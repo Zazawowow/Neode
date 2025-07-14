@@ -1,4 +1,5 @@
 import { Effects } from "../Effects"
+import { DropGenerator, DropPromise } from "./Drop"
 import {
   ServiceInterfaceFilled,
   filledAddress,
@@ -77,16 +78,14 @@ export class GetServiceInterfaces {
     return interfaceFilled
   }
 
-  /**
-   * Watches the service interfaces for the package. Returns an async iterator that yields whenever the value changes
-   */
-  async *watch() {
+  private async *watchGen(abort?: AbortSignal) {
     const { packageId } = this.opts
     const resolveCell = { resolve: () => {} }
     this.effects.onLeaveContext(() => {
       resolveCell.resolve()
     })
-    while (this.effects.isInContext) {
+    abort?.addEventListener("abort", () => resolveCell.resolve())
+    while (this.effects.isInContext && !abort?.aborted) {
       let callback: () => void = () => {}
       const waitForNext = new Promise<void>((resolve) => {
         callback = resolve
@@ -102,18 +101,34 @@ export class GetServiceInterfaces {
   }
 
   /**
+   * Watches the service interfaces for the package. Returns an async iterator that yields whenever the value changes
+   */
+  watch(
+    abort?: AbortSignal,
+  ): AsyncGenerator<ServiceInterfaceFilled[], void, unknown> {
+    const ctrl = new AbortController()
+    abort?.addEventListener("abort", () => ctrl.abort())
+    return DropGenerator.of(this.watchGen(ctrl.signal), () => ctrl.abort())
+  }
+
+  /**
    * Watches the service interfaces for the package. Takes a custom callback function to run whenever the value changes
    */
   onChange(
     callback: (
       value: ServiceInterfaceFilled[] | null,
       error?: Error,
-    ) => void | Promise<void>,
+    ) => { cancel: boolean } | Promise<{ cancel: boolean }>,
   ) {
     ;(async () => {
-      for await (const value of this.watch()) {
+      const ctrl = new AbortController()
+      for await (const value of this.watch(ctrl.signal)) {
         try {
-          await callback(value)
+          const res = await callback(value)
+          if (res.cancel) {
+            ctrl.abort()
+            break
+          }
         } catch (e) {
           console.error(
             "callback function threw an error @ GetServiceInterfaces.onChange",
@@ -134,30 +149,21 @@ export class GetServiceInterfaces {
   /**
    * Watches the service interfaces for the package. Returns when the predicate is true
    */
-  async waitFor(pred: (value: ServiceInterfaceFilled[] | null) => boolean) {
-    const { packageId } = this.opts
-    const resolveCell = { resolve: () => {} }
-    this.effects.onLeaveContext(() => {
-      resolveCell.resolve()
-    })
-    while (this.effects.isInContext) {
-      let callback: () => void = () => {}
-      const waitForNext = new Promise<void>((resolve) => {
-        callback = resolve
-        resolveCell.resolve = resolve
-      })
-      const res = await makeManyInterfaceFilled({
-        effects: this.effects,
-        packageId,
-        callback,
-      })
-      if (pred(res)) {
-        resolveCell.resolve()
-        return res
-      }
-      await waitForNext
-    }
-    return null
+  waitFor(
+    pred: (value: ServiceInterfaceFilled[] | null) => boolean,
+  ): Promise<ServiceInterfaceFilled[] | null> {
+    const ctrl = new AbortController()
+    return DropPromise.of(
+      Promise.resolve().then(async () => {
+        for await (const next of this.watchGen(ctrl.signal)) {
+          if (pred(next)) {
+            return next
+          }
+        }
+        return null
+      }),
+      () => ctrl.abort(),
+    )
   }
 }
 export function getServiceInterfaces(

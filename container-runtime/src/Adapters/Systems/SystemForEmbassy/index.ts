@@ -1045,10 +1045,10 @@ export class SystemForEmbassy implements System {
       .withPath(`/media/embassy/${id}/config.json`)
       .read()
       .onChange(effects, async (oldConfig: U.Config) => {
-        if (!oldConfig) return
+        if (!oldConfig) return { cancel: false }
         const moduleCode = await this.moduleCode
         const method = moduleCode?.dependencies?.[id]?.autoConfigure
-        if (!method) return
+        if (!method) return { cancel: true }
         const newConfig = (await method(
           polyfillEffects(effects, this.manifest),
           JSON.parse(JSON.stringify(oldConfig)),
@@ -1075,6 +1075,7 @@ export class SystemForEmbassy implements System {
             },
           })
         }
+        return { cancel: false }
       })
   }
 }

@@ -49,7 +49,11 @@ export class Daemon<
           (subc?.rc() ?? null) as C,
           exec,
         )
-      return new Daemon(subc, startCommand)
+      const res = new Daemon(subc, startCommand)
+      effects.onLeaveContext(() => {
+        res.stop().catch((e) => console.error(asError(e)))
+      })
+      return res
     }
   }
   async start() {
@@ -66,6 +70,11 @@ export class Daemon<
             .catch((err) => console.error(err))
         try {
           this.commandController = await this.startCommand()
+          if (!this.shouldBeRunning) {
+            // handles race condition if stopped while starting
+            await this.stop()
+            break
+          }
           const success = await this.commandController.wait().then(
             (_) => true,
             (err) => {
@@ -107,12 +116,14 @@ export class Daemon<
   }) {
     this.shouldBeRunning = false
     this.exitedSuccess = false
-    await this.commandController
-      ?.term({ ...termOptions })
-      .catch((e) => console.error(asError(e)))
-    this.commandController = null
-    this.onExitFns = []
-    await this.subcontainer?.destroy()
+    if (this.commandController) {
+      await this.commandController
+        .term({ ...termOptions })
+        .catch((e) => console.error(asError(e)))
+      this.commandController = null
+      this.onExitFns = []
+      await this.subcontainer?.destroy()
+    }
   }
   subcontainerRc(): SubContainerRc<Manifest> | null {
     return this.subcontainer?.rc() ?? null
