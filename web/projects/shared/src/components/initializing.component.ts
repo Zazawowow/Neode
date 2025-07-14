@@ -8,7 +8,11 @@ import { i18nPipe } from '../i18n/i18n.pipe'
   template: `
     <section>
       <h1 [style.font-size.rem]="2" [style.margin-bottom.rem]="2">
-        {{ 'Setting up your server' | i18n }}
+        {{
+          setupType
+            ? ('Setting up your server' | i18n)
+            : ('Booting StartOS' | i18n)
+        }}
       </h1>
       <div>
         {{ 'Progress' | i18n }}: {{ (progress.total * 100).toFixed(0) }}%

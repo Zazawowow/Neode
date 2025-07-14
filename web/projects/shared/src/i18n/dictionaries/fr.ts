@@ -493,6 +493,7 @@ export default {
   495: 'Validation',
   496: 'en cours',
   497: 'terminé',
+  498: 'Démarrage de StartOS',
   499: 'Pour commencer, visitez la bibliothèque de services et téléchargez votre premier service',
   500: 'Voir la bibliothèque de services',
   501: 'Bienvenue sur',

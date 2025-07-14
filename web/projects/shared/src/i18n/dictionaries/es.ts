@@ -493,6 +493,7 @@ export default {
   495: 'Validando',
   496: 'en progreso',
   497: 'completo',
+  498: 'Iniciando StartOS',
   499: 'Para comenzar, visita el Mercado y descarga tu primer servicio',
   500: 'Ver Marketplace',
   501: 'Bienvenido a',

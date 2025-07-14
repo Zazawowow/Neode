@@ -492,6 +492,7 @@ export const ENGLISH = {
   'Validating': 495,
   'in progress': 496,
   'complete': 497,
+  'Booting StartOS': 498,
   'To get started, visit the Marketplace and download your first service': 499,
   'View Marketplace': 500,
   'Welcome to': 501,
