@@ -264,6 +264,7 @@ impl Version {
     }
 }
 
+#[instrument(skip_all)]
 fn version_accessor(db: &mut Value) -> Option<&mut Value> {
     if db.get("public").is_some() {
         db.get_mut("public")?
@@ -274,6 +275,7 @@ fn version_accessor(db: &mut Value) -> Option<&mut Value> {
     }
 }
 
+#[instrument(skip_all)]
 fn version_compat_accessor(db: &mut Value) -> Option<&mut Value> {
     if db.get("public").is_some() {
         let server_info = db.get_mut("public")?.get_mut("serverInfo")?;
@@ -296,6 +298,7 @@ fn version_compat_accessor(db: &mut Value) -> Option<&mut Value> {
     }
 }
 
+#[instrument(skip_all)]
 fn post_init_migration_todos_accessor(db: &mut Value) -> Option<&mut Value> {
     let server_info = if db.get("public").is_some() {
         db.get_mut("public")?.get_mut("serverInfo")?
@@ -303,9 +306,10 @@ fn post_init_migration_todos_accessor(db: &mut Value) -> Option<&mut Value> {
         db.get_mut("server-info")?
     };
     if server_info.get("postInitMigrationTodos").is_none() {
-        server_info
-            .as_object_mut()?
-            .insert("postInitMigrationTodos".into(), Value::Array(Vector::new()));
+        server_info.as_object_mut()?.insert(
+            "postInitMigrationTodos".into(),
+            Value::Object(Default::default()),
+        );
     }
     server_info.get_mut("postInitMigrationTodos")
 }
@@ -421,6 +425,7 @@ where
             ErrorKind::InvalidRequest,
         ))
     }
+    #[instrument(skip_all)]
     fn commit(self, db: &mut Value, res: Value) -> Result<(), Error> {
         *version_accessor(db).or_not_found("`public.serverInfo.version` in db")? =
             to_value(&self.semver())?;
@@ -438,7 +443,7 @@ where
             obj.insert(InternedString::from_display(&self.semver()), res);
         } else {
             return Err(Error::new(
-                eyre!("postInitMigrationTodos is not an array"),
+                eyre!("postInitMigrationTodos is not an array or object"),
                 ErrorKind::Database,
             ));
         }
