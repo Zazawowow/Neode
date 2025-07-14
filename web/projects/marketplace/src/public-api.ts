@@ -16,9 +16,10 @@ export * from './pages/show/additional/additional.component'
 export * from './pages/show/additional/additional.module'
 export * from './pages/show/dependencies/dependencies.component'
 export * from './pages/show/dependencies/dependency-item.component'
-export * from './pages/show/screenshots/screenshots.component'
-export * from './pages/show/hero/hero.component'
-export * from './pages/show/flavors/flavors.component'
+export * from './pages/show/screenshots.component'
+export * from './pages/show/hero.component'
+export * from './pages/show/flavors.component'
+export * from './pages/show/versions.component'
 
 export * from './pipes/filter-packages.pipe'
 

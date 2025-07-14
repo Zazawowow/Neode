@@ -27,7 +27,7 @@ import { MarketplacePkgSideload } from './sideload.utils'
           }
         </div>
         <div class="package-details-additional">
-          <marketplace-additional [pkg]="pkg()" (static)="onStatic($event)" />
+          <marketplace-additional [pkg]="pkg()" (static)="onStatic()" />
         </div>
       </div>
     </div>
@@ -83,13 +83,15 @@ export class SideloadPackageComponent {
   readonly pkg = input.required<MarketplacePkgSideload>()
   readonly file = input.required<File>()
 
-  onStatic(type: 'license' | 'instructions') {
-    const label = type === 'license' ? 'License' : 'Instructions'
-    const key = type === 'license' ? 'fullLicense' : 'instructions'
-    const content = of(this.pkg()[key])
+  onStatic() {
+    const content = of(this.pkg()['license'])
 
     this.dialog
-      .openComponent(MARKDOWN, { label, size: 'l', data: { content } })
+      .openComponent(MARKDOWN, {
+        label: 'License',
+        size: 'l',
+        data: { content },
+      })
       .subscribe()
   }
 }

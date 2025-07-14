@@ -5,6 +5,5 @@
     "https://community-registry.start9.com/": "Community Registry"
   },
   "startosRegistry": "https://registry.start9.com/",
-  "snakeHighScore": 0,
-  "ackInstructions": {}
+  "snakeHighScore": 0
 }

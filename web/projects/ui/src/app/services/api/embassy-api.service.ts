@@ -9,15 +9,15 @@ export abstract class ApiService {
   // for sideloading packages
   abstract uploadPackage(guid: string, body: Blob): Promise<void>
 
-  // for getting static files: ex icons, instructions, licenses
+  // for getting static files: ex license
   abstract getStaticProxy(
     pkg: MarketplacePkg,
-    path: 'LICENSE.md' | 'instructions.md',
+    path: 'LICENSE.md',
   ): Promise<string>
 
   abstract getStaticInstalled(
     id: T.PackageId,
-    path: 'LICENSE.md' | 'instructions.md',
+    path: 'LICENSE.md',
   ): Promise<string>
 
   // websocket

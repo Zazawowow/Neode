@@ -117,17 +117,10 @@ export class S9pk {
     )
   }
 
-  async instructions(): Promise<string> {
-    const file = this.archive.contents.getPath(["instructions.md"])
-    if (!file || !(file.contents instanceof FileContents))
-      throw new Error("instructions.md not found in archive")
-    return new TextDecoder().decode(await file.verifiedFileContents())
-  }
-
   async license(): Promise<string> {
     const file = this.archive.contents.getPath(["LICENSE.md"])
     if (!file || !(file.contents instanceof FileContents))
-      throw new Error("instructions.md not found in archive")
+      throw new Error("license.md not found in archive")
     return new TextDecoder().decode(await file.verifiedFileContents())
   }
 }

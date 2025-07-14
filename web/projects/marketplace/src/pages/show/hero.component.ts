@@ -16,8 +16,6 @@ import { SharedPipesModule, TickerComponent } from '@start9labs/shared'
         <div class="dark-overlay"></div>
         <div class="inner-container-title">
           <h2 ticker>{{ pkg.title }}</h2>
-          <h3>{{ pkg.version }}</h3>
-          <p>{{ pkg.description.short }}</p>
         </div>
         <!-- control buttons -->
         <ng-content />
@@ -42,7 +40,7 @@ import { SharedPipesModule, TickerComponent } from '@start9labs/shared'
       min-height: 32vh;
       position: relative;
       border-radius: 1.5rem;
-      padding: 4rem 2rem 0 2rem;
+      padding: 3rem 2rem 0 2rem;
 
       @media (min-width: 376px) {
         min-height: 20vh;
@@ -65,7 +63,7 @@ import { SharedPipesModule, TickerComponent } from '@start9labs/shared'
       }
 
       .inner-container-title {
-        margin: 1rem 0;
+        margin: 0.5rem 0 1rem 0;
         color: rgb(250 250 250);
         mix-blend-mode: plus-lighter;
         z-index: 1;
@@ -76,29 +74,11 @@ import { SharedPipesModule, TickerComponent } from '@start9labs/shared'
         }
 
         h2 {
-          font-size: 2rem;
+          font-size: 2.5rem;
           line-height: 3rem;
           font-weight: normal;
           display: inline-block;
-          margin-left: -1px;
-        }
-
-        h3 {
-          font-size: 1.1rem;
-          font-weight: normal;
-          margin-bottom: 1rem;
-          pointer-events: none;
-        }
-
-        p {
-          font-size: 1rem;
-          line-height: 1.5rem;
-          font-weight: 300;
-          pointer-events: none;
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
+          margin: 1rem 0 1rem 0;
         }
       }
 

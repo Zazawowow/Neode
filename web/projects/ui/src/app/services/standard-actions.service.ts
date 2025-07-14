@@ -80,7 +80,6 @@ export class StandardActionsService {
 
     try {
       await this.api.uninstallPackage(options)
-      await this.api.setDbValue<boolean>(['ackInstructions', options.id], false)
       await this.router.navigate([''])
     } catch (e: any) {
       this.errorService.handleError(e)

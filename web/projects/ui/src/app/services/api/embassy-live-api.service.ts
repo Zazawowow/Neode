@@ -44,11 +44,11 @@ export class LiveApiService extends ApiService {
     })
   }
 
-  // for getting static files: ex. instructions, licenses
+  // for getting static files: ex: license
 
   async getStaticProxy(
     pkg: MarketplacePkg,
-    path: 'LICENSE.md' | 'instructions.md',
+    path: 'LICENSE.md',
   ): Promise<string> {
     const encodedUrl = encodeURIComponent(pkg.s9pk.url)
 
@@ -65,7 +65,7 @@ export class LiveApiService extends ApiService {
 
   async getStaticInstalled(
     id: T.PackageId,
-    path: 'LICENSE.md' | 'instructions.md',
+    path: 'LICENSE.md',
   ): Promise<string> {
     return this.httpRequest({
       method: Method.GET,

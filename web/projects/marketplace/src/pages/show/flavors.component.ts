@@ -4,7 +4,7 @@ import { SharedPipesModule } from '@start9labs/shared'
 import { TuiTitle } from '@taiga-ui/core'
 import { TuiAvatar } from '@taiga-ui/kit'
 import { TuiCell } from '@taiga-ui/layout'
-import { MarketplacePkg } from '../../../types'
+import { MarketplacePkg } from '../../types'
 
 @Component({
   selector: 'marketplace-flavors',

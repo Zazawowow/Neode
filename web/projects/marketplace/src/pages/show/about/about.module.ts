@@ -6,6 +6,7 @@ import { TuiButton } from '@taiga-ui/core'
 import { NgDompurifyPipe } from '@taiga-ui/dompurify'
 import { TuiTagModule } from '@taiga-ui/legacy'
 import { AboutComponent } from './about.component'
+import { MarketplaceAdditionalItemComponent } from '../additional/additional-item.component'
 
 @NgModule({
   imports: [
@@ -16,6 +17,7 @@ import { AboutComponent } from './about.component'
     SafeLinksDirective,
     MarkdownPipe,
     TuiButton,
+    MarketplaceAdditionalItemComponent,
   ],
   declarations: [AboutComponent],
   exports: [AboutComponent],

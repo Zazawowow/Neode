@@ -8,7 +8,7 @@ import { TUI_IS_MOBILE } from '@taiga-ui/cdk'
 import { TuiButton, TuiDialogContext, TuiDialogService } from '@taiga-ui/core'
 import { TuiCarousel } from '@taiga-ui/kit'
 import { PolymorpheusContent } from '@taiga-ui/polymorpheus'
-import { MarketplacePkg } from '../../../types'
+import { MarketplacePkg } from '../../types'
 
 @Component({
   selector: 'marketplace-package-screenshots',

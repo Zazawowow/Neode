@@ -1,12 +1,13 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  EventEmitter,
   inject,
   Input,
+  Output,
 } from '@angular/core'
-import { TuiDialogService } from '@taiga-ui/core'
-import { RELEASE_NOTES } from '../../../modals/release-notes.component'
 import { MarketplacePkgBase } from '../../../types'
+import { CopyService } from '@start9labs/shared'
 
 @Component({
   selector: 'marketplace-about',
@@ -16,14 +17,11 @@ import { MarketplacePkgBase } from '../../../types'
   standalone: false,
 })
 export class AboutComponent {
-  private readonly dialogs = inject(TuiDialogService)
+  readonly copyService = inject(CopyService)
 
   @Input({ required: true })
   pkg!: MarketplacePkgBase
 
-  async onPast() {
-    this.dialogs
-      .open(RELEASE_NOTES, { label: 'Past Release Notes', data: this.pkg })
-      .subscribe()
-  }
+  @Output()
+  readonly static = new EventEmitter<'license'>()
 }

@@ -42,6 +42,7 @@ type KEYS = 'id' | 'version' | 'alerts' | 'flavor'
           @case (1) {
             <button
               tuiButton
+              size="m"
               type="button"
               appearance="warning"
               (click)="tryInstall()"
@@ -52,6 +53,7 @@ type KEYS = 'id' | 'version' | 'alerts' | 'flavor'
           @case (-1) {
             <button
               tuiButton
+              size="m"
               type="button"
               appearance="primary"
               (click)="tryInstall()"
@@ -62,6 +64,7 @@ type KEYS = 'id' | 'version' | 'alerts' | 'flavor'
           @case (0) {
             <button
               tuiButton
+              size="m"
               type="button"
               appearance="secondary-grayscale"
               (click)="tryInstall()"
@@ -73,6 +76,7 @@ type KEYS = 'id' | 'version' | 'alerts' | 'flavor'
       }
       <button
         tuiButton
+        size="m"
         type="button"
         appearance="secondary-grayscale"
         (click)="showService()"
@@ -83,6 +87,7 @@ type KEYS = 'id' | 'version' | 'alerts' | 'flavor'
     } @else {
       <button
         tuiButton
+        size="m"
         type="button"
         appearance="primary"
         (click)="tryInstall()"

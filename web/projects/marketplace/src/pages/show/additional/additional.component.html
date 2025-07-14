@@ -1,79 +1,50 @@
 <div class="background-border shadow-color-light box-shadow-lg">
   <div class="box-container">
-    <h2 class="additional-detail-title">Information</h2>
+    <h2 class="additional-detail-title">Source Code</h2>
     <div class="detail-container">
-      <!-- release date -->
-      @if (pkg.s9pk?.publishedAt; as published) {
-        <marketplace-additional-item
-          [data]="(published | date: 'medium')!"
-          label="Released"
-          icon=""
-        />
-      }
-      <!-- git hash -->
-      @if (pkg.gitHash; as gitHash) {
-        <marketplace-additional-item
-          (click)="copyService.copy(gitHash)"
-          [data]="gitHash"
-          label="Git Hash"
-          icon="@tui.copy"
-          class="item-copy"
-        />
-      } @else {
-        <div class="item-padding">
-          <label tuiTitle>
-            <span tuiSubtitle>Git Hash</span>
-            Unknown
-          </label>
-        </div>
-      }
-      <!-- license -->
-      <marketplace-additional-item
-        (click)="static.emit('license')"
-        [data]="pkg.license"
-        label="License"
-        icon="@tui.chevron-right"
+      <marketplace-additional-link
+        [url]="pkg.upstreamRepo"
+        label="Upstream Service"
+        icon="@tui.external-link"
         class="item-pointer"
       />
-      <!-- instructions -->
-      <marketplace-additional-item
-        (click)="static.emit('instructions')"
-        data="Click to view instructions"
-        label="Instructions"
-        icon="@tui.chevron-right"
+      <marketplace-additional-link
+        [url]="pkg.wrapperRepo"
+        label="StartOS Package"
+        icon="@tui.external-link"
         class="item-pointer"
       />
-      <!-- versions -->
-      <ng-content />
-      <!-- links -->
-      @if (pkg.marketingSite) {
+    </div>
+  </div>
+</div>
+
+<div class="background-border shadow-color-light box-shadow-lg">
+  <div class="box-container">
+    <h2 class="additional-detail-title">Links</h2>
+    <div class="detail-container">
+      <marketplace-additional-link
+        [url]="pkg.marketingSite"
+        label="Marketing"
+        icon="@tui.external-link"
+        class="item-pointer"
+      />
+      <!-- @TODO matt use docsLink when available -->
+      <marketplace-additional-link
+        [url]="pkg.supportSite"
+        label="Documentation"
+        icon="@tui.external-link"
+        class="item-pointer"
+      />
+      <marketplace-additional-link
+        [url]="pkg.supportSite"
+        label="Support"
+        icon="@tui.external-link"
+        class="item-pointer"
+      />
+      @if (pkg.donationUrl; as donationUrl) {
         <marketplace-additional-link
-          [url]="pkg.marketingSite"
-          label="Marketing Site"
-          icon="@tui.external-link"
-          class="item-pointer"
-        />
-      }
-      @if (pkg.upstreamRepo) {
-        <marketplace-additional-link
-          [url]="pkg.upstreamRepo"
-          label="Source Repository"
-          icon="@tui.external-link"
-          class="item-pointer"
-        />
-      }
-      @if (pkg.wrapperRepo) {
-        <marketplace-additional-link
-          [url]="pkg.wrapperRepo"
-          label="Wrapper Repository"
-          icon="@tui.external-link"
-          class="item-pointer"
-        />
-      }
-      @if (pkg.supportSite) {
-        <marketplace-additional-link
-          [url]="pkg.supportSite"
-          label="Support Site"
+          [url]="donationUrl"
+          label="Donations"
           icon="@tui.external-link"
           class="item-pointer"
         />
