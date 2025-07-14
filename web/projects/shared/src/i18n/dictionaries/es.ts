@@ -436,6 +436,7 @@ export default {
   438: 'Sin Internet',
   439: 'Conectando',
   440: 'Apagando',
+  441: 'Todas las versiones',
   442: 'Nuevas notificaciones',
   443: 'Ver',
   444: 'Recargando PWA',

@@ -3,7 +3,7 @@ import { TuiIcon, TuiTitle } from '@taiga-ui/core'
 import { TuiFade } from '@taiga-ui/kit'
 
 @Component({
-  selector: 'marketplace-additional-item',
+  selector: 'marketplace-item',
   template: `
     <label tuiTitle>
       <span tuiSubtitle>{{ label }}</span>
@@ -36,7 +36,7 @@ import { TuiFade } from '@taiga-ui/kit'
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TuiIcon, TuiTitle, TuiFade],
 })
-export class MarketplaceAdditionalItemComponent {
+export class MarketplaceItemComponent {
   @Input({ required: true })
   label!: string
 

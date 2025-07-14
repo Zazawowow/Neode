@@ -436,6 +436,7 @@ export default {
   438: 'Pas d’Internet',
   439: 'Connexion',
   440: 'Arrêt en cours',
+  441: 'Toutes les versions',
   442: 'Nouvelles notifications',
   443: 'Voir',
   444: 'Rechargement de la PWA',

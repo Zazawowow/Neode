@@ -435,6 +435,7 @@ export const ENGLISH = {
   'No Internet': 438,
   'Connecting': 439,
   'Shutting down': 440,
+  'All versions': 441,
   'New notifications': 442,
   'View': 443,
   'Reloading PWA': 444,

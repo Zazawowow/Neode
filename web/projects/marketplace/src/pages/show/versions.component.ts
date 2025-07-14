@@ -11,7 +11,7 @@ import { DialogService, i18nPipe, SharedPipesModule } from '@start9labs/shared'
 import { TuiButton, TuiDialogContext } from '@taiga-ui/core'
 import { TuiRadioList } from '@taiga-ui/kit'
 import { filter } from 'rxjs'
-import { MarketplaceAdditionalItemComponent } from './additional/additional-item.component'
+import { MarketplaceItemComponent } from './item.component'
 
 @Component({
   selector: 'marketplace-versions',
@@ -19,7 +19,7 @@ import { MarketplaceAdditionalItemComponent } from './additional/additional-item
     <div class="background-border shadow-color-light box-shadow-lg">
       <div class="box-container">
         <h2 class="additional-detail-title">Versions</h2>
-        <marketplace-additional-item
+        <marketplace-item
           (click)="selectVersion(versionSelect)"
           data="Select another version"
           icon="@tui.chevron-right"
@@ -56,12 +56,12 @@ import { MarketplaceAdditionalItemComponent } from './additional/additional-item
     .box-container {
       background-color: rgb(39 39 42);
       border-radius: 0.75rem;
-      padding: 1.75rem;
+      padding: 1.25rem 1.75rem;
     }
 
     .select {
       border: 0;
-      border-top-width: 1px;
+      // border-top-width: 1px;
       border-bottom-width: 1px;
       border-color: rgb(113 113 122);
       border-style: solid;
@@ -74,7 +74,7 @@ import { MarketplaceAdditionalItemComponent } from './additional/additional-item
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    MarketplaceAdditionalItemComponent,
+    MarketplaceItemComponent,
     TuiButton,
     SharedPipesModule,
     FormsModule,

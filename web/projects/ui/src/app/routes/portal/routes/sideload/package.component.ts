@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common'
 import { Component, inject, input } from '@angular/core'
 import {
-  AboutModule,
-  AdditionalModule,
+  MarketplaceAboutComponent,
+  MarketplaceLinksComponent,
   MarketplaceDependenciesComponent,
   MarketplacePackageHeroComponent,
+  MarketplaceReleaseNotesComponent,
 } from '@start9labs/marketplace'
 import { DialogService, MARKDOWN, SharedPipesModule } from '@start9labs/shared'
 import { of } from 'rxjs'
@@ -22,12 +23,13 @@ import { MarketplacePkgSideload } from './sideload.utils'
       <div class="package-details">
         <div class="package-details-main">
           <marketplace-about [pkg]="pkg()" />
+          <marketplace-release-notes [pkg]="pkg()" />
           @if (!(pkg().dependencyMetadata | empty)) {
             <marketplace-dependencies [pkg]="pkg()" />
           }
         </div>
         <div class="package-details-additional">
-          <marketplace-additional [pkg]="pkg()" (static)="onStatic()" />
+          <marketplace-links [pkg]="pkg()" (static)="onStatic()" />
         </div>
       </div>
     </div>
@@ -70,11 +72,12 @@ import { MarketplacePkgSideload } from './sideload.utils'
   imports: [
     CommonModule,
     SharedPipesModule,
-    AboutModule,
-    AdditionalModule,
+    MarketplaceAboutComponent,
+    MarketplaceLinksComponent,
     MarketplacePackageHeroComponent,
     MarketplaceDependenciesComponent,
     MarketplaceControlsComponent,
+    MarketplaceReleaseNotesComponent,
   ],
 })
 export class SideloadPackageComponent {

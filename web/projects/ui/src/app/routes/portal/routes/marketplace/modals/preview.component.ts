@@ -7,12 +7,13 @@ import {
 } from '@angular/core'
 import { Router } from '@angular/router'
 import {
-  AboutModule,
-  AdditionalModule,
-  FlavorsComponent,
+  MarketplaceLinksComponent,
+  MarketplaceFlavorsComponent,
+  MarketplaceAboutComponent,
   MarketplaceDependenciesComponent,
   MarketplacePackageHeroComponent,
   MarketplaceVersionsComponent,
+  MarketplaceReleaseNotesComponent,
 } from '@start9labs/marketplace'
 import {
   DialogService,
@@ -44,13 +45,14 @@ import { MarketplaceControlsComponent } from '../components/controls.component'
         </marketplace-package-hero>
         <div class="inner-container">
           <marketplace-about [pkg]="pkg" (static)="onStatic()" />
+          <marketplace-release-notes [pkg]="pkg" />
           @if (flavors$ | async; as flavors) {
             <marketplace-flavors [pkgs]="flavors" />
           }
           @if (!(pkg.dependencyMetadata | empty)) {
             <marketplace-dependencies [pkg]="pkg" (open)="open($event)" />
           }
-          <marketplace-additional [pkg]="pkg" />
+          <marketplace-links [pkg]="pkg" />
           @if (versions$ | async; as versions) {
             <marketplace-versions
               [version]="version$ | async"
@@ -112,13 +114,14 @@ import { MarketplaceControlsComponent } from '../components/controls.component'
     CommonModule,
     MarketplacePackageHeroComponent,
     MarketplaceDependenciesComponent,
-    AdditionalModule,
-    AboutModule,
     SharedPipesModule,
     TuiLoader,
-    FlavorsComponent,
+    MarketplaceLinksComponent,
+    MarketplaceFlavorsComponent,
+    MarketplaceAboutComponent,
     MarketplaceControlsComponent,
     MarketplaceVersionsComponent,
+    MarketplaceReleaseNotesComponent,
   ],
 })
 export class MarketplacePreviewComponent {

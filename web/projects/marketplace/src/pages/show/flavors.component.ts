@@ -33,7 +33,7 @@ import { MarketplacePkg } from '../../types'
     .box-container {
       background-color: rgb(39 39 42);
       border-radius: 0.75rem;
-      padding: 1.75rem;
+      padding: 1.25rem 1.75rem;
     }
 
     [tuiCell] {
@@ -44,7 +44,7 @@ import { MarketplacePkg } from '../../types'
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, TuiCell, TuiTitle, SharedPipesModule, TuiAvatar],
 })
-export class FlavorsComponent {
+export class MarketplaceFlavorsComponent {
   @Input()
   pkgs!: MarketplacePkg[]
 }

@@ -436,6 +436,7 @@ export default {
   438: 'Brak Internetu',
   439: 'Łączenie',
   440: 'Wyłączanie',
+  441: 'Wszystkie wersje',
   442: 'Nowe powiadomienia',
   443: 'Zobacz',
   444: 'Przeładowywanie PWA',

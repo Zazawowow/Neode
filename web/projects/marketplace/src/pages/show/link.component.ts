@@ -1,21 +1,17 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core'
-import { MarketplaceAdditionalItemComponent } from './additional-item.component'
+import { MarketplaceItemComponent } from './item.component'
 
 @Component({
-  selector: 'marketplace-additional-link',
+  selector: 'marketplace-link',
   template: `
     <a [href]="url" target="_blank" rel="noreferrer">
-      <marketplace-additional-item
-        [label]="label"
-        [icon]="icon"
-        [data]="url"
-      ></marketplace-additional-item>
+      <marketplace-item [label]="label" [icon]="icon" [data]="url" />
     </a>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [MarketplaceAdditionalItemComponent],
+  imports: [MarketplaceItemComponent],
 })
-export class MarketplaceAdditionalLinkComponent {
+export class MarketplaceLinkComponent {
   @Input({ required: true })
   label!: string
 
