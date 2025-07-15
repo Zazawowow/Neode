@@ -5,7 +5,6 @@ import { TuiConfirmData } from '@taiga-ui/kit'
 export const SUCCESS: Partial<TuiDialogOptions<any>> = {
   label: 'Install Success',
   closeable: false,
-  dismissible: false,
   size: 's',
   data: { button: 'Reboot' },
 }
