@@ -20,7 +20,7 @@ import { MarketplaceItemComponent } from './item.component'
       <div class="box-container">
         <h2 class="additional-detail-title">Versions</h2>
         <marketplace-item
-          (click)="selectVersion(versionSelect)"
+          (click)="promptSelectVersion(versionSelect)"
           data="Select another version"
           icon="@tui.chevron-right"
           label=""
@@ -84,13 +84,12 @@ import { MarketplaceItemComponent } from './item.component'
 })
 export class MarketplaceVersionsComponent {
   private readonly dialog = inject(DialogService)
-
   readonly version = input.required<string | null>()
   readonly versions = input.required<string[]>()
 
   onVersion = output<string>()
 
-  selectVersion(template: TemplateRef<TuiDialogContext>) {
+  promptSelectVersion(template: TemplateRef<TuiDialogContext>) {
     this.dialog
       .openComponent<string>(template, {
         label: 'All versions',

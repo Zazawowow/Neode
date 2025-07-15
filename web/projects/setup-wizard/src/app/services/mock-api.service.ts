@@ -302,7 +302,7 @@ export class MockApiService extends ApiService {
     }
   }
 
-  async followServerLogs(): Promise<FollowLogsRes> {
+  async initFollowLogs(): Promise<FollowLogsRes> {
     await pauseFor(1000)
     return {
       startCursor: 'fakestartcursor',

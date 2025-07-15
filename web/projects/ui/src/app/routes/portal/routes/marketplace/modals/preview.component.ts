@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   inject,
+  input,
   Input,
 } from '@angular/core'
 import { Router } from '@angular/router'
@@ -30,7 +31,7 @@ import {
   startWith,
   switchMap,
 } from 'rxjs'
-import { take } from 'rxjs/operators'
+import { shareReplay, take, tap } from 'rxjs/operators'
 import { MarketplaceService } from 'src/app/services/marketplace.service'
 import { MarketplaceControlsComponent } from '../components/controls.component'
 
@@ -55,9 +56,9 @@ import { MarketplaceControlsComponent } from '../components/controls.component'
           <marketplace-links [pkg]="pkg" />
           @if (versions$ | async; as versions) {
             <marketplace-versions
-              [version]="version$ | async"
+              [version]="pkg.version"
               [versions]="versions"
-              (onVersion)="version$.next($event)"
+              (onVersion)="selectedVersion$.next($event)"
             />
           }
         </div>
@@ -130,21 +131,23 @@ export class MarketplacePreviewComponent {
   private readonly router = inject(Router)
   private readonly marketplaceService = inject(MarketplaceService)
 
-  @Input({ required: true })
-  pkgId!: string
+  readonly pkgId = input.required<string>()
 
   private readonly flavor$ = this.router.routerState.root.queryParamMap.pipe(
     map(paramMap => paramMap.get('flavor')),
     take(1),
   )
 
-  readonly version$ = new BehaviorSubject<string | null>(null)
-  readonly pkg$ = combineLatest([this.version$, this.flavor$]).pipe(
+  readonly selectedVersion$ = new BehaviorSubject<string | null>(null)
+
+  readonly pkg$ = combineLatest([this.selectedVersion$, this.flavor$]).pipe(
+    tap(console.error),
     switchMap(([version, flavor]) =>
       this.marketplaceService
-        .getPackage$(this.pkgId, version, flavor)
+        .getPackage$(this.pkgId(), version, flavor)
         .pipe(startWith(null)),
     ),
+    shareReplay({ bufferSize: 1, refCount: false }),
   )
 
   readonly flavors$ = this.flavor$.pipe(
@@ -152,7 +155,7 @@ export class MarketplacePreviewComponent {
       this.marketplaceService.currentRegistry$.pipe(
         map(({ packages }) =>
           packages.filter(
-            ({ id, flavor }) => id === this.pkgId && flavor !== current,
+            ({ id, flavor }) => id === this.pkgId() && flavor !== current,
           ),
         ),
         filter(p => p.length > 0),

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
 import { CopyService, i18nPipe } from '@start9labs/shared'
+import { T } from '@start9labs/start-sdk'
 import { TuiButton, TuiTitle } from '@taiga-ui/core'
 import { TuiFade } from '@taiga-ui/kit'
 import { TuiCell } from '@taiga-ui/layout'
@@ -49,13 +50,13 @@ import { DataModel } from 'src/app/services/patch-db/data-model'
       <div tuiCell>
         <div tuiTitle>
           <strong>Public Key</strong>
-          <div tuiSubtitle tuiFade>{{ server.pubkey }}</div>
+          <div tuiSubtitle tuiFade>{{ getPubkey(server) }}</div>
         </div>
         <button
           tuiIconButton
           appearance="icon"
           iconStart="@tui.copy"
-          (click)="copyService.copy(server.pubkey)"
+          (click)="copyService.copy(getPubkey(server))"
         >
           {{ 'Copy' | i18n }}
         </button>
@@ -72,6 +73,10 @@ export class AboutComponent {
   readonly server = toSignal(
     inject<PatchDB<DataModel>>(PatchDB).watch$('serverInfo'),
   )
+
+  getPubkey(server: T.ServerInfo) {
+    return `${server.pubkey} startos@${server.hostname}`
+  }
 }
 
 export const ABOUT = new PolymorpheusComponent(AboutComponent)

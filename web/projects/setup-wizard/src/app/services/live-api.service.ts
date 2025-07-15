@@ -97,7 +97,7 @@ export class LiveApiService extends ApiService {
     })
   }
 
-  async followServerLogs(): Promise<FollowLogsRes> {
+  async initFollowLogs(): Promise<FollowLogsRes> {
     return this.rpcRequest({ method: 'setup.logs.follow', params: {} })
   }
 

@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core'
 import { TuiProgress } from '@taiga-ui/kit'
 import { LogsWindowComponent } from './logs-window.component'
-import { i18nPipe } from '../i18n/i18n.pipe'
+import { i18nPipe } from '../../i18n/i18n.pipe'
 
 @Component({
   selector: 'app-initializing',

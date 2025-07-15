@@ -5,8 +5,8 @@
 export * from './classes/http-error'
 export * from './classes/rpc-error'
 
-export * from './components/logs-window.component'
-export * from './components/initializing.component'
+export * from './components/initializing/logs-window.component'
+export * from './components/initializing/initializing.component'
 export * from './components/ticker.component'
 export * from './components/drive.component'
 export * from './components/markdown.component'

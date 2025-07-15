@@ -13,7 +13,7 @@ import { Constructor } from '../types/constructor'
 import { convertAnsi } from '../util/convert-ansi'
 
 interface Api {
-  followServerLogs: (params: FollowLogsReq) => Promise<FollowLogsRes>
+  initFollowLogs: (params: FollowLogsReq) => Promise<FollowLogsRes>
   openWebsocket$: (guid: string) => Observable<Log>
 }
 
@@ -28,7 +28,7 @@ export function provideSetupLogsService(
 }
 
 export class SetupLogsService extends Observable<readonly string[]> {
-  private readonly log$ = defer(() => this.api.followServerLogs({})).pipe(
+  private readonly log$ = defer(() => this.api.initFollowLogs({})).pipe(
     switchMap(({ guid }) => this.api.openWebsocket$(guid)),
     bufferTime(500),
     filter(logs => !!logs.length),

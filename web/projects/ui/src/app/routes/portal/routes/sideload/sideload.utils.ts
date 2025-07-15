@@ -37,12 +37,10 @@ async function parseS9pk(file: File): Promise<MarketplacePkgSideload> {
   return {
     ...s9pk.manifest,
     dependencyMetadata: await s9pk.dependencyMetadata(),
-    gitHash: '',
     icon: await s9pk.icon(),
     sourceVersion: s9pk.manifest.canMigrateFrom,
     flavor: ExtendedVersion.parse(s9pk.manifest.version).flavor,
     fullLicense: await s9pk.license(),
-    // instructions: 'TODO @MattHill: remove',
   }
 }
 
