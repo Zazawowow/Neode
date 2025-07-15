@@ -6,7 +6,6 @@ export type DataModel = T.Public & { ui: UIData; packageData: AllPackageData }
 export type UIData = {
   name: string | null
   registries: Record<string, string | null>
-  ackInstructions: Record<string, boolean>
   snakeHighScore: number
   startosRegistry: string
   language: Languages

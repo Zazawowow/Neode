@@ -1,6 +1,5 @@
 import { inject } from '@angular/core'
 import { ActivatedRouteSnapshot, ResolveFn, Routes } from '@angular/router'
-import { MarkdownComponent } from '@start9labs/shared'
 import { defer, map, Observable, of } from 'rxjs'
 import { share } from 'rxjs/operators'
 import { ApiService } from 'src/app/services/api/embassy-api.service'
@@ -24,20 +23,6 @@ export const ROUTES: Routes = [
         loadComponent: () => import('./routes/actions.component'),
       },
       {
-        path: 'instructions',
-        component: MarkdownComponent,
-        resolve: { content: getStatic('instructions.md') },
-        canActivate: [
-          ({ paramMap }: ActivatedRouteSnapshot) => {
-            inject(ApiService)
-              .setDbValue(['ackInstructions', paramMap.get('pkgId')!], true)
-              .catch(e => console.error('Failed to mark as seen', e))
-
-            return true
-          },
-        ],
-      },
-      {
         path: 'interface/:interfaceId',
         loadComponent: () => import('./routes/interface.component'),
       },
@@ -48,7 +33,7 @@ export const ROUTES: Routes = [
       {
         path: 'about',
         loadComponent: () => import('./routes/about.component'),
-        resolve: { content: getStatic('LICENSE.md') },
+        resolve: { content: getStatic() },
       },
     ],
   },
@@ -59,15 +44,13 @@ export const ROUTES: Routes = [
   },
 ]
 
-function getStatic(
-  path: 'LICENSE.md' | 'instructions.md',
-): ResolveFn<Observable<string>> {
+function getStatic(): ResolveFn<Observable<string>> {
   return ({ paramMap }: ActivatedRouteSnapshot) =>
     of(inject(ApiService)).pipe(
       map(api =>
-        defer(() => api.getStaticInstalled(paramMap.get('pkgId')!, path)).pipe(
-          share(),
-        ),
+        defer(() =>
+          api.getStaticInstalled(paramMap.get('pkgId')!, 'LICENSE.md'),
+        ).pipe(share()),
       ),
     )
 }

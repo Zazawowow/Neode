@@ -1,22 +1,14 @@
 import { CommonModule } from '@angular/common'
 import { Component, inject, input } from '@angular/core'
-import { toObservable } from '@angular/core/rxjs-interop'
 import {
-  AboutModule,
-  AdditionalModule,
+  MarketplaceAboutComponent,
+  MarketplaceLinksComponent,
   MarketplaceDependenciesComponent,
   MarketplacePackageHeroComponent,
+  MarketplaceReleaseNotesComponent,
 } from '@start9labs/marketplace'
-import {
-  DialogService,
-  Exver,
-  MARKDOWN,
-  SharedPipesModule,
-} from '@start9labs/shared'
-import { PatchDB } from 'patch-db-client'
-import { filter, first, map, of, switchMap } from 'rxjs'
-import { DataModel } from 'src/app/services/patch-db/data-model'
-import { getManifest } from 'src/app/utils/get-package-data'
+import { DialogService, MARKDOWN, SharedPipesModule } from '@start9labs/shared'
+import { of } from 'rxjs'
 import { MarketplaceControlsComponent } from '../marketplace/components/controls.component'
 import { MarketplacePkgSideload } from './sideload.utils'
 
@@ -26,25 +18,18 @@ import { MarketplacePkgSideload } from './sideload.utils'
     <div class="outer-container">
       <ng-content />
       <marketplace-package-hero [pkg]="pkg()">
-        <marketplace-controls
-          slot="controls"
-          class="controls-wrapper"
-          [version]="pkg().version"
-          [installAlert]="pkg().alerts.install"
-          [localPkg]="local$ | async"
-          [localFlavor]="!!(flavor$ | async)"
-          [file]="file()"
-        />
+        <marketplace-controls [pkg]="pkg()" [file]="file()" />
       </marketplace-package-hero>
       <div class="package-details">
         <div class="package-details-main">
           <marketplace-about [pkg]="pkg()" />
+          <marketplace-release-notes [pkg]="pkg()" />
           @if (!(pkg().dependencyMetadata | empty)) {
             <marketplace-dependencies [pkg]="pkg()" />
           }
         </div>
         <div class="package-details-additional">
-          <marketplace-additional [pkg]="pkg()" (static)="onStatic($event)" />
+          <marketplace-links [pkg]="pkg()" (static)="onStatic()" />
         </div>
       </div>
     </div>
@@ -62,7 +47,6 @@ import { MarketplacePkgSideload } from './sideload.utils'
     }
 
     .package-details {
-      -moz-column-gap: 2rem;
       column-gap: 2rem;
 
       &-main {
@@ -80,62 +64,36 @@ import { MarketplacePkgSideload } from './sideload.utils'
         }
         &-additional {
           grid-column: span 4 / span 4;
-          margin-top: 0px;
+          margin-top: 0;
         }
       }
-    }
-
-    .controls-wrapper {
-      display: flex;
-      justify-content: flex-start;
-      gap: 0.5rem;
-      height: 4.5rem;
     }
   `,
   imports: [
     CommonModule,
     SharedPipesModule,
-    AboutModule,
-    AdditionalModule,
+    MarketplaceAboutComponent,
+    MarketplaceLinksComponent,
     MarketplacePackageHeroComponent,
     MarketplaceDependenciesComponent,
     MarketplaceControlsComponent,
+    MarketplaceReleaseNotesComponent,
   ],
 })
 export class SideloadPackageComponent {
-  private readonly exver = inject(Exver)
-  private readonly patch = inject<PatchDB<DataModel>>(PatchDB)
   private readonly dialog = inject(DialogService)
 
   readonly pkg = input.required<MarketplacePkgSideload>()
   readonly file = input.required<File>()
 
-  readonly local$ = toObservable(this.pkg).pipe(
-    filter(Boolean),
-    switchMap(({ id, flavor }) =>
-      this.patch.watch$('packageData', id).pipe(
-        filter(Boolean),
-        map(pkg =>
-          this.exver.getFlavor(getManifest(pkg).version) === flavor
-            ? pkg
-            : null,
-        ),
-      ),
-    ),
-    first(),
-  )
-
-  readonly flavor$ = this.local$.pipe(map(pkg => !pkg))
-
-  onStatic(type: 'license' | 'instructions') {
-    const label = type === 'license' ? 'License' : 'Instructions'
-    const key = type === 'license' ? 'fullLicense' : 'instructions'
+  onStatic() {
+    const content = of(this.pkg()['license'])
 
     this.dialog
       .openComponent(MARKDOWN, {
-        label,
+        label: 'License',
         size: 'l',
-        data: { content: of(this.pkg()[key]) },
+        data: { content },
       })
       .subscribe()
   }

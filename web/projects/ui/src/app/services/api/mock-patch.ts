@@ -12,7 +12,6 @@ export const mockPatchData: DataModel = {
     },
     startosRegistry: 'https://registry.start9.com/',
     snakeHighScore: 0,
-    ackInstructions: {},
     language: 'english',
   },
   serverInfo: {
@@ -503,7 +502,7 @@ export const mockPatchData: DataModel = {
           visibility: 'enabled',
           allowedStatuses: 'any',
           hasInput: true,
-          group: null,
+          group: 'Connecting',
         },
       },
       serviceInterfaces: {

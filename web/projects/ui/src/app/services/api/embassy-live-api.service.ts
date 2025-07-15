@@ -1,4 +1,6 @@
-import { Inject, Injectable } from '@angular/core'
+import { DOCUMENT, Inject, Injectable } from '@angular/core'
+import { blake3 } from '@noble/hashes/blake3'
+import { MarketplacePkg } from '@start9labs/marketplace'
 import {
   HttpOptions,
   HttpService,
@@ -7,18 +9,15 @@ import {
   RpcError,
   RPCOptions,
 } from '@start9labs/shared'
-import { PATCH_CACHE } from 'src/app/services/patch-db/patch-db-source'
-import { ApiService } from './embassy-api.service'
-import { RR } from './api.types'
-import { webSocket, WebSocketSubject } from 'rxjs/webSocket'
-import { Observable, filter, firstValueFrom } from 'rxjs'
-import { AuthService } from '../auth.service'
-import { DOCUMENT } from '@angular/common'
-import { DataModel } from '../patch-db/data-model'
-import { Dump, pathFromArray } from 'patch-db-client'
 import { T } from '@start9labs/start-sdk'
-import { MarketplacePkg } from '@start9labs/marketplace'
-import { blake3 } from '@noble/hashes/blake3'
+import { Dump, pathFromArray } from 'patch-db-client'
+import { filter, firstValueFrom, Observable } from 'rxjs'
+import { webSocket, WebSocketSubject } from 'rxjs/webSocket'
+import { PATCH_CACHE } from 'src/app/services/patch-db/patch-db-source'
+import { AuthService } from '../auth.service'
+import { DataModel } from '../patch-db/data-model'
+import { RR } from './api.types'
+import { ApiService } from './embassy-api.service'
 
 @Injectable()
 export class LiveApiService extends ApiService {
@@ -45,11 +44,11 @@ export class LiveApiService extends ApiService {
     })
   }
 
-  // for getting static files: ex. instructions, licenses
+  // for getting static files: ex: license
 
   async getStaticProxy(
     pkg: MarketplacePkg,
-    path: 'LICENSE.md' | 'instructions.md',
+    path: 'LICENSE.md',
   ): Promise<string> {
     const encodedUrl = encodeURIComponent(pkg.s9pk.url)
 
@@ -66,7 +65,7 @@ export class LiveApiService extends ApiService {
 
   async getStaticInstalled(
     id: T.PackageId,
-    path: 'LICENSE.md' | 'instructions.md',
+    path: 'LICENSE.md',
   ): Promise<string> {
     return this.httpRequest({
       method: Method.GET,

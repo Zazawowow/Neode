@@ -1,5 +1,10 @@
 import { KeyValuePipe } from '@angular/common'
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core'
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+} from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
 import { getPkgId, i18nPipe } from '@start9labs/shared'
 import { T } from '@start9labs/start-sdk'
@@ -12,29 +17,24 @@ import { StandardActionsService } from 'src/app/services/standard-actions.servic
 import { getManifest } from 'src/app/utils/get-package-data'
 import { ServiceActionComponent } from '../components/action.component'
 
-const OTHER = 'Custom Actions'
-
 @Component({
   template: `
     @if (package(); as pkg) {
       @for (group of pkg.actions | keyvalue; track $index) {
-        @if (group.value.length) {
-          <section class="g-card">
-            <header>{{ group.key }}</header>
-            @for (a of group.value; track $index) {
-              @if (a.visibility !== 'hidden') {
-                <button
-                  tuiCell
-                  [action]="a"
-                  (click)="handle(pkg.mainStatus, pkg.icon, pkg.manifest, a)"
-                ></button>
-              }
-            }
-          </section>
-        }
+        <section class="g-card">
+          <header>{{ group.key }}</header>
+          @for (a of group.value; track $index) {
+            <button
+              tuiCell
+              [action]="a"
+              (click)="handle(pkg.mainStatus, pkg.icon, pkg.manifest, a)"
+            ></button>
+          }
+        </section>
       }
+
       <section class="g-card">
-        <header>{{ 'Standard Actions' | i18n }}</header>
+        <header>StartOS</header>
         <button
           tuiCell
           [action]="rebuild"
@@ -58,11 +58,13 @@ const OTHER = 'Custom Actions'
   `,
   host: { class: 'g-subpage' },
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ServiceActionComponent, TuiCell, KeyValuePipe, i18nPipe],
+  imports: [ServiceActionComponent, TuiCell, KeyValuePipe],
 })
 export default class ServiceActionsRoute {
   private readonly actions = inject(ActionService)
   private readonly i18n = inject(i18nPipe)
+
+  ungrouped: 'General' | 'Other' = 'General'
 
   readonly service = inject(StandardActionsService)
   readonly package = toSignal(
@@ -70,25 +72,42 @@ export default class ServiceActionsRoute {
       .watch$('packageData', getPkgId())
       .pipe(
         filter(pkg => pkg.stateInfo.state === 'installed'),
-        map(pkg => ({
-          mainStatus: pkg.status.main,
-          icon: pkg.icon,
-          manifest: getManifest(pkg),
-          actions: Object.entries(pkg.actions)
-            .filter(([_, val]) => val.visibility !== 'hidden')
-            .reduce<
-              Record<string, ReadonlyArray<T.ActionMetadata & { id: string }>>
-            >(
-              (acc, [id]) => {
-                const action = { id, ...pkg.actions[id]! }
-                const group = pkg.actions[id]?.group || OTHER
-                const current = acc[group] || []
-
-                return { ...acc, [group]: current.concat(action) }
-              },
-              { [OTHER]: [] },
-            ),
-        })),
+        map(pkg => {
+          const specialGroup = Object.values(pkg.actions).some(
+            pkg => !!pkg.group,
+          )
+            ? 'Other'
+            : 'General'
+          return {
+            mainStatus: pkg.status.main,
+            icon: pkg.icon,
+            manifest: getManifest(pkg),
+            actions: Object.entries(pkg.actions)
+              .map(([id, action]) => ({
+                ...action,
+                id,
+                group: action.group || specialGroup,
+              }))
+              .sort((a, b) => {
+                if (a.group === specialGroup) return 1
+                if (b.group === specialGroup) return -1
+                return a.group.localeCompare(b.group) // Optional: sort others alphabetically
+              })
+              .reduce<
+                Record<
+                  string,
+                  Array<T.ActionMetadata & { id: string; group: string }>
+                >
+              >((acc, action) => {
+                const key = action.group
+                if (!acc[key]) {
+                  acc[key] = []
+                }
+                acc[key].push(action)
+                return acc
+              }, {}),
+          }
+        }),
       ),
   )
 
@@ -102,7 +121,7 @@ export default class ServiceActionsRoute {
   readonly uninstall = {
     name: this.i18n.transform('Uninstall')!,
     description: this.i18n.transform(
-      'Uninstalls this service from StartOS and delete all data permanently.',
+      'Uninstalls this service from StartOS and deletes all data permanently.',
     )!,
   }
 

@@ -141,11 +141,8 @@ export class MarketplaceService {
     )
   }
 
-  fetchStatic$(
-    pkg: MarketplacePkg,
-    type: 'LICENSE.md' | 'instructions.md',
-  ): Observable<string> {
-    return from(this.api.getStaticProxy(pkg, type))
+  fetchStatic$(pkg: MarketplacePkg): Observable<string> {
+    return from(this.api.getStaticProxy(pkg, 'LICENSE.md'))
   }
 
   private fetchRegistry$(url: string): Observable<StoreDataWithUrl | null> {

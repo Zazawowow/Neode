@@ -2275,7 +2275,7 @@ export namespace Mock {
         visibility: 'enabled',
         allowedStatuses: 'any',
         hasInput: true,
-        group: null,
+        group: 'Connecting',
       },
     },
     serviceInterfaces: {
