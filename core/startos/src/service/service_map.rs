@@ -22,9 +22,7 @@ use crate::disk::mount::guard::GenericMountGuard;
 use crate::install::PKG_ARCHIVE_DIR;
 use crate::notifications::{notify, NotificationLevel};
 use crate::prelude::*;
-use crate::progress::{
-    FullProgressTracker, PhaseProgressTrackerHandle, ProgressTrackerWriter, ProgressUnits,
-};
+use crate::progress::{FullProgressTracker, PhaseProgressTrackerHandle, ProgressTrackerWriter};
 use crate::registry::signer::commitment::merkle_archive::MerkleArchiveCommitment;
 use crate::s9pk::manifest::PackageId;
 use crate::s9pk::merkle_archive::source::FileSource;
@@ -89,8 +87,6 @@ impl ServiceMap {
     ) -> Result<(), Error> {
         progress.start();
         let ids = ctx.db.peek().await.as_public().as_package_data().keys()?;
-        progress.set_total(ids.len() as u64);
-        progress.set_units(Some(ProgressUnits::Steps));
         let mut jobs = FuturesUnordered::new();
         for id in &ids {
             jobs.push(self.load(ctx, id, LoadDisposition::Retry));
@@ -100,7 +96,6 @@ impl ServiceMap {
                 tracing::error!("Error loading installed package as service: {e}");
                 tracing::debug!("{e:?}");
             }
-            progress += 1;
         }
         progress.complete();
         Ok(())
@@ -341,9 +336,9 @@ impl ServiceMap {
                             .state
                             .borrow()
                             .desired_state;
-                        service.uninstall(uninit, false, false).await?;
+                        let cleanup = service.uninstall(uninit, false, false).await?;
                         progress.complete();
-                        Some(run_state)
+                        Some((run_state, cleanup))
                     } else {
                         None
                     };
@@ -352,7 +347,7 @@ impl ServiceMap {
                         s9pk,
                         &installed_path,
                         &registry,
-                        prev,
+                        prev.as_ref().map(|(s, _)| *s),
                         recovery_source,
                         Some(InstallProgressHandles {
                             finalization_progress,
@@ -361,6 +356,11 @@ impl ServiceMap {
                     )
                     .await?;
                     *service = Some(new_service.into());
+
+                    if let Some((_, cleanup)) = prev {
+                        cleanup.await?;
+                    }
+
                     drop(service);
 
                     sync_progress_task.await.map_err(|_| {
@@ -408,7 +408,7 @@ impl ServiceMap {
                             .uninstall(ExitParams::uninstall(), soft, force)
                             .await;
                         drop(guard);
-                        res
+                        res?.await
                     } else {
                         if force {
                             super::uninstall::cleanup(&ctx, &id, soft).await?;

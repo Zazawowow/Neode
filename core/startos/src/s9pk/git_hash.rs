@@ -44,6 +44,9 @@ impl GitHash {
                 .stdout,
         )
         .ok()?;
+        while hash.ends_with(|c: char| c.is_whitespace()) {
+            hash.pop();
+        }
         if !std::process::Command::new("git")
             .arg("diff-index")
             .arg("--quiet")

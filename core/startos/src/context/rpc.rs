@@ -1,7 +1,9 @@
 use std::collections::{BTreeMap, BTreeSet};
+use std::ffi::OsStr;
 use std::future::Future;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::ops::Deref;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
@@ -28,6 +30,7 @@ use crate::db::model::package::TaskSeverity;
 use crate::db::model::Database;
 use crate::disk::OsPartitionInfo;
 use crate::init::{check_time_is_synchronized, InitResult};
+use crate::install::PKG_ARCHIVE_DIR;
 use crate::lxc::{ContainerId, LxcContainer, LxcManager};
 use crate::net::net_controller::{NetController, NetService};
 use crate::net::utils::{find_eth_iface, find_wifi_iface};
@@ -40,8 +43,10 @@ use crate::service::action::update_tasks;
 use crate::service::effects::callbacks::ServiceCallbacks;
 use crate::service::ServiceMap;
 use crate::shutdown::Shutdown;
+use crate::util::io::delete_file;
 use crate::util::lshw::LshwDevice;
 use crate::util::sync::{SyncMutex, Watch};
+use crate::DATA_DIR;
 
 pub struct RpcContextSeed {
     is_closed: AtomicBool,
@@ -103,6 +108,7 @@ impl InitRpcContextPhases {
 pub struct CleanupInitPhases {
     cleanup_sessions: PhaseProgressTrackerHandle,
     init_services: PhaseProgressTrackerHandle,
+    prune_s9pks: PhaseProgressTrackerHandle,
     check_tasks: PhaseProgressTrackerHandle,
 }
 impl CleanupInitPhases {
@@ -110,6 +116,7 @@ impl CleanupInitPhases {
         Self {
             cleanup_sessions: handle.add_phase("Cleaning up sessions".into(), Some(1)),
             init_services: handle.add_phase("Initializing services".into(), Some(10)),
+            prune_s9pks: handle.add_phase("Pruning S9PKs".into(), Some(1)),
             check_tasks: handle.add_phase("Checking action requests".into(), Some(1)),
         }
     }
@@ -308,6 +315,7 @@ impl RpcContext {
         CleanupInitPhases {
             mut cleanup_sessions,
             init_services,
+            mut prune_s9pks,
             mut check_tasks,
         }: CleanupInitPhases,
     ) -> Result<(), Error> {
@@ -369,9 +377,32 @@ impl RpcContext {
         self.services.init(&self, init_services).await?;
         tracing::info!("Initialized Services");
 
-        // TODO
-        check_tasks.start();
+        prune_s9pks.start();
         let peek = self.db.peek().await;
+        let keep = peek
+            .as_public()
+            .as_package_data()
+            .as_entries()?
+            .into_iter()
+            .map(|(_, pde)| pde.as_s9pk().de())
+            .collect::<Result<BTreeSet<PathBuf>, Error>>()?;
+        let installed_dir = &Path::new(DATA_DIR).join(PKG_ARCHIVE_DIR).join("installed");
+        let mut dir = tokio::fs::read_dir(&installed_dir)
+            .await
+            .with_ctx(|_| (ErrorKind::Filesystem, lazy_format!("dir {installed_dir:?}")))?;
+        while let Some(file) = dir
+            .next_entry()
+            .await
+            .with_ctx(|_| (ErrorKind::Filesystem, lazy_format!("dir {installed_dir:?}")))?
+        {
+            let path = file.path();
+            if path.extension() == Some(OsStr::new("s9pk")) && !keep.contains(&path) {
+                delete_file(path).await?;
+            }
+        }
+        prune_s9pks.complete();
+
+        check_tasks.start();
         let mut action_input: OrdMap<PackageId, BTreeMap<ActionId, Value>> = OrdMap::new();
         let tasks: BTreeSet<_> = peek
             .as_public()

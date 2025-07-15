@@ -41,7 +41,6 @@ use crate::disk::mount::filesystem::ReadOnly;
 use crate::disk::mount::guard::{GenericMountGuard, MountGuard};
 use crate::lxc::ContainerId;
 use crate::prelude::*;
-use crate::progress::{NamedProgress, Progress};
 use crate::rpc_continuations::{Guid, RpcContinuation};
 use crate::s9pk::S9pk;
 use crate::service::action::update_tasks;
@@ -120,7 +119,12 @@ impl ServiceRef {
     pub fn weak(&self) -> Weak<Service> {
         Arc::downgrade(&self.0)
     }
-    pub async fn uninstall(self, uninit: ExitParams, soft: bool, force: bool) -> Result<(), Error> {
+    pub async fn uninstall(
+        self,
+        uninit: ExitParams,
+        soft: bool,
+        force: bool,
+    ) -> Result<BoxFuture<'static, Result<(), Error>>, Error> {
         let id = self.seed.persistent_container.s9pk.as_manifest().id.clone();
         let ctx = self.seed.ctx.clone();
         let uninit_res = self.shutdown(Some(uninit.clone())).await;
@@ -130,22 +134,26 @@ impl ServiceRef {
             uninit_res?;
         }
 
-        if let Some(s9pk_path) = ctx
+        let s9pk_path = ctx
             .db
             .peek()
             .await
-            .as_public()
-            .as_package_data()
-            .as_idx(&id)
-            .map(|pde| pde.as_s9pk())
-        {
-            delete_file(s9pk_path.de()?).await?;
-        }
+            .into_public()
+            .into_package_data()
+            .into_idx(&id)
+            .map(|pde| pde.into_s9pk());
 
-        if uninit.is_uninstall() {
-            uninstall::cleanup(&ctx, &id, soft).await?;
+        Ok(async move {
+            if let Some(s9pk_path) = s9pk_path {
+                delete_file(s9pk_path.de()?).await?;
+            }
+
+            if uninit.is_uninstall() {
+                uninstall::cleanup(&ctx, &id, soft).await?;
+            }
+            Ok(())
         }
-        Ok(())
+        .boxed())
     }
     pub async fn shutdown(self, uninit: Option<ExitParams>) -> Result<(), Error> {
         if let Some((hdl, shutdown)) = self.seed.persistent_container.rpc_server.send_replace(None)
@@ -331,19 +339,11 @@ impl Service {
                 Ok(None)
             }
             PackageStateMatchModelRef::Updating(s) => {
+                let new_s9pk = s.as_s9pk().de()?;
                 if disposition == LoadDisposition::Retry
-                    && s.as_installing_info()
-                        .as_progress()
-                        .de()?
-                        .phases
-                        .iter()
-                        .any(|NamedProgress { name, progress }| {
-                            name.eq_ignore_ascii_case("download")
-                                && progress == &Progress::Complete(true)
-                        })
+                    && tokio::fs::metadata(&new_s9pk).await.is_ok()
                 {
-                    let s9pk_path = s.as_s9pk().de()?;
-                    if let Ok(s9pk) = S9pk::open(&s9pk_path, Some(id)).await.map_err(|e| {
+                    if let Ok(s9pk) = S9pk::open(&new_s9pk, Some(id)).await.map_err(|e| {
                         tracing::error!("Error opening s9pk for update: {e}");
                         tracing::debug!("{e:?}")
                     }) {
@@ -429,9 +429,13 @@ impl Service {
                     )
                     .await
                     {
-                        Ok(service) => match service
-                            .uninstall(ExitParams::uninstall(), false, false)
-                            .await
+                        Ok(service) => match async {
+                            service
+                                .uninstall(ExitParams::uninstall(), false, false)
+                                .await?
+                                .await
+                        }
+                        .await
                         {
                             Err(e) => {
                                 tracing::error!("Error uninstalling service: {e}");

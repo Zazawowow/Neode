@@ -971,14 +971,28 @@ pub struct Base32<T>(pub T);
 impl<T: AsRef<[u8]>> Base32<T> {
     pub fn to_lower_string(&self) -> String {
         base32::encode(
-            base32::Alphabet::Rfc4648Lower { padding: true },
+            base32::Alphabet::Rfc4648Lower { padding: false },
             self.0.as_ref(),
         )
     }
 }
 impl<T: AsRef<[u8]>> std::fmt::Display for Base32<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        base32::encode(base32::Alphabet::Rfc4648 { padding: true }, self.0.as_ref()).fmt(f)
+        base32::encode(
+            base32::Alphabet::Rfc4648 { padding: false },
+            self.0.as_ref(),
+        )
+        .fmt(f)
+    }
+}
+impl<T: TryFrom<Vec<u8>>> FromStr for Base32<T> {
+    type Err = color_eyre::eyre::Report;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        base32::decode(base32::Alphabet::Rfc4648 { padding: false }, &s)
+            .ok_or_else(|| eyre!("{s} is not a valid base32 string"))?
+            .try_into()
+            .map_err(|_| eyre!("base32 string is an invalid length"))
+            .map(Self)
     }
 }
 impl<'de, T: TryFrom<Vec<u8>>> Deserialize<'de> for Base32<T> {
@@ -986,17 +1000,7 @@ impl<'de, T: TryFrom<Vec<u8>>> Deserialize<'de> for Base32<T> {
     where
         D: Deserializer<'de>,
     {
-        let s = String::deserialize(deserializer)?;
-        base32::decode(base32::Alphabet::Rfc4648 { padding: true }, &s)
-            .ok_or_else(|| {
-                serde::de::Error::invalid_value(
-                    serde::de::Unexpected::Str(&s),
-                    &"a valid base32 string",
-                )
-            })?
-            .try_into()
-            .map_err(|_| serde::de::Error::custom("invalid length"))
-            .map(Self)
+        deserialize_from_str(deserializer)
     }
 }
 impl<T: AsRef<[u8]>> Serialize for Base32<T> {
@@ -1008,10 +1012,7 @@ impl<T: AsRef<[u8]>> Serialize for Base32<T> {
     }
 }
 
-pub const BASE64: base64::engine::GeneralPurpose = base64::engine::GeneralPurpose::new(
-    &base64::alphabet::STANDARD,
-    base64::engine::GeneralPurposeConfig::new(),
-);
+pub const BASE64: base64::engine::GeneralPurpose = base64::engine::general_purpose::STANDARD_NO_PAD;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, TS)]
 #[ts(type = "string", concrete(T = Vec<u8>))]
