@@ -74,7 +74,7 @@ export class LogsPipe implements PipeTransform {
               this.logs.status$.next(v ? 'reconnecting' : 'disconnected'),
             ),
             filter(Boolean),
-            delay(1000),
+            delay(1000), // @TODO Alex why delay here?
             take(1),
             ignoreElements(),
           ),

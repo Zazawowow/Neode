@@ -3,11 +3,11 @@ import {
   bufferTime,
   catchError,
   defer,
-  EMPTY,
+  delay,
   filter,
-  from,
   map,
   Observable,
+  repeatWhen,
   scan,
   switchMap,
   timer,
@@ -38,6 +38,7 @@ export class SetupLogsService extends Observable<readonly string[]> {
     filter(logs => !!logs.length),
     map(convertAnsi),
     scan((logs: readonly string[], log) => [...logs, log], []),
+    repeatWhen(obs => obs.pipe(delay(2000))),
     catchError((_, watch$) => timer(2000).pipe(switchMap(() => watch$))),
   )
 
