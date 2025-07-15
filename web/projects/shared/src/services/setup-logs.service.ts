@@ -1,12 +1,16 @@
 import { StaticClassProvider } from '@angular/core'
 import {
   bufferTime,
+  catchError,
   defer,
+  EMPTY,
   filter,
+  from,
   map,
   Observable,
   scan,
   switchMap,
+  timer,
 } from 'rxjs'
 import { FollowLogsReq, FollowLogsRes, Log } from '../types/api'
 import { Constructor } from '../types/constructor'
@@ -34,6 +38,7 @@ export class SetupLogsService extends Observable<readonly string[]> {
     filter(logs => !!logs.length),
     map(convertAnsi),
     scan((logs: readonly string[], log) => [...logs, log], []),
+    catchError((_, watch$) => timer(2000).pipe(switchMap(() => watch$))),
   )
 
   constructor(private readonly api: Api) {

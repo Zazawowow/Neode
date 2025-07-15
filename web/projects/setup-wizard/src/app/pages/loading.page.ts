@@ -16,8 +16,8 @@ import {
   map,
   startWith,
   switchMap,
-  take,
   tap,
+  timer,
 } from 'rxjs'
 import { ApiService } from 'src/app/services/api.service'
 import { StateService } from 'src/app/services/state.service'
@@ -42,18 +42,9 @@ export default class LoadingPage {
   readonly progress = toSignal(
     from(this.getStatus()).pipe(
       filter(Boolean),
-      take(1),
       switchMap(({ guid, progress }) =>
         this.api.openWebsocket$<T.FullProgress>(guid).pipe(
           startWith(progress),
-          catchError((_, watch$) =>
-            interval(2000).pipe(
-              switchMap(() => from(this.api.getStatus())),
-              catchError(() => EMPTY),
-              take(1),
-              switchMap(() => watch$),
-            ),
-          ),
           tap(({ overall }) => {
             if (overall === true) {
               this.getStatus()
@@ -62,10 +53,7 @@ export default class LoadingPage {
         ),
       ),
       map(formatProgress),
-      catchError(e => {
-        this.errorService.handleError(e)
-        return EMPTY
-      }),
+      catchError((_, caught$) => timer(2000).pipe(switchMap(() => caught$))),
     ),
     { initialValue: { total: 0, message: '' } },
   )
@@ -75,16 +63,21 @@ export default class LoadingPage {
     guid: string
     progress: T.FullProgress
   } | null> {
-    const res = await this.api.getStatus()
+    try {
+      const res = await this.api.getStatus()
 
-    if (!res) {
-      this.router.navigate(['home'])
-      return null
-    } else if (res.status === 'complete') {
-      this.router.navigate(['success'])
-      return null
-    } else {
-      return res
+      if (!res) {
+        this.router.navigate(['home'])
+        return null
+      } else if (res.status === 'complete') {
+        this.router.navigate(['success'])
+        return null
+      } else {
+        return res
+      }
+    } catch (e: any) {
+      this.errorService.handleError(e)
+      throw e
     }
   }
 }
