@@ -35,7 +35,7 @@ export class CommandController<
           const abort = new AbortController()
           const cell: { ctrl: CommandController<Manifest, C> } = {
             ctrl: new CommandController<Manifest, C>(
-              exec.fn(subcontainer, abort).then(async (command) => {
+              exec.fn(subcontainer, abort.signal).then(async (command) => {
                 if (subcontainer && command && !abort.signal.aborted) {
                   const newCtrl = (
                     await CommandController.of<

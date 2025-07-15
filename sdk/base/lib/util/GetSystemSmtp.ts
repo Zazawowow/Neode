@@ -1,5 +1,6 @@
 import { Effects } from "../Effects"
 import * as T from "../types"
+import { DropGenerator, DropPromise } from "./Drop"
 
 export class GetSystemSmtp {
   constructor(readonly effects: Effects) {}
@@ -21,15 +22,13 @@ export class GetSystemSmtp {
     return this.effects.getSystemSmtp({})
   }
 
-  /**
-   * Watches the system SMTP credentials. Returns an async iterator that yields whenever the value changes
-   */
-  async *watch() {
+  private async *watchGen(abort?: AbortSignal) {
     const resolveCell = { resolve: () => {} }
     this.effects.onLeaveContext(() => {
       resolveCell.resolve()
     })
-    while (this.effects.isInContext) {
+    abort?.addEventListener("abort", () => resolveCell.resolve())
+    while (this.effects.isInContext && !abort?.aborted) {
       let callback: () => void = () => {}
       const waitForNext = new Promise<void>((resolve) => {
         callback = resolve
@@ -43,18 +42,34 @@ export class GetSystemSmtp {
   }
 
   /**
+   * Watches the system SMTP credentials. Returns an async iterator that yields whenever the value changes
+   */
+  watch(
+    abort?: AbortSignal,
+  ): AsyncGenerator<T.SmtpValue | null, void, unknown> {
+    const ctrl = new AbortController()
+    abort?.addEventListener("abort", () => ctrl.abort())
+    return DropGenerator.of(this.watchGen(ctrl.signal), () => ctrl.abort())
+  }
+
+  /**
    * Watches the system SMTP credentials. Takes a custom callback function to run whenever the credentials change
    */
   onChange(
     callback: (
       value: T.SmtpValue | null,
       error?: Error,
-    ) => void | Promise<void>,
+    ) => { cancel: boolean } | Promise<{ cancel: boolean }>,
   ) {
     ;(async () => {
-      for await (const value of this.watch()) {
+      const ctrl = new AbortController()
+      for await (const value of this.watch(ctrl.signal)) {
         try {
-          await callback(value)
+          const res = await callback(value)
+          if (res.cancel) {
+            ctrl.abort()
+            break
+          }
         } catch (e) {
           console.error(
             "callback function threw an error @ GetSystemSmtp.onChange",
@@ -75,26 +90,20 @@ export class GetSystemSmtp {
   /**
    * Watches the system SMTP credentials. Returns when the predicate is true
    */
-  async waitFor(pred: (value: T.SmtpValue | null) => boolean) {
-    const resolveCell = { resolve: () => {} }
-    this.effects.onLeaveContext(() => {
-      resolveCell.resolve()
-    })
-    while (this.effects.isInContext) {
-      let callback: () => void = () => {}
-      const waitForNext = new Promise<void>((resolve) => {
-        callback = resolve
-        resolveCell.resolve = resolve
-      })
-      const res = await this.effects.getSystemSmtp({
-        callback: () => callback(),
-      })
-      if (pred(res)) {
-        resolveCell.resolve()
-        return res
-      }
-      await waitForNext
-    }
-    return null
+  waitFor(
+    pred: (value: T.SmtpValue | null) => boolean,
+  ): Promise<T.SmtpValue | null> {
+    const ctrl = new AbortController()
+    return DropPromise.of(
+      Promise.resolve().then(async () => {
+        for await (const next of this.watchGen(ctrl.signal)) {
+          if (pred(next)) {
+            return next
+          }
+        }
+        return null
+      }),
+      () => ctrl.abort(),
+    )
   }
 }

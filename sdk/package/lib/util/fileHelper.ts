@@ -4,9 +4,37 @@ import * as TOML from "@iarna/toml"
 import * as INI from "ini"
 import * as T from "../../../base/lib/types"
 import * as fs from "node:fs/promises"
-import { asError, partialDiff } from "../../../base/lib/util"
+import { asError } from "../../../base/lib/util"
+import { DropGenerator, DropPromise } from "../../../base/lib/util/Drop"
 
 const previousPath = /(.+?)\/([^/]*)$/
+
+const deepEq = (left: unknown, right: unknown) => {
+  if (left === right) return true
+  if (Array.isArray(left) && Array.isArray(right)) {
+    if (left.length === right.length) {
+      for (const idx in left) {
+        if (!deepEq(left[idx], right[idx])) return false
+      }
+      return true
+    }
+  } else if (
+    typeof left === "object" &&
+    typeof right === "object" &&
+    left &&
+    right
+  ) {
+    const keys = new Set<keyof typeof left | keyof typeof right>([
+      ...(Object.keys(left) as (keyof typeof left)[]),
+      ...(Object.keys(right) as (keyof typeof right)[]),
+    ])
+    for (let key of keys) {
+      if (!deepEq(left[key], right[key])) return false
+    }
+    return true
+  }
+  return false
+}
 
 const exists = (path: string) =>
   fs.access(path).then(
@@ -99,10 +127,16 @@ type Validator<T, U> = matches.Validator<T, U> | matches.Validator<unknown, U>
 type ReadType<A> = {
   once: () => Promise<A | null>
   const: (effects: T.Effects) => Promise<A | null>
-  watch: (effects: T.Effects) => AsyncGenerator<A | null, null, unknown>
+  watch: (
+    effects: T.Effects,
+    abort?: AbortSignal,
+  ) => AsyncGenerator<A | null, null, unknown>
   onChange: (
     effects: T.Effects,
-    callback: (value: A | null, error?: Error) => void | Promise<void>,
+    callback: (
+      value: A | null,
+      error?: Error,
+    ) => { cancel: boolean } | Promise<{ cancel: boolean }>,
   ) => void
   waitFor: (
     effects: T.Effects,
@@ -151,7 +185,12 @@ type ReadType<A> = {
  * ```
  */
 export class FileHelper<A> {
-  private consts: (() => void)[] = []
+  private consts: [
+    () => void,
+    any,
+    (a: any) => any,
+    (left: any, right: any) => any,
+  ][] = []
   protected constructor(
     readonly path: string,
     readonly writeData: (dataIn: A) => string,
@@ -209,10 +248,15 @@ export class FileHelper<A> {
     const watch = this.readWatch(effects, map, eq)
     const res = await watch.next()
     if (effects.constRetry) {
-      if (!this.consts.includes(effects.constRetry))
-        this.consts.push(effects.constRetry)
+      const record: (typeof this.consts)[number] = [
+        effects.constRetry,
+        res.value,
+        map,
+        eq,
+      ]
+      this.consts.push(record)
       watch.next().then(() => {
-        this.consts = this.consts.filter((a) => a === effects.constRetry)
+        this.consts = this.consts.filter((r) => r !== record)
         effects.constRetry && effects.constRetry()
       })
     }
@@ -223,11 +267,13 @@ export class FileHelper<A> {
     effects: T.Effects,
     map: (value: A) => B,
     eq: (left: B | null | undefined, right: B | null) => boolean,
+    abort?: AbortSignal,
   ) {
     let res
-    while (effects.isInContext) {
+    while (effects.isInContext && !abort?.aborted) {
       if (await exists(this.path)) {
         const ctrl = new AbortController()
+        abort?.addEventListener("abort", () => ctrl.abort())
         const watch = fs.watch(this.path, {
           persistent: false,
           signal: ctrl.signal,
@@ -254,14 +300,19 @@ export class FileHelper<A> {
 
   private readOnChange<B>(
     effects: T.Effects,
-    callback: (value: B | null, error?: Error) => void | Promise<void>,
+    callback: (
+      value: B | null,
+      error?: Error,
+    ) => { cancel: boolean } | Promise<{ cancel: boolean }>,
     map: (value: A) => B,
     eq: (left: B | null | undefined, right: B | null) => boolean,
   ) {
     ;(async () => {
-      for await (const value of this.readWatch(effects, map, eq)) {
+      const ctrl = new AbortController()
+      for await (const value of this.readWatch(effects, map, eq, ctrl.signal)) {
         try {
-          await callback(value)
+          const res = await callback(value)
+          if (res.cancel) ctrl.abort()
         } catch (e) {
           console.error(
             "callback function threw an error @ FileHelper.read.onChange",
@@ -279,38 +330,36 @@ export class FileHelper<A> {
       )
   }
 
-  private async readWaitFor<B>(
+  private readWaitFor<B>(
     effects: T.Effects,
     pred: (value: B | null, error?: Error) => boolean,
     map: (value: A) => B,
   ): Promise<B | null> {
-    while (effects.isInContext) {
-      if (await exists(this.path)) {
-        const ctrl = new AbortController()
-        const watch = fs.watch(this.path, {
-          persistent: false,
-          signal: ctrl.signal,
-        })
-        const newRes = await this.readOnce(map)
-        const listen = Promise.resolve()
-          .then(async () => {
-            for await (const _ of watch) {
+    const ctrl = new AbortController()
+    return DropPromise.of(
+      Promise.resolve().then(async () => {
+        const watch = this.readWatch(effects, map, (_) => false, ctrl.signal)
+        while (true) {
+          try {
+            const res = await watch.next()
+            if (pred(res.value)) {
               ctrl.abort()
-              return null
+              return res.value
             }
-          })
-          .catch((e) => console.error(asError(e)))
-        if (pred(newRes)) {
-          ctrl.abort()
-          return newRes
+            if (res.done) {
+              break
+            }
+          } catch (e) {
+            if (pred(null, e as Error)) {
+              break
+            }
+          }
         }
-        await listen
-      } else {
-        if (pred(null)) return null
-        await onCreated(this.path).catch((e) => console.error(asError(e)))
-      }
-    }
-    return null
+        ctrl.abort()
+        return null
+      }),
+      () => ctrl.abort(),
+    )
   }
 
   read(): ReadType<A>
@@ -323,14 +372,24 @@ export class FileHelper<A> {
     eq?: (left: any, right: any) => boolean,
   ): ReadType<any> {
     map = map ?? ((a: A) => a)
-    eq = eq ?? ((left: any, right: any) => !partialDiff(left, right))
+    eq = eq ?? deepEq
     return {
       once: () => this.readOnce(map),
       const: (effects: T.Effects) => this.readConst(effects, map, eq),
-      watch: (effects: T.Effects) => this.readWatch(effects, map, eq),
+      watch: (effects: T.Effects, abort?: AbortSignal) => {
+        const ctrl = new AbortController()
+        abort?.addEventListener("abort", () => ctrl.abort())
+        return DropGenerator.of(
+          this.readWatch(effects, map, eq, ctrl.signal),
+          () => ctrl.abort(),
+        )
+      },
       onChange: (
         effects: T.Effects,
-        callback: (value: A | null, error?: Error) => void | Promise<void>,
+        callback: (
+          value: A | null,
+          error?: Error,
+        ) => { cancel: boolean } | Promise<{ cancel: boolean }>,
       ) => this.readOnChange(effects, callback, map, eq),
       waitFor: (effects: T.Effects, pred: (value: A | null) => boolean) =>
         this.readWaitFor(effects, pred, map),
@@ -345,13 +404,17 @@ export class FileHelper<A> {
     data: T.AllowReadonly<A> | A,
     options: { allowWriteAfterConst?: boolean } = {},
   ) {
-    await this.writeFile(this.validate(data))
-    if (
-      !options.allowWriteAfterConst &&
-      effects.constRetry &&
-      this.consts.includes(effects.constRetry)
-    )
-      throw new Error(`Canceled: write after const: ${this.path}`)
+    const newData = this.validate(data)
+    await this.writeFile(newData)
+    if (!options.allowWriteAfterConst && effects.constRetry) {
+      const records = this.consts.filter(([c]) => c === effects.constRetry)
+      for (const record of records) {
+        const [_, prev, map, eq] = record
+        if (!eq(prev, map(newData))) {
+          throw new Error(`Canceled: write after const: ${this.path}`)
+        }
+      }
+    }
     return null
   }
 
@@ -372,16 +435,14 @@ export class FileHelper<A> {
     const toWrite = this.writeData(mergeData)
     if (toWrite !== fileDataRaw) {
       this.writeFile(mergeData)
-      if (
-        !options.allowWriteAfterConst &&
-        effects.constRetry &&
-        this.consts.includes(effects.constRetry)
-      ) {
-        const diff = partialDiff(fileData, mergeData as any)
-        if (!diff) {
-          return null
+      if (!options.allowWriteAfterConst && effects.constRetry) {
+        const records = this.consts.filter(([c]) => c === effects.constRetry)
+        for (const record of records) {
+          const [_, prev, map, eq] = record
+          if (!eq(prev, map(mergeData))) {
+            throw new Error(`Canceled: write after const: ${this.path}`)
+          }
         }
-        throw new Error(`Canceled: write after const: ${this.path}`)
       }
     }
     return null
