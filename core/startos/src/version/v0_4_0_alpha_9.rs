@@ -81,6 +81,12 @@ impl VersionT for Version {
             );
         }
 
+        db.get_mut("public")
+            .and_then(|p| p.get_mut("ui"))
+            .and_then(|u| u.as_object_mut())
+            .or_not_found("`public.ui` in db")?
+            .remove("ackInstructions");
+
         Ok(Value::Object(res))
     }
     async fn post_up(self, _ctx: &RpcContext, input: Value) -> Result<(), Error> {

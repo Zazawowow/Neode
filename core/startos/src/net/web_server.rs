@@ -209,7 +209,6 @@ impl<A: Accept + Send + Sync + 'static> WebServer<A> {
                 }
             }
 
-            let accept = AtomicBool::new(true);
             let queue_cell = Arc::new(RwLock::new(None));
             let graceful = hyper_util::server::graceful::GracefulShutdown::new();
             let mut server = hyper_util::server::conn::auto::Builder::new(QueueRunner {
@@ -260,7 +259,6 @@ impl<A: Accept + Send + Sync + 'static> WebServer<A> {
                 _ = &mut runner => (),
             }
 
-            accept.store(false, std::sync::atomic::Ordering::SeqCst);
             drop(queue);
             drop(queue_cell.write().unwrap().take());
 

@@ -410,6 +410,7 @@ async fn watcher(
         if let Err(e) = res {
             tracing::error!("{e}");
             tracing::debug!("{e:?}");
+            tokio::time::sleep(Duration::from_secs(1)).await;
         }
     }
 }
