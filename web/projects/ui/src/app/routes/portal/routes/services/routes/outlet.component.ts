@@ -33,13 +33,15 @@ const INACTIVE: PrimaryStatus[] = [
     @if (service()) {
       <div *title class="title">
         <a routerLink=".." tuiIconButton iconStart="@tui.arrow-left">Back</a>
-        <tui-avatar size="xs" [style.margin-inline-end.rem]="0.75">
-          <img alt="" [src]="service()?.icon" />
-        </tui-avatar>
-        <span tuiFade>{{ manifest()?.title }}</span>
+        <div routerLink="./" class="m-header">
+          <tui-avatar size="xs" [style.margin-inline-end.rem]="0.75">
+            <img alt="" [src]="service()?.icon" />
+          </tui-avatar>
+          <span tuiFade>{{ manifest()?.title }}</span>
+        </div>
       </div>
       <aside class="g-aside">
-        <header tuiCell>
+        <header tuiCell routerLink="./">
           <tui-avatar><img alt="" [src]="service()?.icon" /></tui-avatar>
           <span tuiTitle>
             <strong tuiFade>{{ manifest()?.title }}</strong>
@@ -88,6 +90,7 @@ const INACTIVE: PrimaryStatus[] = [
 
     header {
       margin: 0 -0.5rem;
+      cursor: pointer;
     }
 
     nav[inert] a:not(:first-child) {
@@ -105,6 +108,11 @@ const INACTIVE: PrimaryStatus[] = [
       [tuiTitle] {
         font-weight: bold;
       }
+    }
+
+    .m-header {
+      cursor: pointer;
+      display: flex;
     }
 
     :host-context(tui-root._mobile) {

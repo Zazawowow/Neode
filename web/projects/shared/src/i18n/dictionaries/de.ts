@@ -482,7 +482,7 @@ export default {
   484: 'Laden Sie die Seite neu. Wenn das nicht funktioniert, beenden Sie Ihren Browser und öffnen Sie ihn erneut, um diese Seite erneut zu besuchen.',
   485: 'StartOS-Benutzeroberfläche',
   486: 'WiFi',
-  487: 'Dokumentation', // @TODO matt
+  487: 'Dokumentation',
   488: 'spanisch',
   489: 'polnisch',
   490: 'deutsch',

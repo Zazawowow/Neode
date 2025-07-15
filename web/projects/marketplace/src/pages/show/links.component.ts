@@ -42,9 +42,8 @@ import { MarketplaceLinkComponent } from './link.component'
             icon="@tui.external-link"
             class="item-pointer"
           />
-          <!-- @TODO matt use docsLink when available -->
           <marketplace-link
-            [url]="pkg().supportSite"
+            [url]="pkg().docsUrl"
             label="Documentation"
             icon="@tui.external-link"
             class="item-pointer"

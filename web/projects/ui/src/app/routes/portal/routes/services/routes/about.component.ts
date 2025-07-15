@@ -130,8 +130,7 @@ export default class ServiceAboutRoute {
                 },
                 {
                   name: 'Documentation',
-                  // @TODO matt use docsUrl when available
-                  value: manifest.supportSite || NOT_PROVIDED,
+                  value: manifest.docsUrl || NOT_PROVIDED,
                 },
                 {
                   name: 'Support',
