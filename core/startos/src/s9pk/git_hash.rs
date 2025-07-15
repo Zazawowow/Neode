@@ -21,6 +21,9 @@ impl GitHash {
                 .invoke(ErrorKind::Git)
                 .await?,
         )?;
+        while hash.ends_with(|c: char| c.is_whitespace()) {
+            hash.pop();
+        }
         if Command::new("git")
             .arg("diff-index")
             .arg("--quiet")

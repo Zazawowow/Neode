@@ -21,9 +21,11 @@ export type PackageVersionInfo = {
   supportSite: string
   marketingSite: string
   donationUrl: string | null
+  docsUrl: string | null
   alerts: Alerts
   dependencyMetadata: { [key: PackageId]: DependencyMetadata }
   osVersion: string
+  sdkVersion: string | null
   hardwareRequirements: HardwareRequirements
   sourceVersion: string | null
   s9pk: RegistryAsset<MerkleArchiveCommitment>

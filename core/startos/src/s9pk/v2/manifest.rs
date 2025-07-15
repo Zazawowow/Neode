@@ -62,8 +62,6 @@ pub struct Manifest {
     pub dependencies: Dependencies,
     #[serde(default)]
     pub hardware_requirements: HardwareRequirements,
-    #[ts(optional)]
-    #[serde(default = "GitHash::load_sync")]
     pub git_hash: Option<GitHash>,
     #[serde(default = "current_version")]
     #[ts(type = "string")]

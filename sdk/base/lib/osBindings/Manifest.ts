@@ -31,7 +31,7 @@ export type Manifest = {
   alerts: Alerts
   dependencies: Dependencies
   hardwareRequirements: HardwareRequirements
-  gitHash?: GitHash
+  gitHash: GitHash | null
   osVersion: string
   sdkVersion: string | null
 }

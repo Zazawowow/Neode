@@ -43,7 +43,7 @@ import { MarketplaceLinkComponent } from './link.component'
             class="item-pointer"
           />
           <marketplace-link
-            [url]="pkg().docsUrl"
+            [url]="pkg().docsUrl || pkg().supportSite"
             label="Documentation"
             icon="@tui.external-link"
             class="item-pointer"

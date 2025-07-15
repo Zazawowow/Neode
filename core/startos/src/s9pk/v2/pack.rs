@@ -18,6 +18,7 @@ use crate::context::CliContext;
 use crate::dependencies::DependencyMetadata;
 use crate::prelude::*;
 use crate::rpc_continuations::Guid;
+use crate::s9pk::git_hash::GitHash;
 use crate::s9pk::manifest::Manifest;
 use crate::s9pk::merkle_archive::directory_contents::DirectoryContents;
 use crate::s9pk::merkle_archive::source::http::HttpSource;
@@ -686,6 +687,8 @@ pub async fn pack(ctx: CliContext, params: PackParams) -> Result<(), Error> {
         None,
     )
     .await?;
+
+    s9pk.as_manifest_mut().git_hash = Some(GitHash::from_path(params.path()).await?);
 
     if !params.no_assets {
         let assets_dir = params.assets();

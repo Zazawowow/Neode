@@ -93,9 +93,10 @@ struct RootCommand(pub String);
 pub struct MiB(pub u64);
 
 impl MiB {
-    fn new(value: u64) -> Self {
+    pub fn new(value: u64) -> Self {
         Self(value / 1024 / 1024)
     }
+    #[allow(non_snake_case)]
     fn from_MiB(value: u64) -> Self {
         Self(value)
     }

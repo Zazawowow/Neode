@@ -32,7 +32,7 @@ export class SystemForStartOs implements System {
     target: ExtendedVersion | VersionRange | null,
     timeoutMs: number | null = null,
   ): Promise<void> {
-    // TODO: stop?
+    await this.stop()
     return void (await this.abi.uninit({ effects, target }))
   }
 

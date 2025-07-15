@@ -84,10 +84,14 @@ pub struct PackageVersionInfo {
     pub marketing_site: Url,
     #[ts(type = "string | null")]
     pub donation_url: Option<Url>,
+    #[ts(type = "string | null")]
+    pub docs_url: Option<Url>,
     pub alerts: Alerts,
     pub dependency_metadata: BTreeMap<PackageId, DependencyMetadata>,
     #[ts(type = "string")]
     pub os_version: Version,
+    #[ts(type = "string | null")]
+    pub sdk_version: Option<Version>,
     pub hardware_requirements: HardwareRequirements,
     #[ts(type = "string | null")]
     pub source_version: Option<VersionRange>,
@@ -121,9 +125,11 @@ impl PackageVersionInfo {
             support_site: manifest.support_site.clone(),
             marketing_site: manifest.marketing_site.clone(),
             donation_url: manifest.donation_url.clone(),
+            docs_url: manifest.docs_url.clone(),
             alerts: manifest.alerts.clone(),
             dependency_metadata,
             os_version: manifest.os_version.clone(),
+            sdk_version: manifest.sdk_version.clone(),
             hardware_requirements: manifest.hardware_requirements.clone(),
             source_version: None, // TODO
             s9pk: RegistryAsset {
