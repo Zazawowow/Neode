@@ -421,7 +421,7 @@ async fn get_wan_ipv4(iface: &str) -> Result<Option<Ipv4Addr>, Error> {
     let client = client.interface(iface);
     Ok(client
         .build()?
-        .get("http://ip4only.me/api/")
+        .get("https://ip4only.me/api/")
         .timeout(Duration::from_secs(10))
         .send()
         .await?

@@ -1012,7 +1012,13 @@ impl<T: AsRef<[u8]>> Serialize for Base32<T> {
     }
 }
 
-pub const BASE64: base64::engine::GeneralPurpose = base64::engine::general_purpose::STANDARD_NO_PAD;
+pub const BASE64: base64::engine::GeneralPurpose =
+    base64::engine::general_purpose::GeneralPurpose::new(
+        &base64::alphabet::STANDARD,
+        base64::engine::GeneralPurposeConfig::new()
+            .with_encode_padding(false)
+            .with_decode_padding_mode(base64::engine::DecodePaddingMode::Indifferent),
+    );
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, TS)]
 #[ts(type = "string", concrete(T = Vec<u8>))]

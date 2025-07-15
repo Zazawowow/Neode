@@ -398,6 +398,10 @@ pub async fn init(
         .arg("systemd-journald")
         .invoke(crate::ErrorKind::Journald)
         .await?;
+    Command::new("killall")
+        .arg("journalctl")
+        .invoke(crate::ErrorKind::Journald)
+        .await?;
     mount_logs.complete();
     tokio::io::copy(
         &mut open_file("/run/startos/init.log").await?,
