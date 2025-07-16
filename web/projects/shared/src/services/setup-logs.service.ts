@@ -38,8 +38,8 @@ export class SetupLogsService extends Observable<readonly string[]> {
     filter(logs => !!logs.length),
     map(convertAnsi),
     scan((logs: readonly string[], log) => [...logs, log], []),
-    repeatWhen(obs => obs.pipe(delay(2000))),
-    catchError((_, watch$) => timer(2000).pipe(switchMap(() => watch$))),
+    repeatWhen(obs => obs.pipe(delay(500))),
+    catchError((_, watch$) => timer(500).pipe(switchMap(() => watch$))),
   )
 
   constructor(private readonly api: Api) {

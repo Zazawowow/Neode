@@ -52,7 +52,7 @@ export default class InitializingPage {
       }),
       catchError((_, caught$) => {
         this.state.retrigger(true)
-        return timer(2000).pipe(switchMap(() => caught$))
+        return timer(500).pipe(switchMap(() => caught$))
       }),
     ),
     { initialValue: { total: 0, message: 'waiting...' } },

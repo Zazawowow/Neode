@@ -53,7 +53,7 @@ export default class LoadingPage {
         ),
       ),
       map(formatProgress),
-      catchError((_, caught$) => timer(2000).pipe(switchMap(() => caught$))),
+      catchError((_, caught$) => timer(500).pipe(switchMap(() => caught$))),
     ),
     { initialValue: { total: 0, message: '' } },
   )

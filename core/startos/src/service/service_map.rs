@@ -10,7 +10,7 @@ use futures::{Future, FutureExt, StreamExt, TryFutureExt};
 use helpers::NonDetachingJoinHandle;
 use imbl::OrdMap;
 use models::ErrorData;
-use tokio::sync::{oneshot, Mutex, OwnedRwLockReadGuard, OwnedRwLockWriteGuard, RwLock};
+use tokio::sync::{oneshot, OwnedRwLockReadGuard, OwnedRwLockWriteGuard, RwLock};
 use tracing::instrument;
 use url::Url;
 
@@ -32,6 +32,7 @@ use crate::service::start_stop::StartStop;
 use crate::service::{LoadDisposition, Service, ServiceRef};
 use crate::status::MainStatus;
 use crate::util::serde::{Base32, Pem};
+use crate::util::sync::SyncMutex;
 use crate::DATA_DIR;
 
 pub type DownloadInstallFuture = BoxFuture<'static, Result<InstallFuture, Error>>;
@@ -60,13 +61,18 @@ fn s9pk_installed_path(commitment: &MerkleArchiveCommitment) -> PathBuf {
 
 /// This is the structure to contain all the services
 #[derive(Default)]
-pub struct ServiceMap(Mutex<OrdMap<PackageId, Arc<RwLock<Option<ServiceRef>>>>>);
+pub struct ServiceMap(SyncMutex<OrdMap<PackageId, Arc<RwLock<Option<ServiceRef>>>>>);
 impl ServiceMap {
     async fn entry(&self, id: &PackageId) -> Arc<RwLock<Option<ServiceRef>>> {
         let mut lock = self.0.lock().await;
         lock.entry(id.clone())
             .or_insert_with(|| Arc::new(RwLock::new(None)))
             .clone()
+    }
+
+    #[instrument(skip_all)]
+    pub async fn try_get(&self, id: &PackageId) -> OwnedRwLockReadGuard<Option<ServiceRef>> {
+        self.entry(id).await.try_read_owned().await.ok
     }
 
     #[instrument(skip_all)]
@@ -80,12 +86,7 @@ impl ServiceMap {
     }
 
     #[instrument(skip_all)]
-    pub async fn init(
-        &self,
-        ctx: &RpcContext,
-        mut progress: PhaseProgressTrackerHandle,
-    ) -> Result<(), Error> {
-        progress.start();
+    pub async fn init(&self, ctx: &RpcContext) -> Result<(), Error> {
         let ids = ctx.db.peek().await.as_public().as_package_data().keys()?;
         let mut jobs = FuturesUnordered::new();
         for id in &ids {
@@ -97,7 +98,6 @@ impl ServiceMap {
                 tracing::debug!("{e:?}");
             }
         }
-        progress.complete();
         Ok(())
     }
 

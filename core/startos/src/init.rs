@@ -336,7 +336,6 @@ pub async fn init(
     let db = TypedPatchDb::<Database>::load_unchecked(db);
     let peek = db.peek().await;
     load_database.complete();
-    tracing::info!("Opened PatchDB");
 
     load_ssh_keys.start();
     crate::ssh::sync_keys(
@@ -347,7 +346,6 @@ pub async fn init(
     )
     .await?;
     load_ssh_keys.complete();
-    tracing::info!("Synced SSH Keys");
 
     let account = AccountInfo::load(&peek)?;
 
@@ -408,7 +406,6 @@ pub async fn init(
         &mut tokio::io::stderr(),
     )
     .await?;
-    tracing::info!("Mounted Logs");
 
     load_ca_cert.start();
     // write to ca cert store
@@ -438,7 +435,6 @@ pub async fn init(
         .result?;
     crate::net::wifi::synchronize_network_manager(MAIN_DATA, &wifi).await?;
     load_wifi.complete();
-    tracing::info!("Synchronized WiFi");
 
     init_tmp.start();
     let tmp_dir = Path::new(PACKAGE_DATA).join("tmp");
@@ -480,7 +476,6 @@ pub async fn init(
     if let Some(governor) = governor {
         tracing::info!("Setting CPU Governor to \"{governor}\"");
         cpupower::set_governor(governor).await?;
-        tracing::info!("Set CPU Governor");
     }
     set_governor.complete();
 
@@ -508,8 +503,6 @@ pub async fn init(
     }
     if !ntp_synced {
         tracing::warn!("Timed out waiting for system time to synchronize");
-    } else {
-        tracing::info!("Syncronized system clock");
     }
     sync_clock.complete();
 
@@ -541,7 +534,6 @@ pub async fn init(
     })
     .await
     .result?;
-    tracing::info!("Updated server info");
     update_server_info.complete();
 
     launch_service_network.start();
@@ -550,7 +542,6 @@ pub async fn init(
         .arg("lxc-net.service")
         .invoke(ErrorKind::Lxc)
         .await?;
-    tracing::info!("Launched service intranet");
     launch_service_network.complete();
 
     validate_db.start();
@@ -560,7 +551,6 @@ pub async fn init(
     })
     .await
     .result?;
-    tracing::info!("Validated database");
     validate_db.complete();
 
     if let Some(progress) = postinit {

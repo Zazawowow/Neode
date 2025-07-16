@@ -219,6 +219,7 @@ impl FullProgress {
 
 #[derive(Clone)]
 pub struct FullProgressTracker {
+    log: bool,
     overall: watch::Sender<Progress>,
     phases: watch::Sender<InOMap<InternedString, watch::Receiver<Progress>>>,
 }
@@ -226,7 +227,14 @@ impl FullProgressTracker {
     pub fn new() -> Self {
         let (overall, _) = watch::channel(Progress::new());
         let (phases, _) = watch::channel(InOMap::new());
-        Self { overall, phases }
+        Self {
+            log: false,
+            overall,
+            phases,
+        }
+    }
+    pub fn enable_logging(&mut self, log: bool) {
+        self.log = log;
     }
     pub fn snapshot(&self) -> FullProgress {
         FullProgress {
@@ -363,10 +371,12 @@ impl FullProgressTracker {
                 .send_modify(|o| o.add_total(overall_contribution));
         }
         let (send, recv) = watch::channel(Progress::new());
+        let log = self.log.then(|| name.clone());
         self.phases.send_modify(|p| {
             p.insert(name, recv);
         });
         PhaseProgressTrackerHandle {
+            log,
             overall: self.overall.clone(),
             overall_contribution,
             contributed: 0,
@@ -379,6 +389,7 @@ impl FullProgressTracker {
 }
 
 pub struct PhaseProgressTrackerHandle {
+    log: Option<InternedString>,
     overall: watch::Sender<Progress>,
     overall_contribution: Option<u64>,
     contributed: u64,
@@ -404,6 +415,9 @@ impl PhaseProgressTrackerHandle {
         }
     }
     pub fn start(&mut self) {
+        if let Some(name) = &self.log {
+            tracing::info!("{}...", name)
+        }
         self.progress.send_modify(|p| p.start());
     }
     pub fn set_done(&mut self, done: u64) {
@@ -424,6 +438,9 @@ impl PhaseProgressTrackerHandle {
     pub fn complete(&mut self) {
         self.progress.send_modify(|p| p.set_complete());
         self.update_overall();
+        if let Some(name) = &self.log {
+            tracing::info!("{}: complete", name)
+        }
     }
     pub fn writer<W>(self, writer: W) -> ProgressTrackerWriter<W> {
         ProgressTrackerWriter {

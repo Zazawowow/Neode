@@ -314,7 +314,7 @@ impl RpcContext {
         &self,
         CleanupInitPhases {
             mut cleanup_sessions,
-            init_services,
+            mut init_services,
             mut prune_s9pks,
             mut check_tasks,
         }: CleanupInitPhases,
@@ -374,8 +374,9 @@ impl RpcContext {
         });
         cleanup_sessions.complete();
 
-        self.services.init(&self, init_services).await?;
-        tracing::info!("Initialized Services");
+        init_services.start();
+        self.services.init(&self).await?;
+        init_services.complete();
 
         prune_s9pks.start();
         let peek = self.db.peek().await;
@@ -387,17 +388,19 @@ impl RpcContext {
             .map(|(_, pde)| pde.as_s9pk().de())
             .collect::<Result<BTreeSet<PathBuf>, Error>>()?;
         let installed_dir = &Path::new(DATA_DIR).join(PKG_ARCHIVE_DIR).join("installed");
-        let mut dir = tokio::fs::read_dir(&installed_dir)
-            .await
-            .with_ctx(|_| (ErrorKind::Filesystem, lazy_format!("dir {installed_dir:?}")))?;
-        while let Some(file) = dir
-            .next_entry()
-            .await
-            .with_ctx(|_| (ErrorKind::Filesystem, lazy_format!("dir {installed_dir:?}")))?
-        {
-            let path = file.path();
-            if path.extension() == Some(OsStr::new("s9pk")) && !keep.contains(&path) {
-                delete_file(path).await?;
+        if tokio::fs::metadata(&installed_dir).await.is_ok() {
+            let mut dir = tokio::fs::read_dir(&installed_dir)
+                .await
+                .with_ctx(|_| (ErrorKind::Filesystem, lazy_format!("dir {installed_dir:?}")))?;
+            while let Some(file) = dir
+                .next_entry()
+                .await
+                .with_ctx(|_| (ErrorKind::Filesystem, lazy_format!("dir {installed_dir:?}")))?
+            {
+                let path = file.path();
+                if path.extension() == Some(OsStr::new("s9pk")) && !keep.contains(&path) {
+                    delete_file(path).await?;
+                }
             }
         }
         prune_s9pks.complete();
