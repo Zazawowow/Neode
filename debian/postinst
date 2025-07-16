@@ -62,7 +62,7 @@ ln -s /usr/share/zoneinfo/Etc/UTC /etc/localtime
 echo "#" > /etc/network/interfaces
 if ! [ -f /etc/resolv.conf ]; then
   rm -f /etc/resolv.conf
-  echo "nameserver 8.8.8.8" > /etc/resolv.conf # Google DNS Fallback
+  echo "nameserver 1.1.1.1" > /etc/resolv.conf # Cloudflare DNS Fallback
 fi
 if ! [ -f /run/systemd/resolve/stub-resolv.conf ]; then
     mkdir -p /run/systemd/resolve
@@ -112,6 +112,7 @@ sed -i '/\(^\|#\)\s*unqualified-search-registries\s*=\s*/c\unqualified-search-re
 sed -i 's/\(#\|\^\)\s*\([^=]\+\)=\(suspend\|hibernate\)\s*$/\2=ignore/g' /etc/systemd/logind.conf
 sed -i '/\(^\|#\)MulticastDNS=/c\MulticastDNS=no' /etc/systemd/resolved.conf
 sed -i 's/\[Service\]/[Service]\nEnvironment=SYSTEMD_LOG_LEVEL=debug/' /lib/systemd/system/systemd-timesyncd.service
+sed -i "s/\.debian\./\./g;s/#FallbackNTP=/FallbackNTP=/"  /etc/systemd/timesyncd.conf
 sed -i '/\(^\|#\)RootDistanceMaxSec=/c\RootDistanceMaxSec=10' /etc/systemd/timesyncd.conf
 
 mkdir -p /etc/nginx/ssl
