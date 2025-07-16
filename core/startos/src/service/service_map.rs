@@ -63,26 +63,27 @@ fn s9pk_installed_path(commitment: &MerkleArchiveCommitment) -> PathBuf {
 #[derive(Default)]
 pub struct ServiceMap(SyncMutex<OrdMap<PackageId, Arc<RwLock<Option<ServiceRef>>>>>);
 impl ServiceMap {
-    async fn entry(&self, id: &PackageId) -> Arc<RwLock<Option<ServiceRef>>> {
-        let mut lock = self.0.lock().await;
-        lock.entry(id.clone())
-            .or_insert_with(|| Arc::new(RwLock::new(None)))
-            .clone()
+    fn entry(&self, id: &PackageId) -> Arc<RwLock<Option<ServiceRef>>> {
+        self.0.mutate(|lock| {
+            lock.entry(id.clone())
+                .or_insert_with(|| Arc::new(RwLock::new(None)))
+                .clone()
+        })
     }
 
     #[instrument(skip_all)]
-    pub async fn try_get(&self, id: &PackageId) -> OwnedRwLockReadGuard<Option<ServiceRef>> {
-        self.entry(id).await.try_read_owned().await.ok
+    pub fn try_get(&self, id: &PackageId) -> Option<OwnedRwLockReadGuard<Option<ServiceRef>>> {
+        self.entry(id).try_read_owned().ok()
     }
 
     #[instrument(skip_all)]
     pub async fn get(&self, id: &PackageId) -> OwnedRwLockReadGuard<Option<ServiceRef>> {
-        self.entry(id).await.read_owned().await
+        self.entry(id).read_owned().await
     }
 
     #[instrument(skip_all)]
     pub async fn get_mut(&self, id: &PackageId) -> OwnedRwLockWriteGuard<Option<ServiceRef>> {
-        self.entry(id).await.write_owned().await
+        self.entry(id).write_owned().await
     }
 
     #[instrument(skip_all)]
@@ -431,17 +432,18 @@ impl ServiceMap {
     }
 
     pub async fn shutdown_all(&self) -> Result<(), Error> {
-        let lock = self.0.lock().await;
-        let mut futs = Vec::with_capacity(lock.len());
-        for service in lock.values().cloned() {
-            futs.push(async move {
-                if let Some(service) = service.write_owned().await.take() {
-                    service.shutdown(None).await?
-                }
-                Ok::<_, Error>(())
-            });
-        }
-        drop(lock);
+        let futs = self.0.mutate(|lock| {
+            let mut futs = Vec::with_capacity(lock.len());
+            for service in lock.values().cloned() {
+                futs.push(async move {
+                    if let Some(service) = service.write_owned().await.take() {
+                        service.shutdown(None).await?
+                    }
+                    Ok::<_, Error>(())
+                });
+            }
+            futs
+        });
         let mut errors = ErrorCollection::new();
         for res in futures::future::join_all(futs).await {
             errors.handle(res);
