@@ -584,8 +584,10 @@ pub async fn stats(ctx: RpcContext) -> Result<BTreeMap<PackageId, Option<Service
 
     let mut stats = BTreeMap::new();
     for id in ids {
-        let service: tokio::sync::OwnedRwLockReadGuard<Option<crate::service::ServiceRef>> =
-            ctx.services.get(&id).await;
+        let Some(service) = ctx.services.try_get(&id) else {
+            stats.insert(id, None);
+            continue;
+        };
 
         let Some(service_ref) = service.as_ref() else {
             stats.insert(id, None);
