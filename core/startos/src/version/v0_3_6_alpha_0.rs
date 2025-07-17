@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::ffi::OsStr;
 use std::path::Path;
 
 use chrono::{DateTime, Utc};
@@ -6,6 +7,7 @@ use const_format::formatcp;
 use ed25519_dalek::SigningKey;
 use exver::{PreReleaseSegment, VersionRange};
 use imbl_value::{json, InternedString};
+use models::{PackageId, ReplayId};
 use openssl::pkey::PKey;
 use openssl::x509::X509;
 use sqlx::postgres::PgConnectOptions;
@@ -178,8 +180,26 @@ async fn init_postgres(datadir: impl AsRef<Path>) -> Result<PgPool, Error> {
             .await?;
     }
 
-    let secret_store =
-        PgPool::connect_with(PgConnectOptions::new().database("secrets").username("root")).await?;
+    let secret_store = if let Ok(s) = PgPool::connect_with(
+        PgConnectOptions::new()
+            .database("secrets")
+            .username("root")
+            .port(5432)
+            .socket("/var/run/postgresql"),
+    )
+    .await
+    {
+        s
+    } else {
+        PgPool::connect_with(
+            PgConnectOptions::new()
+                .database("secrets")
+                .username("root")
+                .port(5433)
+                .socket("/var/run/postgresql"),
+        )
+        .await?
+    };
     sqlx::migrate!()
         .run(&secret_store)
         .await
@@ -210,6 +230,8 @@ impl VersionT for Version {
         Ok((account, ssh_keys, cifs))
     }
     fn up(self, db: &mut Value, (account, ssh_keys, cifs): Self::PreUpRes) -> Result<Value, Error> {
+        let prev_package_data = db["package-data"].clone();
+
         let wifi = json!({
             "interface": db["server-info"]["wifi"]["interface"],
             "ssids": db["server-info"]["wifi"]["ssids"],
@@ -236,7 +258,7 @@ impl VersionT for Version {
                 "lanAddress": db["server-info"]["lan-address"],
             });
 
-            server_info["postInitMigrationTodos"] = json!([]);
+            server_info["postInitMigrationTodos"] = json!({});
             let tor_address: String = from_value(db["server-info"]["tor-address"].clone())?;
             // Maybe we do this like the Public::init does
             server_info["torAddress"] = json!(tor_address);
@@ -287,7 +309,8 @@ impl VersionT for Version {
         });
 
         *db = next;
-        Ok(Value::Null)
+
+        Ok(prev_package_data)
     }
     fn down(self, _db: &mut Value) -> Result<(), Error> {
         Err(Error::new(
@@ -312,6 +335,9 @@ impl VersionT for Version {
         // Should be the name of the package
         let mut paths = tokio::fs::read_dir(path).await?;
         while let Some(path) = paths.next_entry().await? {
+            let Ok(id) = path.file_name().to_string_lossy().parse::<PackageId>() else {
+                continue;
+            };
             let path = path.path();
             if !path.is_dir() {
                 continue;
@@ -328,25 +354,62 @@ impl VersionT for Version {
                 let mut paths = tokio::fs::read_dir(path).await?;
                 while let Some(path) = paths.next_entry().await? {
                     let path = path.path();
-                    if path.is_dir() {
+                    if path.extension() != Some(OsStr::new("s9pk")) {
                         continue;
                     }
 
-                    let package_s9pk = tokio::fs::File::open(path).await?;
-                    let file = MultiCursorFile::open(&package_s9pk).await?;
+                    let configured = if !input.is_null() {
+                        let Some(configured) = input
+                            .get(&*id)
+                            .and_then(|pde| pde.get("installed"))
+                            .and_then(|i| i.get("status"))
+                            .and_then(|s| s.get("configured"))
+                            .and_then(|c| c.as_bool())
+                        else {
+                            continue;
+                        };
+                        configured
+                    } else {
+                        false
+                    };
 
-                    let key = ctx.db.peek().await.into_private().into_compat_s9pk_key();
-                    ctx.services
-                        .install(
-                            ctx.clone(),
-                            || crate::s9pk::load(file.clone(), || Ok(key.de()?.0), None),
-                            None,
-                            None::<crate::util::Never>,
-                            None,
-                        )
-                        .await?
-                        .await?
-                        .await?;
+                    if let Err(e) = async {
+                        let package_s9pk = tokio::fs::File::open(path).await?;
+                        let file = MultiCursorFile::open(&package_s9pk).await?;
+
+                        let key = ctx.db.peek().await.into_private().into_compat_s9pk_key();
+                        ctx.services
+                            .install(
+                                ctx.clone(),
+                                || crate::s9pk::load(file.clone(), || Ok(key.de()?.0), None),
+                                None,
+                                None::<crate::util::Never>,
+                                None,
+                            )
+                            .await?
+                            .await?
+                            .await?;
+
+                        if configured {
+                            ctx.db
+                                .mutate(|db| {
+                                    db.as_public_mut()
+                                        .as_package_data_mut()
+                                        .as_idx_mut(&id)
+                                        .or_not_found(&id)?
+                                        .as_tasks_mut()
+                                        .remove(&ReplayId::from("needs-config"))
+                                })
+                                .await
+                                .result?;
+                        }
+                        Ok::<_, Error>(())
+                    }
+                    .await
+                    {
+                        tracing::error!("Error reinstalling {id}: {e}");
+                        tracing::debug!("{e:?}");
+                    }
                 }
             }
         }

@@ -46,9 +46,9 @@ impl VersionT for Version {
             .and_then(|p| p.get_mut("serverInfo"))
             .and_then(|si| si.get_mut("postInitMigrationTodos"))
             .or_not_found("`public.serverInfo.postInitMigrationTodos` in db")?;
-        if let Some(prev) = todos.take().as_array() {
+        if let Some(prev) = todos.as_array().cloned() {
             *todos = Value::Object(
-                prev.into_iter()
+                prev.iter()
                     .filter_map(|version| version.as_str())
                     .map(InternedString::intern)
                     .map(|v| (v, Value::Null))

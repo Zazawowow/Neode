@@ -407,13 +407,13 @@ export class SystemForEmbassy implements System {
         )
       }
     } else if (this.manifest.config) {
-      // await effects.action.createTask({
-      //   packageId: this.manifest.id,
-      //   actionId: "config",
-      //   severity: "critical",
-      //   replayId: "needs-config",
-      //   reason: "This service must be configured before it can be run",
-      // })
+      await effects.action.createTask({
+        packageId: this.manifest.id,
+        actionId: "config",
+        severity: "critical",
+        replayId: "needs-config",
+        reason: "This service must be configured before it can be run",
+      })
     }
 
     await effects.setDataVersion({
