@@ -42,12 +42,14 @@ import { MarketplaceLinkComponent } from './link.component'
             icon="@tui.external-link"
             class="item-pointer"
           />
-          <marketplace-link
-            [url]="pkg().docsUrl || pkg().supportSite"
-            label="Documentation"
-            icon="@tui.external-link"
-            class="item-pointer"
-          />
+          @if (pkg().docsUrl; as docsUrl) {
+            <marketplace-link
+              [url]="docsUrl"
+              label="Documentation"
+              icon="@tui.external-link"
+              class="item-pointer"
+            />
+          }
           <marketplace-link
             [url]="pkg().supportSite"
             label="Support"
