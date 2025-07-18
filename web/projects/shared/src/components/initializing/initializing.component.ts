@@ -82,8 +82,11 @@ export class InitializingComponent {
   readonly error = input<string>()
 
   readonly message = computed(() => {
-    return this.progress().message || this.progress().total === 1
-      ? this.i18nPipe.transform('Finished')
-      : '...'
+    return (
+      this.progress().message ||
+      (this.progress().total === 1
+        ? this.i18nPipe.transform('Finished')
+        : '...')
+    )
   })
 }
