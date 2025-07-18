@@ -273,20 +273,17 @@ export const ENGLISH = {
   'Git Hash': 273,
   'License': 274,
   'Installed From': 275,
-  'Service Repository': 276,
-  'Package Repository': 277,
-  'Marketing Site': 278,
-  'Support Site': 279,
-  'Donation Link': 280,
+  'Marketing': 278,
+  'Support': 279,
+  'Donations': 280,
   'Standard Actions': 281,
   'Rebuild Service': 282, // as in, rebuild a software container
   'Rebuilds the service container. Only necessary if there is a bug in StartOS': 283,
   'Uninstall': 284,
-  'Uninstalls this service from StartOS and delete all data permanently.': 285,
+  'Uninstalls this service from StartOS and deletes all data permanently.': 285,
   'Dashboard': 286,
   'dashboard': 287,
   'actions': 288,
-  'instructions': 289,
   'logs': 290, // as in, "application logs"
   'about': 291, // as in, "about this server"
   'Starting upload': 292,
@@ -484,7 +481,7 @@ export const ENGLISH = {
   'Refresh the page. If refreshing the page does not work, you may need to quit and re-open your browser, then revisit this page.': 484,
   'StartOS UI': 485,
   'WiFi': 486,
-  'Instructions': 487,
+  'Documentation': 487, // as in, a website to view documentation
   'spanish': 488,
   'polish': 489,
   'german': 490,
@@ -495,7 +492,7 @@ export const ENGLISH = {
   'Validating': 495,
   'in progress': 496,
   'complete': 497,
-  'Click to view all versions': 498,
+  'Booting StartOS': 498,
   'To get started, visit the Marketplace and download your first service': 499,
   'View Marketplace': 500,
   'Welcome to': 501,
@@ -521,4 +518,13 @@ export const ENGLISH = {
   'To resolve the issue, refer to': 521,
   'SDK Version': 522,
   'Backup Report': 523,
+  'Delete selected': 524,
+  'No keys': 525,
+  'Add SSH Public Key': 526,
+  'By default, you can SSH into your server from any device using your master password. Optionally add SSH public keys to grant specific devices access without needing to enter a password.': 527,
+  'Source Code': 528,
+  'Upstream service': 529, // as in, the URL of the source code for the original software
+  'StartOS package': 530, // as in, the URL of the source code for the StartOS package
+  'Error initializing server': 531,
+  'Finished': 532, // an in, complete
 } as const

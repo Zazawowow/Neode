@@ -54,6 +54,7 @@ export function buildManifest<
   )
   return {
     ...manifest,
+    gitHash: null,
     osVersion: manifest.osVersion ?? OSVersion,
     sdkVersion,
     version: versions.current.options.version,

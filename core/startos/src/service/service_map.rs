@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -10,7 +10,7 @@ use futures::{Future, FutureExt, StreamExt, TryFutureExt};
 use helpers::NonDetachingJoinHandle;
 use imbl::OrdMap;
 use models::ErrorData;
-use tokio::sync::{oneshot, Mutex, OwnedRwLockReadGuard, OwnedRwLockWriteGuard, RwLock};
+use tokio::sync::{oneshot, OwnedRwLockReadGuard, OwnedRwLockWriteGuard, RwLock};
 use tracing::instrument;
 use url::Url;
 
@@ -22,9 +22,8 @@ use crate::disk::mount::guard::GenericMountGuard;
 use crate::install::PKG_ARCHIVE_DIR;
 use crate::notifications::{notify, NotificationLevel};
 use crate::prelude::*;
-use crate::progress::{
-    FullProgressTracker, PhaseProgressTrackerHandle, ProgressTrackerWriter, ProgressUnits,
-};
+use crate::progress::{FullProgressTracker, PhaseProgressTrackerHandle, ProgressTrackerWriter};
+use crate::registry::signer::commitment::merkle_archive::MerkleArchiveCommitment;
 use crate::s9pk::manifest::PackageId;
 use crate::s9pk::merkle_archive::source::FileSource;
 use crate::s9pk::S9pk;
@@ -32,7 +31,8 @@ use crate::service::rpc::ExitParams;
 use crate::service::start_stop::StartStop;
 use crate::service::{LoadDisposition, Service, ServiceRef};
 use crate::status::MainStatus;
-use crate::util::serde::Pem;
+use crate::util::serde::{Base32, Pem};
+use crate::util::sync::SyncMutex;
 use crate::DATA_DIR;
 
 pub type DownloadInstallFuture = BoxFuture<'static, Result<InstallFuture, Error>>;
@@ -43,37 +43,52 @@ pub struct InstallProgressHandles {
     pub progress: FullProgressTracker,
 }
 
+fn s9pk_download_path(commitment: &MerkleArchiveCommitment) -> PathBuf {
+    Path::new(DATA_DIR)
+        .join(PKG_ARCHIVE_DIR)
+        .join("downloading")
+        .join(Base32(commitment.root_sighash.0).to_lower_string())
+        .with_extension("s9pk")
+}
+
+fn s9pk_installed_path(commitment: &MerkleArchiveCommitment) -> PathBuf {
+    Path::new(DATA_DIR)
+        .join(PKG_ARCHIVE_DIR)
+        .join("installed")
+        .join(Base32(commitment.root_sighash.0).to_lower_string())
+        .with_extension("s9pk")
+}
+
 /// This is the structure to contain all the services
 #[derive(Default)]
-pub struct ServiceMap(Mutex<OrdMap<PackageId, Arc<RwLock<Option<ServiceRef>>>>>);
+pub struct ServiceMap(SyncMutex<OrdMap<PackageId, Arc<RwLock<Option<ServiceRef>>>>>);
 impl ServiceMap {
-    async fn entry(&self, id: &PackageId) -> Arc<RwLock<Option<ServiceRef>>> {
-        let mut lock = self.0.lock().await;
-        lock.entry(id.clone())
-            .or_insert_with(|| Arc::new(RwLock::new(None)))
-            .clone()
+    fn entry(&self, id: &PackageId) -> Arc<RwLock<Option<ServiceRef>>> {
+        self.0.mutate(|lock| {
+            lock.entry(id.clone())
+                .or_insert_with(|| Arc::new(RwLock::new(None)))
+                .clone()
+        })
+    }
+
+    #[instrument(skip_all)]
+    pub fn try_get(&self, id: &PackageId) -> Option<OwnedRwLockReadGuard<Option<ServiceRef>>> {
+        self.entry(id).try_read_owned().ok()
     }
 
     #[instrument(skip_all)]
     pub async fn get(&self, id: &PackageId) -> OwnedRwLockReadGuard<Option<ServiceRef>> {
-        self.entry(id).await.read_owned().await
+        self.entry(id).read_owned().await
     }
 
     #[instrument(skip_all)]
     pub async fn get_mut(&self, id: &PackageId) -> OwnedRwLockWriteGuard<Option<ServiceRef>> {
-        self.entry(id).await.write_owned().await
+        self.entry(id).write_owned().await
     }
 
     #[instrument(skip_all)]
-    pub async fn init(
-        &self,
-        ctx: &RpcContext,
-        mut progress: PhaseProgressTrackerHandle,
-    ) -> Result<(), Error> {
-        progress.start();
+    pub async fn init(&self, ctx: &RpcContext) -> Result<(), Error> {
         let ids = ctx.db.peek().await.as_public().as_package_data().keys()?;
-        progress.set_total(ids.len() as u64);
-        progress.set_units(Some(ProgressUnits::Steps));
         let mut jobs = FuturesUnordered::new();
         for id in &ids {
             jobs.push(self.load(ctx, id, LoadDisposition::Retry));
@@ -83,9 +98,7 @@ impl ServiceMap {
                 tracing::error!("Error loading installed package as service: {e}");
                 tracing::debug!("{e:?}");
             }
-            progress += 1;
         }
-        progress.complete();
         Ok(())
     }
 
@@ -152,6 +165,13 @@ impl ServiceMap {
         validate_progress.start();
         s9pk.validate_and_filter(ctx.s9pk_arch)?;
         validate_progress.complete();
+        let commitment = s9pk.as_archive().commitment().await?;
+        let mut installed_path = s9pk_installed_path(&commitment);
+        while tokio::fs::metadata(&installed_path).await.is_ok() {
+            let prev = installed_path.file_stem().unwrap_or_default();
+            installed_path.set_file_name(prev.to_string_lossy().into_owned() + "x.s9pk");
+            // append an x if already exists to avoid reference counting when reinstalling same s9pk
+        }
         let manifest = s9pk.as_manifest().clone();
         let id = manifest.id.clone();
         let icon = s9pk.icon_data_url().await?;
@@ -184,6 +204,7 @@ impl ServiceMap {
             .handle(async {
                 ctx.db
                     .mutate({
+                        let installed_path = installed_path.clone();
                         let manifest = manifest.clone();
                         let id = id.clone();
                         let install_progress = progress.snapshot();
@@ -196,6 +217,7 @@ impl ServiceMap {
                                 pde.as_state_info_mut().ser(&PackageState::Updating(
                                     UpdatingState {
                                         manifest: prev.manifest,
+                                        s9pk: installed_path,
                                         installing_info: InstallingInfo {
                                             new_manifest: manifest,
                                             progress: install_progress,
@@ -217,7 +239,7 @@ impl ServiceMap {
                                         } else {
                                             PackageState::Installing(installing)
                                         },
-                                        data_version: None,
+                                        s9pk: installed_path,
                                         status: MainStatus::Stopped,
                                         registry,
                                         developer_key: Pem::new(developer_key),
@@ -241,13 +263,9 @@ impl ServiceMap {
             .await?;
 
         Ok(async move {
-            let (installed_path, sync_progress_task) = reload_guard
+            let sync_progress_task = reload_guard
                 .handle(async {
-                    let download_path = Path::new(DATA_DIR)
-                        .join(PKG_ARCHIVE_DIR)
-                        .join("downloading")
-                        .join(&id)
-                        .with_extension("s9pk");
+                    let download_path = s9pk_download_path(&commitment);
 
                     let deref_id = id.clone();
                     let sync_progress_task =
@@ -273,15 +291,9 @@ impl ServiceMap {
                     file.sync_all().await?;
                     unpack_progress.complete();
 
-                    let installed_path = Path::new(DATA_DIR)
-                        .join(PKG_ARCHIVE_DIR)
-                        .join("installed")
-                        .join(&id)
-                        .with_extension("s9pk");
-
                     crate::util::io::rename(&download_path, &installed_path).await?;
 
-                    Ok::<_, Error>((installed_path, sync_progress_task))
+                    Ok::<_, Error>(sync_progress_task)
                 })
                 .await?;
             Ok(reload_guard
@@ -325,17 +337,18 @@ impl ServiceMap {
                             .state
                             .borrow()
                             .desired_state;
-                        service.uninstall(uninit, false, false).await?;
+                        let cleanup = service.uninstall(uninit, false, false).await?;
                         progress.complete();
-                        Some(run_state)
+                        Some((run_state, cleanup))
                     } else {
                         None
                     };
                     let new_service = Service::install(
                         ctx,
                         s9pk,
+                        &installed_path,
                         &registry,
-                        prev,
+                        prev.as_ref().map(|(s, _)| *s),
                         recovery_source,
                         Some(InstallProgressHandles {
                             finalization_progress,
@@ -344,6 +357,11 @@ impl ServiceMap {
                     )
                     .await?;
                     *service = Some(new_service.into());
+
+                    if let Some((_, cleanup)) = prev {
+                        cleanup.await?;
+                    }
+
                     drop(service);
 
                     sync_progress_task.await.map_err(|_| {
@@ -391,7 +409,7 @@ impl ServiceMap {
                             .uninstall(ExitParams::uninstall(), soft, force)
                             .await;
                         drop(guard);
-                        res
+                        res?.await
                     } else {
                         if force {
                             super::uninstall::cleanup(&ctx, &id, soft).await?;
@@ -414,17 +432,18 @@ impl ServiceMap {
     }
 
     pub async fn shutdown_all(&self) -> Result<(), Error> {
-        let lock = self.0.lock().await;
-        let mut futs = Vec::with_capacity(lock.len());
-        for service in lock.values().cloned() {
-            futs.push(async move {
-                if let Some(service) = service.write_owned().await.take() {
-                    service.shutdown(None).await?
-                }
-                Ok::<_, Error>(())
-            });
-        }
-        drop(lock);
+        let futs = self.0.mutate(|lock| {
+            let mut futs = Vec::with_capacity(lock.len());
+            for service in lock.values().cloned() {
+                futs.push(async move {
+                    if let Some(service) = service.write_owned().await.take() {
+                        service.shutdown(None).await?
+                    }
+                    Ok::<_, Error>(())
+                });
+            }
+            futs
+        });
         let mut errors = ErrorCollection::new();
         for res in futures::future::join_all(futs).await {
             errors.handle(res);

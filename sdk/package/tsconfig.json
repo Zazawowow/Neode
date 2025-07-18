@@ -15,6 +15,6 @@
     "target": "es2021",
     "resolveJsonModule": true
   },
-  "include": ["lib/**/*", "../base/lib/util/Hostname.ts"],
+  "include": ["lib/**/*"],
   "exclude": ["lib/**/*.spec.ts", "lib/**/*.gen.ts", "list", "node_modules"]
 }

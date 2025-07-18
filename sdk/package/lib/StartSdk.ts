@@ -59,8 +59,9 @@ import {
   setupOnInit,
   setupOnUninit,
 } from "../../base/lib/inits"
+import { DropGenerator } from "../../base/lib/util/Drop"
 
-export const OSVersion = testTypeVersion("0.4.0-alpha.8")
+export const OSVersion = testTypeVersion("0.4.0-alpha.9")
 
 // prettier-ignore
 type AnyNeverCond<T extends any[], Then, Else> = 
@@ -191,12 +192,13 @@ export class StartSdk<Manifest extends T.SDKManifest> {
           "callback"
         > = {},
       ) => {
-        async function* watch() {
+        async function* watch(abort?: AbortSignal) {
           const resolveCell = { resolve: () => {} }
           effects.onLeaveContext(() => {
             resolveCell.resolve()
           })
-          while (effects.isInContext) {
+          abort?.addEventListener("abort", () => resolveCell.resolve())
+          while (effects.isInContext && !abort?.aborted) {
             let callback: () => void = () => {}
             const waitForNext = new Promise<void>((resolve) => {
               callback = resolve
@@ -215,17 +217,26 @@ export class StartSdk<Manifest extends T.SDKManifest> {
                 (() => effects.constRetry && effects.constRetry()),
             }),
           once: () => effects.getContainerIp(options),
-          watch,
+          watch: (abort?: AbortSignal) => {
+            const ctrl = new AbortController()
+            abort?.addEventListener("abort", () => ctrl.abort())
+            return DropGenerator.of(watch(ctrl.signal), () => ctrl.abort())
+          },
           onChange: (
             callback: (
               value: string | null,
               error?: Error,
-            ) => void | Promise<void>,
+            ) => { cancel: boolean } | Promise<{ cancel: boolean }>,
           ) => {
             ;(async () => {
-              for await (const value of watch()) {
+              const ctrl = new AbortController()
+              for await (const value of watch(ctrl.signal)) {
                 try {
-                  await callback(value)
+                  const res = await callback(value)
+                  if (res.cancel) {
+                    ctrl.abort()
+                    break
+                  }
                 } catch (e) {
                   console.error(
                     "callback function threw an error @ getContainerIp.onChange",

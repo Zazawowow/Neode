@@ -1,5 +1,4 @@
-import { DOCUMENT } from '@angular/common'
-import { Inject, Injectable } from '@angular/core'
+import { Inject, Injectable, DOCUMENT } from '@angular/core'
 import {
   DiskListResponse,
   encodeBase64,
@@ -98,7 +97,7 @@ export class LiveApiService extends ApiService {
     })
   }
 
-  async followServerLogs(): Promise<FollowLogsRes> {
+  async initFollowLogs(): Promise<FollowLogsRes> {
     return this.rpcRequest({ method: 'setup.logs.follow', params: {} })
   }
 

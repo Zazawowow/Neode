@@ -1,5 +1,5 @@
 import { AsyncPipe } from '@angular/common'
-import { Component, ElementRef, inject } from '@angular/core'
+import { Component, ElementRef, inject, input } from '@angular/core'
 import {
   INTERSECTION_ROOT,
   WaIntersectionObserver,
@@ -7,7 +7,7 @@ import {
 import { WaMutationObserver } from '@ng-web-apis/mutation-observer'
 import { TuiScrollbar } from '@taiga-ui/core'
 import { NgDompurifyPipe } from '@taiga-ui/dompurify'
-import { SetupLogsService } from '../services/setup-logs.service'
+import { SetupLogsService } from '../../services/setup-logs.service'
 
 @Component({
   selector: 'logs-window',

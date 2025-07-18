@@ -4,7 +4,7 @@ import * as cp from "child_process"
 import { promisify } from "util"
 import { Buffer } from "node:buffer"
 import { once } from "../../../base/lib/util/once"
-import { Drop } from "./Drop"
+import { Drop } from "../../../base/lib/util/Drop"
 import { Mounts } from "../mainFn/Mounts"
 import { BackupEffects } from "../backup/Backups"
 

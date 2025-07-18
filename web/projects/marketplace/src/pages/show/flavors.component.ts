@@ -4,7 +4,7 @@ import { SharedPipesModule } from '@start9labs/shared'
 import { TuiTitle } from '@taiga-ui/core'
 import { TuiAvatar } from '@taiga-ui/kit'
 import { TuiCell } from '@taiga-ui/layout'
-import { MarketplacePkg } from '../../../types'
+import { MarketplacePkg } from '../../types'
 
 @Component({
   selector: 'marketplace-flavors',
@@ -33,7 +33,7 @@ import { MarketplacePkg } from '../../../types'
     .box-container {
       background-color: rgb(39 39 42);
       border-radius: 0.75rem;
-      padding: 1.75rem;
+      padding: 1.25rem 1.75rem;
     }
 
     [tuiCell] {
@@ -44,7 +44,7 @@ import { MarketplacePkg } from '../../../types'
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [RouterLink, TuiCell, TuiTitle, SharedPipesModule, TuiAvatar],
 })
-export class FlavorsComponent {
+export class MarketplaceFlavorsComponent {
   @Input()
   pkgs!: MarketplacePkg[]
 }

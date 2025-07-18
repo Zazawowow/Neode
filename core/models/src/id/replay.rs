@@ -9,6 +9,14 @@ use yasi::InternedString;
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, TS)]
 #[ts(type = "string")]
 pub struct ReplayId(InternedString);
+impl<T> From<T> for ReplayId
+where
+    T: Into<InternedString>,
+{
+    fn from(value: T) -> Self {
+        Self(value.into())
+    }
+}
 impl FromStr for ReplayId {
     type Err = Infallible;
     fn from_str(s: &str) -> Result<Self, Self::Err> {

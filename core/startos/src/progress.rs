@@ -5,6 +5,7 @@ use futures::future::pending;
 use futures::stream::BoxStream;
 use futures::{Future, FutureExt, StreamExt, TryFutureExt};
 use helpers::NonDetachingJoinHandle;
+use imbl::Vector;
 use imbl_value::{InOMap, InternedString};
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use itertools::Itertools;
@@ -219,14 +220,22 @@ impl FullProgress {
 
 #[derive(Clone)]
 pub struct FullProgressTracker {
+    log: bool,
     overall: watch::Sender<Progress>,
-    phases: watch::Sender<InOMap<InternedString, watch::Receiver<Progress>>>,
+    phases: watch::Sender<Vector<(InternedString, watch::Receiver<Progress>)>>,
 }
 impl FullProgressTracker {
     pub fn new() -> Self {
         let (overall, _) = watch::channel(Progress::new());
-        let (phases, _) = watch::channel(InOMap::new());
-        Self { overall, phases }
+        let (phases, _) = watch::channel(Vector::new());
+        Self {
+            log: false,
+            overall,
+            phases,
+        }
+    }
+    pub fn enable_logging(&mut self, log: bool) {
+        self.log = log;
     }
     pub fn snapshot(&self) -> FullProgress {
         FullProgress {
@@ -245,8 +254,8 @@ impl FullProgressTracker {
     pub fn stream(&self, min_interval: Option<Duration>) -> BoxStream<'static, FullProgress> {
         struct StreamState {
             overall: watch::Receiver<Progress>,
-            phases_recv: watch::Receiver<InOMap<InternedString, watch::Receiver<Progress>>>,
-            phases: InOMap<InternedString, watch::Receiver<Progress>>,
+            phases_recv: watch::Receiver<Vector<(InternedString, watch::Receiver<Progress>)>>,
+            phases: Vector<(InternedString, watch::Receiver<Progress>)>,
         }
         let mut overall = self.overall.subscribe();
         overall.mark_changed(); // make sure stream starts with a value
@@ -280,11 +289,14 @@ impl FullProgressTracker {
                     futures::future::select_all(changed).await;
                 }
 
-                for (name, phase) in &*phases_recv.borrow_and_update() {
-                    if !phases.contains_key(name) {
-                        phases.insert(name.clone(), phase.clone());
+                let phases_ref = phases_recv.borrow_and_update();
+                for (idx, (name, recv)) in phases_ref.iter().enumerate() {
+                    if phases.get(idx).map(|(n, _)| n) != Some(name) {
+                        phases.insert(idx, (name.clone(), recv.clone()));
                     }
                 }
+                phases.truncate(phases_ref.len());
+                drop(phases_ref);
 
                 let o = *overall.borrow_and_update();
 
@@ -363,10 +375,12 @@ impl FullProgressTracker {
                 .send_modify(|o| o.add_total(overall_contribution));
         }
         let (send, recv) = watch::channel(Progress::new());
+        let log = self.log.then(|| name.clone());
         self.phases.send_modify(|p| {
-            p.insert(name, recv);
+            p.push_back((name, recv));
         });
         PhaseProgressTrackerHandle {
+            log,
             overall: self.overall.clone(),
             overall_contribution,
             contributed: 0,
@@ -379,6 +393,7 @@ impl FullProgressTracker {
 }
 
 pub struct PhaseProgressTrackerHandle {
+    log: Option<InternedString>,
     overall: watch::Sender<Progress>,
     overall_contribution: Option<u64>,
     contributed: u64,
@@ -404,6 +419,9 @@ impl PhaseProgressTrackerHandle {
         }
     }
     pub fn start(&mut self) {
+        if let Some(name) = &self.log {
+            tracing::info!("{}...", name)
+        }
         self.progress.send_modify(|p| p.start());
     }
     pub fn set_done(&mut self, done: u64) {
@@ -424,6 +442,9 @@ impl PhaseProgressTrackerHandle {
     pub fn complete(&mut self) {
         self.progress.send_modify(|p| p.set_complete());
         self.update_overall();
+        if let Some(name) = &self.log {
+            tracing::info!("{}: complete", name)
+        }
     }
     pub fn writer<W>(self, writer: W) -> ProgressTrackerWriter<W> {
         ProgressTrackerWriter {

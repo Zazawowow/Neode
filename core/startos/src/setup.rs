@@ -82,6 +82,7 @@ pub async fn list_disks(ctx: SetupContext) -> Result<Vec<DiskInfo>, Error> {
     crate::disk::util::list(&ctx.os_partitions).await
 }
 
+#[instrument(skip_all)]
 async fn setup_init(
     ctx: &SetupContext,
     password: Option<String>,
@@ -130,6 +131,7 @@ pub struct AttachParams {
     kiosk: Option<bool>,
 }
 
+#[instrument(skip_all)]
 pub async fn attach(
     ctx: SetupContext,
     AttachParams {

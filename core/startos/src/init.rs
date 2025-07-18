@@ -60,145 +60,6 @@ pub async fn check_time_is_synchronized() -> Result<bool, Error> {
         == "NTPSynchronized=yes")
 }
 
-// must be idempotent
-#[tracing::instrument(skip_all)]
-pub async fn init_postgres(datadir: impl AsRef<Path>) -> Result<(), Error> {
-    let db_dir = datadir.as_ref().join("main/postgresql");
-    if tokio::process::Command::new("mountpoint")
-        .arg("/var/lib/postgresql")
-        .stdout(std::process::Stdio::null())
-        .stderr(std::process::Stdio::null())
-        .status()
-        .await?
-        .success()
-    {
-        unmount("/var/lib/postgresql", true).await?;
-    }
-    let exists = tokio::fs::metadata(&db_dir).await.is_ok();
-    if !exists {
-        Command::new("cp")
-            .arg("-ra")
-            .arg("/var/lib/postgresql")
-            .arg(&db_dir)
-            .invoke(crate::ErrorKind::Filesystem)
-            .await?;
-    }
-    Command::new("chown")
-        .arg("-R")
-        .arg("postgres:postgres")
-        .arg(&db_dir)
-        .invoke(crate::ErrorKind::Database)
-        .await?;
-
-    let mut pg_paths = tokio::fs::read_dir("/usr/lib/postgresql").await?;
-    let mut pg_version = None;
-    while let Some(pg_path) = pg_paths.next_entry().await? {
-        let pg_path_version = pg_path
-            .file_name()
-            .to_str()
-            .map(|v| v.parse())
-            .transpose()?
-            .unwrap_or(0);
-        if pg_path_version > pg_version.unwrap_or(0) {
-            pg_version = Some(pg_path_version)
-        }
-    }
-    let pg_version = pg_version.ok_or_else(|| {
-        Error::new(
-            eyre!("could not determine postgresql version"),
-            crate::ErrorKind::Database,
-        )
-    })?;
-
-    crate::disk::mount::util::bind(&db_dir, "/var/lib/postgresql", false).await?;
-
-    let pg_version_string = pg_version.to_string();
-    let pg_version_path = db_dir.join(&pg_version_string);
-    if exists
-    // maybe migrate
-    {
-        let incomplete_path = db_dir.join(format!("{pg_version}.migration.incomplete"));
-        if tokio::fs::metadata(&incomplete_path).await.is_ok() // previous migration was incomplete
-        && tokio::fs::metadata(&pg_version_path).await.is_ok()
-        {
-            tokio::fs::remove_dir_all(&pg_version_path).await?;
-        }
-        if tokio::fs::metadata(&pg_version_path).await.is_err()
-        // need to migrate
-        {
-            let conf_dir = Path::new("/etc/postgresql").join(pg_version.to_string());
-            let conf_dir_tmp = {
-                let mut tmp = conf_dir.clone();
-                tmp.set_extension("tmp");
-                tmp
-            };
-            if tokio::fs::metadata(&conf_dir).await.is_ok() {
-                Command::new("mv")
-                    .arg(&conf_dir)
-                    .arg(&conf_dir_tmp)
-                    .invoke(ErrorKind::Filesystem)
-                    .await?;
-            }
-            let mut old_version = pg_version;
-            while old_version > 13
-            /* oldest pg version included in startos */
-            {
-                old_version -= 1;
-                let old_datadir = db_dir.join(old_version.to_string());
-                if tokio::fs::metadata(&old_datadir).await.is_ok() {
-                    create_file(&incomplete_path).await?.sync_all().await?;
-                    Command::new("pg_upgradecluster")
-                        .arg(old_version.to_string())
-                        .arg("main")
-                        .invoke(crate::ErrorKind::Database)
-                        .await?;
-                    break;
-                }
-            }
-            if tokio::fs::metadata(&conf_dir).await.is_ok() {
-                if tokio::fs::metadata(&conf_dir).await.is_ok() {
-                    tokio::fs::remove_dir_all(&conf_dir).await?;
-                }
-                Command::new("mv")
-                    .arg(&conf_dir_tmp)
-                    .arg(&conf_dir)
-                    .invoke(ErrorKind::Filesystem)
-                    .await?;
-            }
-            tokio::fs::remove_file(&incomplete_path).await?;
-        }
-        if tokio::fs::metadata(&incomplete_path).await.is_ok() {
-            unreachable!() // paranoia
-        }
-    }
-
-    Command::new("systemctl")
-        .arg("start")
-        .arg(format!("postgresql@{pg_version}-main.service"))
-        .invoke(crate::ErrorKind::Database)
-        .await?;
-    if !exists {
-        Command::new("sudo")
-            .arg("-u")
-            .arg("postgres")
-            .arg("createuser")
-            .arg("root")
-            .invoke(crate::ErrorKind::Database)
-            .await?;
-        Command::new("sudo")
-            .arg("-u")
-            .arg("postgres")
-            .arg("createdb")
-            .arg("secrets")
-            .arg("-O")
-            .arg("root")
-            .invoke(crate::ErrorKind::Database)
-            .await?;
-    }
-
-    Ok(())
-}
-
 pub struct InitResult {
     pub net_ctrl: Arc<NetController>,
     pub os_net_service: NetService,
@@ -336,7 +197,6 @@ pub async fn init(
     let db = TypedPatchDb::<Database>::load_unchecked(db);
     let peek = db.peek().await;
     load_database.complete();
-    tracing::info!("Opened PatchDB");
 
     load_ssh_keys.start();
     crate::ssh::sync_keys(
@@ -347,7 +207,6 @@ pub async fn init(
     )
     .await?;
     load_ssh_keys.complete();
-    tracing::info!("Synced SSH Keys");
 
     let account = AccountInfo::load(&peek)?;
 
@@ -398,13 +257,16 @@ pub async fn init(
         .arg("systemd-journald")
         .invoke(crate::ErrorKind::Journald)
         .await?;
+    Command::new("killall")
+        .arg("journalctl")
+        .invoke(crate::ErrorKind::Journald)
+        .await?;
     mount_logs.complete();
     tokio::io::copy(
         &mut open_file("/run/startos/init.log").await?,
         &mut tokio::io::stderr(),
     )
     .await?;
-    tracing::info!("Mounted Logs");
 
     load_ca_cert.start();
     // write to ca cert store
@@ -434,7 +296,6 @@ pub async fn init(
         .result?;
     crate::net::wifi::synchronize_network_manager(MAIN_DATA, &wifi).await?;
     load_wifi.complete();
-    tracing::info!("Synchronized WiFi");
 
     init_tmp.start();
     let tmp_dir = Path::new(PACKAGE_DATA).join("tmp");
@@ -476,7 +337,6 @@ pub async fn init(
     if let Some(governor) = governor {
         tracing::info!("Setting CPU Governor to \"{governor}\"");
         cpupower::set_governor(governor).await?;
-        tracing::info!("Set CPU Governor");
     }
     set_governor.complete();
 
@@ -504,8 +364,6 @@ pub async fn init(
     }
     if !ntp_synced {
         tracing::warn!("Timed out waiting for system time to synchronize");
-    } else {
-        tracing::info!("Syncronized system clock");
     }
     sync_clock.complete();
 
@@ -537,7 +395,6 @@ pub async fn init(
     })
     .await
     .result?;
-    tracing::info!("Updated server info");
     update_server_info.complete();
 
     launch_service_network.start();
@@ -546,7 +403,6 @@ pub async fn init(
         .arg("lxc-net.service")
         .invoke(ErrorKind::Lxc)
         .await?;
-    tracing::info!("Launched service intranet");
     launch_service_network.complete();
 
     validate_db.start();
@@ -556,7 +412,6 @@ pub async fn init(
     })
     .await
     .result?;
-    tracing::info!("Validated database");
     validate_db.complete();
 
     if let Some(progress) = postinit {

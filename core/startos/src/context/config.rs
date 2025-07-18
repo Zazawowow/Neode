@@ -6,11 +6,8 @@ use clap::Parser;
 use reqwest::Url;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use sqlx::postgres::PgConnectOptions;
-use sqlx::PgPool;
 
 use crate::disk::OsPartitionInfo;
-use crate::init::init_postgres;
 use crate::prelude::*;
 use crate::util::serde::IoFormat;
 use crate::version::VersionT;
@@ -150,17 +147,5 @@ impl ServerConfig {
             .with_ctx(|_| (crate::ErrorKind::Filesystem, db_path.display().to_string()))?;
 
         Ok(db)
-    }
-    #[instrument(skip_all)]
-    pub async fn secret_store(&self) -> Result<PgPool, Error> {
-        init_postgres("/media/startos/data").await?;
-        let secret_store =
-            PgPool::connect_with(PgConnectOptions::new().database("secrets").username("root"))
-                .await?;
-        sqlx::migrate!()
-            .run(&secret_store)
-            .await
-            .with_kind(crate::ErrorKind::Database)?;
-        Ok(secret_store)
     }
 }

@@ -17,6 +17,7 @@ import { CommandController } from "./CommandController"
 import { HealthCheck } from "../health/HealthCheck"
 import { Oneshot } from "./Oneshot"
 import { Manifest } from "../test/output.sdk"
+import { asError } from "../util"
 
 export const cpExec = promisify(CP.exec)
 export const cpExecFile = promisify(CP.execFile)
@@ -69,7 +70,7 @@ export type ExecFnOptions<
 > = {
   fn: (
     subcontainer: C,
-    abort: AbortController,
+    abort: AbortSignal,
   ) => Promise<C extends null ? null : ExecCommandOptions | null>
   // Defaults to the DEFAULT_SIGTERM_TIMEOUT = 30_000ms
   sigtermTimeout?: number
@@ -379,6 +380,9 @@ export class Daemons<Manifest extends T.SDKManifest, Ids extends string>
   }
 
   async build() {
+    this.effects.onLeaveContext(() => {
+      this.term().catch((e) => console.error(asError(e)))
+    })
     for (const daemon of this.healthDaemons) {
       await daemon.init()
     }

@@ -6,7 +6,16 @@ import {
   provideSetupLogsService,
 } from '@start9labs/shared'
 import { T } from '@start9labs/start-sdk'
-import { catchError, defer, from, map, startWith, switchMap, tap } from 'rxjs'
+import {
+  catchError,
+  defer,
+  from,
+  map,
+  startWith,
+  switchMap,
+  tap,
+  timer,
+} from 'rxjs'
 import { ApiService } from 'src/app/services/api/embassy-api.service'
 import { StateService } from 'src/app/services/state.service'
 
@@ -29,7 +38,7 @@ export default class InitializingPage {
           .openWebsocket$<T.FullProgress>(guid, {
             closeObserver: {
               next: () => {
-                this.state.syncState()
+                this.state.retrigger(true)
               },
             },
           })
@@ -38,13 +47,12 @@ export default class InitializingPage {
       map(formatProgress),
       tap(({ total }) => {
         if (total === 1) {
-          this.state.syncState()
+          this.state.retrigger(true)
         }
       }),
-      catchError((e, caught$) => {
-        console.error(e)
-        this.state.syncState()
-        return caught$
+      catchError((_, caught$) => {
+        this.state.retrigger(true)
+        return timer(500).pipe(switchMap(() => caught$))
       }),
     ),
     { initialValue: { total: 0, message: 'waiting...' } },

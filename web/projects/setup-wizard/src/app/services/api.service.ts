@@ -23,7 +23,7 @@ export abstract class ApiService {
   abstract execute(setupInfo: T.SetupExecuteParams): Promise<T.SetupProgress> // setup.execute
   abstract complete(): Promise<T.SetupResult> // setup.complete
   abstract exit(): Promise<void> // setup.exit
-  abstract followServerLogs(): Promise<FollowLogsRes> // setup.logs.follow
+  abstract initFollowLogs(): Promise<FollowLogsRes> // setup.logs.follow
   abstract openWebsocket$<T>(guid: string): Observable<T>
 
   async encrypt(toEncrypt: string): Promise<T.EncryptedWire> {
