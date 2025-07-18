@@ -526,4 +526,6 @@ export default {
   528: 'Quellcode',
   529: 'Upstream-Dienst',
   530: 'StartOS-Paket',
+  531: 'Fehler beim Initialisieren des Servers',
+  532: 'Abgeschlossen',
 } satisfies i18n

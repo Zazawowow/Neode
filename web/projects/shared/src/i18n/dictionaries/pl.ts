@@ -526,4 +526,6 @@ export default {
   528: 'Kod źródłowy',
   529: 'Usługa źródłowa',
   530: 'Pakiet StartOS',
+  531: 'Błąd inicjalizacji serwera',
+  532: 'Zakończono',
 } satisfies i18n

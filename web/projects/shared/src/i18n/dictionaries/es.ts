@@ -526,4 +526,6 @@ export default {
   528: 'Código fuente',
   529: 'Servicio original',
   530: 'Paquete StartOS',
+  531: 'Error al inicializar el servidor',
+  532: 'Finalizado',
 } satisfies i18n

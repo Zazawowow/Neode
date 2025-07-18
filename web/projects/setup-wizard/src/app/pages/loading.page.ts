@@ -1,18 +1,21 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core'
+import {
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  signal,
+} from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
 import { Router } from '@angular/router'
 import {
-  ErrorService,
   formatProgress,
+  getErrorMessage,
   InitializingComponent,
 } from '@start9labs/shared'
 import { T } from '@start9labs/start-sdk'
 import {
   catchError,
-  EMPTY,
   filter,
   from,
-  interval,
   map,
   startWith,
   switchMap,
@@ -23,7 +26,8 @@ import { ApiService } from 'src/app/services/api.service'
 import { StateService } from 'src/app/services/state.service'
 
 @Component({
-  template: '<app-initializing [setupType]="type" [progress]="progress()" />',
+  template:
+    '<app-initializing [setupType]="type" [progress]="progress()" [error]="error()" />',
   styles: `
     :host {
       max-width: unset;
@@ -35,7 +39,6 @@ import { StateService } from 'src/app/services/state.service'
 })
 export default class LoadingPage {
   private readonly api = inject(ApiService)
-  private readonly errorService = inject(ErrorService)
 
   readonly type = inject(StateService).setupType
   readonly router = inject(Router)
@@ -58,6 +61,8 @@ export default class LoadingPage {
     { initialValue: { total: 0, message: '' } },
   )
 
+  error = signal('')
+
   private async getStatus(): Promise<{
     status: 'running'
     guid: string
@@ -68,16 +73,15 @@ export default class LoadingPage {
 
       if (!res) {
         this.router.navigate(['home'])
-        return null
       } else if (res.status === 'complete') {
         this.router.navigate(['success'])
-        return null
       } else {
         return res
       }
     } catch (e: any) {
-      this.errorService.handleError(e)
-      throw e
+      this.error.set(getErrorMessage(e))
     }
+
+    return null
   }
 }

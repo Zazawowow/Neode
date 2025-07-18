@@ -525,4 +525,6 @@ export const ENGLISH = {
   'Source Code': 528,
   'Upstream service': 529, // as in, the URL of the source code for the original software
   'StartOS package': 530, // as in, the URL of the source code for the StartOS package
+  'Error initializing server': 531,
+  'Finished': 532, // an in, complete
 } as const
