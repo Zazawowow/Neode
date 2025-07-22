@@ -169,7 +169,7 @@ impl LanPortForwardController {
                         (
                             iface.clone(),
                             (
-                                info.inbound(),
+                                info.public(),
                                 info.ip_info.as_ref().map_or(Vec::new(), |i| {
                                     i.subnets
                                         .iter()
@@ -205,7 +205,7 @@ impl LanPortForwardController {
                             ip_info
                                 .iter()
                                 .map(|(iface, info)| (iface.clone(), (
-                                    info.inbound(),
+                                    info.public(),
                                     info.ip_info.as_ref().map_or(Vec::new(), |i| {
                                         i.subnets
                                             .iter()

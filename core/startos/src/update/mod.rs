@@ -202,6 +202,7 @@ pub async fn cli_update_system(
                     prev.overall.set_complete();
                     progress.update(&prev);
                 }
+                println!("Update complete. Restart your server to apply the update.")
             } else {
                 println!("Updating to v{v}...")
             }

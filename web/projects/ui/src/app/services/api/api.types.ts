@@ -347,12 +347,14 @@ export namespace RR {
 
   export type GetActionInputReq = { packageId: string; actionId: string } // package.action.get-input
   export type GetActionInputRes = {
+    eventId: string
     spec: IST.InputSpec
     value: object | null
   }
 
   export type ActionReq = {
     packageId: string
+    eventId: string | null
     actionId: string
     input: object | null
   } // package.action.run

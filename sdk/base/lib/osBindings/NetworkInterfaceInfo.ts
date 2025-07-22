@@ -2,7 +2,6 @@
 import type { IpInfo } from "./IpInfo"
 
 export type NetworkInterfaceInfo = {
-  inbound: boolean | null
-  outbound: boolean | null
+  public: boolean | null
   ipInfo: IpInfo | null
 }

@@ -509,13 +509,18 @@ export class SystemForEmbassy implements System {
   ): Promise<T.ActionInput | null> {
     if (actionId === "config") {
       const config = await this.getConfig(effects, timeoutMs)
-      return { spec: config.spec, value: config.config }
+      return {
+        eventId: effects.eventId!,
+        spec: config.spec,
+        value: config.config,
+      }
     } else if (actionId === "properties") {
       return null
     } else {
       const oldSpec = this.manifest.actions?.[actionId]?.["input-spec"]
       if (!oldSpec) return null
       return {
+        eventId: effects.eventId!,
         spec: transformConfigSpec(oldSpec as OldConfigSpec),
         value: null,
       }

@@ -335,7 +335,7 @@ impl NetServiceData {
                 for (interface, public, ip_info) in
                     net_ifaces.iter().filter_map(|(interface, info)| {
                         if let Some(ip_info) = &info.ip_info {
-                            Some((interface, info.inbound(), ip_info))
+                            Some((interface, info.public(), ip_info))
                         } else {
                             None
                         }

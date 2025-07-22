@@ -58,7 +58,7 @@ pub fn network_interface_api<C: Context>() -> ParentHandler<C> {
                             info.ip_info.as_ref()
                                 .and_then(|ip_info| ip_info.device_type)
                                 .map_or_else(|| "UNKNOWN".to_owned(), |ty| format!("{ty:?}")),
-                            info.inbound(),
+                            info.public(),
                             info.ip_info.as_ref().map_or_else(
                                 || "<DISCONNECTED>".to_owned(),
                                 |ip_info| ip_info.subnets
@@ -585,21 +585,24 @@ async fn watch_ip(
                                             None
                                         };
 
-                                        write_to.send_if_modified(|m| {
-                                            let (inbound, outbound) = m
-                                                .get(&iface)
-                                                .map_or((None, None), |i| (i.inbound, i.outbound));
-                                            m.insert(
-                                                iface.clone(),
-                                                NetworkInterfaceInfo {
-                                                    inbound,
-                                                    outbound,
-                                                    ip_info: ip_info.clone(),
-                                                },
-                                            )
-                                            .filter(|old| &old.ip_info == &ip_info)
-                                            .is_none()
-                                        });
+                                        write_to.send_if_modified(
+                                            |m: &mut BTreeMap<
+                                                InternedString,
+                                                NetworkInterfaceInfo,
+                                            >| {
+                                                let public =
+                                                    m.get(&iface).map_or(None, |i| i.public);
+                                                m.insert(
+                                                    iface.clone(),
+                                                    NetworkInterfaceInfo {
+                                                        public,
+                                                        ip_info: ip_info.clone(),
+                                                    },
+                                                )
+                                                .filter(|old| &old.ip_info == &ip_info)
+                                                .is_none()
+                                            },
+                                        );
 
                                         Ok::<_, Error>(())
                                     })
@@ -856,7 +859,7 @@ impl NetworkInterfaceController {
                         return false;
                     }
                 }
-                .inbound,
+                .public,
                 public,
             );
             prev != public
@@ -968,8 +971,7 @@ impl ListenerMap {
     ) -> Result<(), Error> {
         let mut keep = BTreeSet::<SocketAddr>::new();
         for info in ip_info.values().chain([&NetworkInterfaceInfo {
-            inbound: Some(false),
-            outbound: Some(false),
+            public: Some(false),
             ip_info: Some(IpInfo {
                 name: "lo".into(),
                 scope_id: 1,
@@ -984,7 +986,7 @@ impl ListenerMap {
                 ntp_servers: Default::default(),
             }),
         }]) {
-            if public || !info.inbound() {
+            if public || !info.public() {
                 if let Some(ip_info) = &info.ip_info {
                     for ipnet in &ip_info.subnets {
                         let addr = match ipnet.addr() {
@@ -1003,7 +1005,7 @@ impl ListenerMap {
                         };
                         keep.insert(addr);
                         if let Some((_, is_public, wan_ip)) = self.listeners.get_mut(&addr) {
-                            *is_public = info.inbound();
+                            *is_public = info.public();
                             *wan_ip = info.ip_info.as_ref().and_then(|i| i.wan_ip);
                             continue;
                         }
@@ -1021,7 +1023,7 @@ impl ListenerMap {
                                         .into(),
                                 )
                                 .with_kind(ErrorKind::Network)?,
-                                info.inbound(),
+                                info.public(),
                                 info.ip_info.as_ref().and_then(|i| i.wan_ip),
                             ),
                         );

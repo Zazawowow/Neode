@@ -133,6 +133,7 @@ export class ActionInputModal {
   readonly warning = this.context.data.actionInfo.metadata.warning
   readonly pkgInfo = this.context.data.pkgInfo
   readonly requestInfo = this.context.data.requestInfo
+  eventId: string | null = null
 
   buttons: ActionButton<any>[] = [
     {
@@ -151,6 +152,7 @@ export class ActionInputModal {
   ).pipe(
     map(res => {
       const originalValue = res.value || {}
+      this.eventId = res.eventId
 
       return {
         spec: res.spec,
@@ -174,7 +176,12 @@ export class ActionInputModal {
 
   async execute(input: object) {
     if (await this.checkConflicts(input)) {
-      await this.actionService.execute(this.pkgInfo.id, this.actionId, input)
+      await this.actionService.execute(
+        this.pkgInfo.id,
+        this.eventId,
+        this.actionId,
+        input,
+      )
       this.context.$implicit.complete()
     }
   }

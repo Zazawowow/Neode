@@ -1108,6 +1108,7 @@ export class MockApiService extends ApiService {
   ): Promise<RR.GetActionInputRes> {
     await pauseFor(2000)
     return {
+      eventId: 'ANZXNWIFRTTBZ6T52KQPZILIQQODDHXQ',
       value: Mock.MockConfig,
       spec: await Mock.getActionInputSpec(),
     }

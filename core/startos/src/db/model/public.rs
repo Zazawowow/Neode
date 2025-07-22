@@ -198,13 +198,12 @@ pub struct NetworkInfo {
 #[model = "Model<Self>"]
 #[ts(export)]
 pub struct NetworkInterfaceInfo {
-    pub inbound: Option<bool>,
-    pub outbound: Option<bool>,
+    pub public: Option<bool>,
     pub ip_info: Option<IpInfo>,
 }
 impl NetworkInterfaceInfo {
-    pub fn inbound(&self) -> bool {
-        self.inbound.unwrap_or_else(|| {
+    pub fn public(&self) -> bool {
+        self.public.unwrap_or_else(|| {
             !self.ip_info.as_ref().map_or(true, |ip_info| {
                 let ip4s = ip_info
                     .subnets

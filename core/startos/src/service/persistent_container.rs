@@ -105,7 +105,6 @@ pub struct PersistentContainer {
     pub(super) lxc_container: OnceCell<LxcContainer>,
     pub(super) rpc_client: UnixRpcClient,
     pub(super) rpc_server: watch::Sender<Option<(NonDetachingJoinHandle<()>, ShutdownHandle)>>,
-    // procedures: Mutex<Vec<(ProcedureName, ProcedureId)>>,
     js_mount: MountGuard,
     volumes: BTreeMap<VolumeId, MountGuard>,
     assets: Vec<MountGuard>,
