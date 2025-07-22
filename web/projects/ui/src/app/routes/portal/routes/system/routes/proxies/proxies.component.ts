@@ -117,10 +117,31 @@ export default class ProxiesComponent {
         public: 'Public',
       },
     }),
-    config: ISB.Value.file({
-      name: 'Wiregaurd Config',
-      required: true,
-      extensions: ['.conf'],
+    config: ISB.Value.union({
+      name: 'Config',
+      default: 'upload',
+      variants: ISB.Variants.of({
+        upload: {
+          name: 'File',
+          spec: ISB.InputSpec.of({
+            file: ISB.Value.file({
+              name: 'Wiregaurd Config',
+              required: true,
+              extensions: ['.conf'],
+            }),
+          }),
+        },
+        paste: {
+          name: 'Copy/Paste',
+          spec: ISB.InputSpec.of({
+            file: ISB.Value.textarea({
+              name: 'Paste File Contents',
+              default: null,
+              required: true,
+            }),
+          }),
+        },
+      }),
     }),
   })
 
@@ -140,17 +161,13 @@ export default class ProxiesComponent {
     })
   }
 
-  private async save(
-    input: typeof this.wireguardSpec._TYPE & {
-      config: { hash: string; file: File }
-    },
-  ): Promise<boolean> {
+  private async save(input: typeof this.wireguardSpec._TYPE): Promise<boolean> {
     const loader = this.loader.open('Saving').subscribe()
 
     try {
       await this.api.addProxy({
         label: input.label,
-        config: input.config,
+        config: input.config.value.file as string, // @TODO alex this is the file represented as a string
         public: input.type === 'public',
       })
       return true
