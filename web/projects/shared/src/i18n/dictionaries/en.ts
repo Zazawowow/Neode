@@ -527,4 +527,12 @@ export const ENGLISH = {
   'StartOS package': 530, // as in, the URL of the source code for the StartOS package
   'Error initializing server': 531,
   'Finished': 532, // an in, complete
+  'Inbound Proxies': 533, // as in a service used to proxy internet traffic
+  'Inbound proxies provide remote access to your server and installed services.': 534,
+  'Saved Proxies': 535, // as in, a list of proxies already added to StartOS
+  'Add Proxy': 536, // as in, add a new proxy to StartOS
+  'Label': 537, // as in, a name given to something
+  'No proxies': 538,
+  'Update Label': 539,
+  'Rename': 540
 } as const

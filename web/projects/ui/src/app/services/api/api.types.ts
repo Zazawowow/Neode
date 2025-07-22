@@ -234,7 +234,30 @@ export namespace RR {
   }
   export type CreateBackupRes = null
 
-  // package
+  // proxy
+
+  export type AddProxyReq = {
+    label: string
+    config: string // hash of file
+    public: boolean
+  } // net.proxy.add
+  export type AddProxyRes = {
+    id: string
+  }
+
+  export type UpdateProxyReq = {
+    id: string
+    label: string
+  } // net.netwok-interface.set-label
+  export type UpdateProxyRes = null
+
+  export type RemoveProxyReq = { id: string } // net.proxy.remove
+  export type RemoveProxyRes = null
+
+  // export type SetOutboundProxyReq = {
+  //   id: string | null
+  // } // net.proxy.set-outbound
+  // export type SetOutboundProxyRes = null
 
   export type InitAcmeReq = {
     provider: 'letsencrypt' | 'letsencrypt-staging' | string
@@ -374,7 +397,7 @@ export namespace RR {
     icon: string // base64
   }
   export type SideloadPackageRes = {
-    upload: string // guid
+    upload: string
     progress: string // guid
   }
 
@@ -630,35 +653,6 @@ export type DependencyErrorTransitive = {
 
 //   export type OverridePortReq = { target: number; port: number } // net.port-forwards.override
 //   export type OverridePortRes = null
-
-//   // ** proxies **
-
-//   export type AddProxyReq = {
-//     name: string
-//     config: string
-//   } // net.proxy.add
-//   export type AddProxyRes = null
-
-//   export type UpdateProxyReq = {
-//     name: string
-//   } // net.proxy.update
-//   export type UpdateProxyRes = null
-
-//   export type DeleteProxyReq = { id: string } // net.proxy.delete
-//   export type DeleteProxyRes = null
-
-//   // ** set outbound proxies **
-
-//   export type SetOsOutboundProxyReq = {
-//     proxy: string | null
-//   } // server.proxy.set-outbound
-//   export type SetOsOutboundProxyRes = null
-
-//   export type SetServiceOutboundProxyReq = {
-//     packageId: string
-//     proxy: string | null
-//   } // package.proxy.set-outbound
-//   export type SetServiceOutboundProxyRes = null
 
 //   // ** automated backups **
 

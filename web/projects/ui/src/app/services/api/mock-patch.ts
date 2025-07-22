@@ -136,8 +136,7 @@ export const mockPatchData: DataModel = {
       },
       networkInterfaces: {
         eth0: {
-          inbound: false,
-          outbound: true,
+          public: false,
           ipInfo: {
             name: 'Wired Connection 1',
             scopeId: 1,
@@ -148,8 +147,7 @@ export const mockPatchData: DataModel = {
           },
         },
         wlan0: {
-          inbound: false,
-          outbound: true,
+          public: false,
           ipInfo: {
             name: 'Wireless Connection 1',
             scopeId: 2,

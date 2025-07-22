@@ -33,9 +33,9 @@ export class LiveApiService extends ApiService {
     this.document.defaultView.rpcClient = this
   }
 
-  // for sideloading packages
+  // for uploading files
 
-  async uploadPackage(guid: string, body: Blob): Promise<void> {
+  async uploadFile(guid: string, body: Blob): Promise<void> {
     await this.httpRequest({
       method: Method.POST,
       body,
@@ -271,12 +271,6 @@ export class LiveApiService extends ApiService {
     return this.rpcRequest({ method: 'net.tor.reset', params })
   }
 
-  // async setOsOutboundProxy(
-  //   params: RR.SetOsOutboundProxyReq,
-  // ): Promise<RR.SetOsOutboundProxyRes> {
-  //   return this.rpcRequest({ method: 'server.proxy.set-outbound', params })
-  // }
-
   // marketplace URLs
 
   async checkOSUpdate(
@@ -352,16 +346,22 @@ export class LiveApiService extends ApiService {
 
   // proxies
 
-  // async addProxy(params: RR.AddProxyReq): Promise<RR.AddProxyRes> {
-  //   return this.rpcRequest({ method: 'net.proxy.add', params })
-  // }
+  async addProxy(params: RR.AddProxyReq): Promise<RR.AddProxyRes> {
+    return this.rpcRequest({ method: 'net.proxy.add', params })
+  }
 
-  // async updateProxy(params: RR.UpdateProxyReq): Promise<RR.UpdateProxyRes> {
-  //   return this.rpcRequest({ method: 'net.proxy.update', params })
-  // }
+  async updateProxy(params: RR.UpdateProxyReq): Promise<RR.UpdateProxyRes> {
+    return this.rpcRequest({ method: 'net.netwok-interface.set-label', params })
+  }
 
-  // async deleteProxy(params: RR.DeleteProxyReq): Promise<RR.DeleteProxyRes> {
-  //   return this.rpcRequest({ method: 'net.proxy.delete', params })
+  async removeProxy(params: RR.RemoveProxyReq): Promise<RR.RemoveProxyRes> {
+    return this.rpcRequest({ method: 'net.proxy.remove', params })
+  }
+
+  // async setOutboundProxy(
+  //   params: RR.SetOutboundProxyReq,
+  // ): Promise<RR.SetOutboundProxyRes> {
+  //   return this.rpcRequest({ method: 'server.proxy.set-outbound', params })
   // }
 
   // domains

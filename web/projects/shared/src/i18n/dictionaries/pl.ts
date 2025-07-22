@@ -528,4 +528,12 @@ export default {
   530: 'Pakiet StartOS',
   531: 'Błąd inicjalizacji serwera',
   532: 'Zakończono',
+  533: 'Proksy przychodzące',
+  534: 'Proksy przychodzące zapewniają zdalny dostęp do twojego serwera i zainstalowanych usług.',
+  535: 'Zapisane proksy',
+  536: 'Dodaj proksy',
+  537: 'Etykieta',
+  538: 'Brak proksy',
+  539: 'Aktualizuj etykietę',
+  540: 'Zmień nazwę',
 } satisfies i18n

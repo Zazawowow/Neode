@@ -27,11 +27,6 @@ export const SYSTEM_MENU = [
       link: 'interfaces',
     },
     {
-      icon: '@tui.award',
-      item: 'ACME',
-      link: 'acme',
-    },
-    {
       icon: '@tui.mail',
       item: 'Email',
       link: 'email',
@@ -40,6 +35,18 @@ export const SYSTEM_MENU = [
       icon: '@tui.wifi',
       item: 'WiFi',
       link: 'wifi',
+    },
+  ],
+  [
+    {
+      icon: '@tui.award',
+      item: 'ACME',
+      link: 'acme',
+    },
+    {
+      icon: '@tui.hard-drive-download',
+      item: 'Inbound Proxies',
+      link: 'proxies',
     },
   ],
   [

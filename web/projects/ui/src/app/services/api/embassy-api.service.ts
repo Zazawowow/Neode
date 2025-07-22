@@ -6,8 +6,8 @@ import { WebSocketSubject } from 'rxjs/webSocket'
 export abstract class ApiService {
   // http
 
-  // for sideloading packages
-  abstract uploadPackage(guid: string, body: Blob): Promise<void>
+  // for uploading files
+  abstract uploadFile(guid: string, body: Blob): Promise<void>
 
   // for getting static files: ex license
   abstract getStaticProxy(
@@ -126,12 +126,6 @@ export abstract class ApiService {
 
   // @TODO 041
 
-  // ** server outbound proxy **
-
-  // abstract setOsOutboundProxy(
-  //   params: RR.SetOsOutboundProxyReq,
-  // ): Promise<RR.SetOsOutboundProxyRes>
-
   // smtp
 
   abstract setSmtp(params: RR.SetSMTPReq): Promise<RR.SetSMTPRes>
@@ -182,13 +176,17 @@ export abstract class ApiService {
 
   // ** proxies **
 
+  abstract addProxy(params: RR.AddProxyReq): Promise<RR.AddProxyRes>
+
+  abstract updateProxy(params: RR.UpdateProxyReq): Promise<RR.UpdateProxyRes>
+
+  abstract removeProxy(params: RR.RemoveProxyReq): Promise<RR.RemoveProxyRes>
+
   // @TODO 041
 
-  // abstract addProxy(params: RR.AddProxyReq): Promise<RR.AddProxyRes>
-
-  // abstract updateProxy(params: RR.UpdateProxyReq): Promise<RR.UpdateProxyRes>
-
-  // abstract deleteProxy(params: RR.DeleteProxyReq): Promise<RR.DeleteProxyRes>
+  // abstract setOutboundProxy(
+  //   params: RR.SetOutboundProxyReq,
+  // ): Promise<RR.SetOutboundProxyRes>
 
   // ** domains **
 

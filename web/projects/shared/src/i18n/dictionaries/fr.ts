@@ -528,4 +528,12 @@ export default {
   530: 'Paquet StartOS',
   531: "Erreur lors de l'initialisation du serveur",
   532: 'Terminé',
+  533: 'Proxies entrants',
+  534: 'Les proxies entrants permettent un accès à distance à votre serveur et aux services installés.',
+  535: 'Proxies enregistrés',
+  536: 'Ajouter un proxy',
+  537: 'Étiquette',
+  538: 'Aucun proxy',
+  539: 'Mettre à jour l’étiquette',
+  540: 'Renommer',
 } satisfies i18n

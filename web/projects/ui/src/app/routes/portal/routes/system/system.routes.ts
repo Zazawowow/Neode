@@ -72,13 +72,13 @@ export default [
         title: titleResolver,
         loadComponent: () => import('./routes/password/password.component'),
       },
+      {
+        path: 'proxies',
+        loadComponent: () => import('./routes/proxies/proxies.component'),
+      },
       // {
       //   path: 'domains',
       //   loadComponent: () => import('./routes/domains/domains.component')
-      // },
-      // {
-      //   path: 'proxies',
-      //   loadComponent: () => import('./routes/proxies/proxies.component')
       // },
       // {
       //   path: 'router',

@@ -528,4 +528,12 @@ export default {
   530: 'StartOS-Paket',
   531: 'Fehler beim Initialisieren des Servers',
   532: 'Abgeschlossen',
+  533: 'Eingehende Proxys',
+  534: 'Eingehende Proxys ermöglichen den Fernzugriff auf Ihren Server und installierte Dienste.',
+  535: 'Gespeicherte Proxys',
+  536: 'Proxy hinzufügen',
+  537: 'Bezeichnung',
+  538: 'Keine Proxys',
+  539: 'Bezeichnung aktualisieren',
+  540: 'Umbenennen',
 } satisfies i18n

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core'
-import { pauseFor, Log, RPCErrorDetails, RPCOptions } from '@start9labs/shared'
+import { pauseFor, Log, RPCErrorDetails } from '@start9labs/shared'
 import { ApiService } from './embassy-api.service'
 import {
   AddOperation,
@@ -71,7 +71,7 @@ export class MockApiService extends ApiService {
       .subscribe()
   }
 
-  async uploadPackage(guid: string, body: Blob): Promise<void> {
+  async uploadFile(guid: string, body: Blob): Promise<void> {
     await pauseFor(2000)
   }
 
@@ -467,23 +467,6 @@ export class MockApiService extends ApiService {
     return null
   }
 
-  // async setOsOutboundProxy(
-  //   params: RR.SetOsOutboundProxyReq,
-  // ): Promise<RR.SetOsOutboundProxyRes> {
-  //   await pauseFor(2000)
-
-  //   const patch = [
-  //     {
-  //       op: PatchOp.REPLACE,
-  //       path: '/serverInfo/network/outboundProxy',
-  //       value: params.proxy,
-  //     },
-  //   ]
-  //   this.mockRevision(patch)
-
-  //   return null
-  // }
-
   // marketplace URLs
 
   async checkOSUpdate(
@@ -559,56 +542,73 @@ export class MockApiService extends ApiService {
     return null
   }
 
-  // network
+  // proxies
 
-  // async addProxy(params: RR.AddProxyReq): Promise<RR.AddProxyRes> {
+  async addProxy(params: RR.AddProxyReq): Promise<RR.AddProxyRes> {
+    await pauseFor(2000)
+
+    const id = `wga-${params.label}`
+
+    const patch: AddOperation<T.NetworkInterfaceInfo>[] = [
+      {
+        op: PatchOp.ADD,
+        path: `/serverInfo/network/networkInterfaces/${id}`,
+        value: {
+          public: params.public,
+          ipInfo: {
+            name: params.label,
+            scopeId: 3,
+            deviceType: 'wireguard',
+            subnets: [],
+            wanIp: '1.1.1.1',
+            ntpServers: [],
+          },
+        },
+      },
+    ]
+    this.mockRevision(patch)
+
+    return { id }
+  }
+
+  async updateProxy(params: RR.UpdateProxyReq): Promise<RR.UpdateProxyRes> {
+    await pauseFor(2000)
+
+    const patch: ReplaceOperation<string>[] = [
+      {
+        op: PatchOp.REPLACE,
+        path: `/serverInfo/network/networkInterfaces/${params.id}/label`,
+        value: params.label,
+      },
+    ]
+    this.mockRevision(patch)
+
+    return null
+  }
+
+  async removeProxy(params: RR.RemoveProxyReq): Promise<RR.RemoveProxyRes> {
+    await pauseFor(2000)
+    const patch: RemoveOperation[] = [
+      {
+        op: PatchOp.REMOVE,
+        path: `/serverInfo/network/networkInterfaces/${params.id}`,
+      },
+    ]
+    this.mockRevision(patch)
+
+    return null
+  }
+
+  // async setOutboundProxy(
+  //   params: RR.SetOutboundProxyReq,
+  // ): Promise<RR.SetOutboundProxyRes> {
   //   await pauseFor(2000)
 
-  //   const patch = [
-  //     {
-  //       op: PatchOp.ADD,
-  //       path: `/serverInfo/network/networkInterfaces/wga1`,
-  //       value: {
-  //         inbound: true,
-  //         outbound: true,
-  //         ipInfo: {
-  //           name: params.name,
-  //           scopeId: 3,
-  //           deviceType: 'wireguard',
-  //           subnets: [],
-  //           wanIp: '1.1.1.1',
-  //           ntpServers: [],
-  //         },
-  //       },
-  //     },
-  //   ]
-  //   this.mockRevision(patch)
-
-  //   return null
-  // }
-
-  // async updateProxy(params: RR.UpdateProxyReq): Promise<RR.UpdateProxyRes> {
-  //   await pauseFor(2000)
-
-  //   const patch = [
+  //   const patch: ReplaceOperation<string | null>[] = [
   //     {
   //       op: PatchOp.REPLACE,
-  //       path: `/serverInfo/network/proxies/0/name`,
-  //       value: params.name,
-  //     },
-  //   ]
-  //   this.mockRevision(patch)
-
-  //   return null
-  // }
-
-  // async deleteProxy(params: RR.DeleteProxyReq): Promise<RR.DeleteProxyRes> {
-  //   await pauseFor(2000)
-  //   const patch = [
-  //     {
-  //       op: PatchOp.REPLACE,
-  //       path: '/serverInfo/network/proxies',
-  //       value: [],
+  //       path: '/serverInfo/network/outboundInterface',
+  //       value: params.id,
   //     },
   //   ]
   //   this.mockRevision(patch)
