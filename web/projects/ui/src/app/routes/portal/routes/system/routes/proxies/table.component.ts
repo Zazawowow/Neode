@@ -71,7 +71,7 @@ export class ProxiesTableComponent<T extends WireguardProxy> {
         const loader = this.loader.open('Deleting').subscribe()
 
         try {
-          await this.api.removeProxy({ id })
+          await this.api.removeTunnel({ id })
         } catch (e: any) {
           this.errorService.handleError(e)
         } finally {
@@ -108,7 +108,7 @@ export class ProxiesTableComponent<T extends WireguardProxy> {
     const loader = this.loader.open('Saving').subscribe()
 
     try {
-      await this.api.updateProxy({ id, label })
+      await this.api.updateTunnel({ id, name: label })
       return true
     } catch (e: any) {
       this.errorService.handleError(e)

@@ -234,30 +234,25 @@ export namespace RR {
   }
   export type CreateBackupRes = null
 
-  // proxy
+  // tunnel
 
-  export type AddProxyReq = {
-    label: string
-    config: string // hash of file
+  export type AddTunnelReq = {
+    name: string
+    config: string // file contents
     public: boolean
-  } // net.proxy.add
-  export type AddProxyRes = {
+  } // net.tunnel.add
+  export type AddTunnelRes = {
     id: string
   }
 
-  export type UpdateProxyReq = {
+  export type UpdateTunnelReq = {
     id: string
-    label: string
-  } // net.netwok-interface.set-label
-  export type UpdateProxyRes = null
+    name: string
+  } // net.netwok-interface.set-name
+  export type UpdateTunnelRes = null
 
-  export type RemoveProxyReq = { id: string } // net.proxy.remove
-  export type RemoveProxyRes = null
-
-  // export type SetOutboundProxyReq = {
-  //   id: string | null
-  // } // net.proxy.set-outbound
-  // export type SetOutboundProxyRes = null
+  export type RemoveTunnelReq = { id: string } // net.tunnel.remove
+  export type RemoveTunnelRes = null
 
   export type InitAcmeReq = {
     provider: 'letsencrypt' | 'letsencrypt-staging' | string

@@ -12,6 +12,7 @@ pub mod service_interface;
 pub mod ssl;
 pub mod static_server;
 pub mod tor;
+pub mod tunnel;
 pub mod utils;
 pub mod vhost;
 pub mod web_server;
@@ -31,6 +32,10 @@ pub fn net<C: Context>() -> ParentHandler<C> {
             "network-interface",
             network_interface::network_interface_api::<C>()
                 .with_about("View and edit network interface configurations"),
+        )
+        .subcommand(
+            "tunnel",
+            tunnel::tunnel_api::<C>().with_about("Manage tunnels"),
         )
         .subcommand(
             "vhost",

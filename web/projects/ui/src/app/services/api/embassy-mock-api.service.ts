@@ -544,10 +544,11 @@ export class MockApiService extends ApiService {
 
   // proxies
 
-  async addProxy(params: RR.AddProxyReq): Promise<RR.AddProxyRes> {
+  private proxyId = 0
+  async addTunnel(params: RR.AddTunnelReq): Promise<RR.AddTunnelRes> {
     await pauseFor(2000)
 
-    const id = `wga-${params.label}`
+    const id = `wg${this.proxyId++}`
 
     const patch: AddOperation<T.NetworkInterfaceInfo>[] = [
       {
@@ -556,7 +557,7 @@ export class MockApiService extends ApiService {
         value: {
           public: params.public,
           ipInfo: {
-            name: params.label,
+            name: params.name,
             scopeId: 3,
             deviceType: 'wireguard',
             subnets: [],
@@ -571,14 +572,14 @@ export class MockApiService extends ApiService {
     return { id }
   }
 
-  async updateProxy(params: RR.UpdateProxyReq): Promise<RR.UpdateProxyRes> {
+  async updateTunnel(params: RR.UpdateTunnelReq): Promise<RR.UpdateTunnelRes> {
     await pauseFor(2000)
 
     const patch: ReplaceOperation<string>[] = [
       {
         op: PatchOp.REPLACE,
         path: `/serverInfo/network/networkInterfaces/${params.id}/label`,
-        value: params.label,
+        value: params.name,
       },
     ]
     this.mockRevision(patch)
@@ -586,7 +587,7 @@ export class MockApiService extends ApiService {
     return null
   }
 
-  async removeProxy(params: RR.RemoveProxyReq): Promise<RR.RemoveProxyRes> {
+  async removeTunnel(params: RR.RemoveTunnelReq): Promise<RR.RemoveTunnelRes> {
     await pauseFor(2000)
     const patch: RemoveOperation[] = [
       {
@@ -600,8 +601,8 @@ export class MockApiService extends ApiService {
   }
 
   // async setOutboundProxy(
-  //   params: RR.SetOutboundProxyReq,
-  // ): Promise<RR.SetOutboundProxyRes> {
+  //   params: RR.SetOutboundTunnelReq,
+  // ): Promise<RR.SetOutboundTunnelRes> {
   //   await pauseFor(2000)
 
   //   const patch: ReplaceOperation<string | null>[] = [
@@ -1372,8 +1373,8 @@ export class MockApiService extends ApiService {
   }
 
   // async setServiceOutboundProxy(
-  //   params: RR.SetServiceOutboundProxyReq,
-  // ): Promise<RR.SetServiceOutboundProxyRes> {
+  //   params: RR.SetServiceOutboundTunnelReq,
+  // ): Promise<RR.SetServiceOutboundTunnelRes> {
   //   await pauseFor(2000)
   //   const patch = [
   //     {

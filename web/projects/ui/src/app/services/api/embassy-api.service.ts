@@ -176,17 +176,17 @@ export abstract class ApiService {
 
   // ** proxies **
 
-  abstract addProxy(params: RR.AddProxyReq): Promise<RR.AddProxyRes>
+  abstract addTunnel(params: RR.AddTunnelReq): Promise<RR.AddTunnelRes>
 
-  abstract updateProxy(params: RR.UpdateProxyReq): Promise<RR.UpdateProxyRes>
+  abstract updateTunnel(params: RR.UpdateTunnelReq): Promise<RR.UpdateTunnelRes>
 
-  abstract removeProxy(params: RR.RemoveProxyReq): Promise<RR.RemoveProxyRes>
+  abstract removeTunnel(params: RR.RemoveTunnelReq): Promise<RR.RemoveTunnelRes>
 
   // @TODO 041
 
   // abstract setOutboundProxy(
-  //   params: RR.SetOutboundProxyReq,
-  // ): Promise<RR.SetOutboundProxyRes>
+  //   params: RR.SetOutboundTunnelReq,
+  // ): Promise<RR.SetOutboundTunnelRes>
 
   // ** domains **
 
@@ -364,8 +364,8 @@ export abstract class ApiService {
   // ** service outbound proxy **
 
   // abstract setServiceOutboundProxy(
-  //   params: RR.SetServiceOutboundProxyReq,
-  // ): Promise<RR.SetServiceOutboundProxyRes>
+  //   params: RR.SetServiceOutboundTunnelReq,
+  // ): Promise<RR.SetServiceOutboundTunnelRes>
 
   abstract initAcme(params: RR.InitAcmeReq): Promise<RR.InitAcmeRes>
 

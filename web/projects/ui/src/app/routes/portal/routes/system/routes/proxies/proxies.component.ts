@@ -165,8 +165,8 @@ export default class ProxiesComponent {
     const loader = this.loader.open('Saving').subscribe()
 
     try {
-      await this.api.addProxy({
-        label: input.label,
+      await this.api.addTunnel({
+        name: input.label,
         config: input.config.value.file as string, // @TODO alex this is the file represented as a string
         public: input.type === 'public',
       })

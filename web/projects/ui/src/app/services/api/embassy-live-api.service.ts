@@ -346,21 +346,21 @@ export class LiveApiService extends ApiService {
 
   // proxies
 
-  async addProxy(params: RR.AddProxyReq): Promise<RR.AddProxyRes> {
-    return this.rpcRequest({ method: 'net.proxy.add', params })
+  async addTunnel(params: RR.AddTunnelReq): Promise<RR.AddTunnelRes> {
+    return this.rpcRequest({ method: 'net.tunnel.add', params })
   }
 
-  async updateProxy(params: RR.UpdateProxyReq): Promise<RR.UpdateProxyRes> {
-    return this.rpcRequest({ method: 'net.netwok-interface.set-label', params })
+  async updateTunnel(params: RR.UpdateTunnelReq): Promise<RR.UpdateTunnelRes> {
+    return this.rpcRequest({ method: 'net.netwok-interface.set-name', params })
   }
 
-  async removeProxy(params: RR.RemoveProxyReq): Promise<RR.RemoveProxyRes> {
-    return this.rpcRequest({ method: 'net.proxy.remove', params })
+  async removeTunnel(params: RR.RemoveTunnelReq): Promise<RR.RemoveTunnelRes> {
+    return this.rpcRequest({ method: 'net.tunnel.remove', params })
   }
 
   // async setOutboundProxy(
-  //   params: RR.SetOutboundProxyReq,
-  // ): Promise<RR.SetOutboundProxyRes> {
+  //   params: RR.SetOutboundTunnelReq,
+  // ): Promise<RR.SetOutboundTunnelRes> {
   //   return this.rpcRequest({ method: 'server.proxy.set-outbound', params })
   // }
 
@@ -627,8 +627,8 @@ export class LiveApiService extends ApiService {
   }
 
   // async setServiceOutboundProxy(
-  //   params: RR.SetServiceOutboundProxyReq,
-  // ): Promise<RR.SetServiceOutboundProxyRes> {
+  //   params: RR.SetServiceOutboundTunnelReq,
+  // ): Promise<RR.SetServiceOutboundTunnelRes> {
   //   return this.rpcRequest({ method: 'package.proxy.set-outbound', params })
   // }
 

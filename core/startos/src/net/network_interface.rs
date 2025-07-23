@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV6};
 use std::sync::{Arc, Weak};
 use std::task::Poll;
@@ -28,6 +28,7 @@ use crate::context::{CliContext, RpcContext};
 use crate::db::model::public::{IpInfo, NetworkInterfaceInfo, NetworkInterfaceType};
 use crate::db::model::Database;
 use crate::net::forward::START9_BRIDGE_IFACE;
+use crate::net::network_interface::device::DeviceProxy;
 use crate::net::utils::{ipv6_is_link_local, ipv6_is_local};
 use crate::net::web_server::Accept;
 use crate::prelude::*;
@@ -86,15 +87,15 @@ pub fn network_interface_api<C: Context>() -> ParentHandler<C> {
                 .with_call_remote::<CliContext>(),
         )
         .subcommand(
-            "set-inbound",
-            from_fn_async(set_inbound)
+            "set-public",
+            from_fn_async(set_public)
                 .with_metadata("sync_db", Value::Bool(true))
                 .no_display()
                 .with_about("Indicate whether this interface has inbound access from the WAN")
                 .with_call_remote::<CliContext>(),
         ).subcommand(
             "unset-inbound",
-            from_fn_async(unset_inbound)
+            from_fn_async(unset_public)
                 .with_metadata("sync_db", Value::Bool(true))
                 .no_display()
                 .with_about("Allow this interface to infer whether it has inbound access from the WAN based on its IPv4 address")
@@ -105,7 +106,13 @@ pub fn network_interface_api<C: Context>() -> ParentHandler<C> {
                 .no_display()
                 .with_about("Forget a disconnected interface")
                 .with_call_remote::<CliContext>()
-        )
+        ).subcommand("set-name",
+        from_fn_async(set_name)
+            .with_metadata("sync_db", Value::Bool(true))
+            .no_display()
+            .with_about("Rename an interface")
+            .with_call_remote::<CliContext>()
+    )
 }
 
 async fn list_interfaces(
@@ -116,19 +123,19 @@ async fn list_interfaces(
 
 #[derive(Debug, Clone, Deserialize, Serialize, Parser, TS)]
 #[ts(export)]
-struct NetworkInterfaceSetInboundParams {
+struct NetworkInterfaceSetPublicParams {
     #[ts(type = "string")]
     interface: InternedString,
-    inbound: Option<bool>,
+    public: Option<bool>,
 }
 
-async fn set_inbound(
+async fn set_public(
     ctx: RpcContext,
-    NetworkInterfaceSetInboundParams { interface, inbound }: NetworkInterfaceSetInboundParams,
+    NetworkInterfaceSetPublicParams { interface, public }: NetworkInterfaceSetPublicParams,
 ) -> Result<(), Error> {
     ctx.net_controller
         .net_iface
-        .set_inbound(&interface, Some(inbound.unwrap_or(true)))
+        .set_public(&interface, Some(public.unwrap_or(true)))
         .await
 }
 
@@ -139,13 +146,13 @@ struct UnsetInboundParams {
     interface: InternedString,
 }
 
-async fn unset_inbound(
+async fn unset_public(
     ctx: RpcContext,
     UnsetInboundParams { interface }: UnsetInboundParams,
 ) -> Result<(), Error> {
     ctx.net_controller
         .net_iface
-        .set_inbound(&interface, None)
+        .set_public(&interface, None)
         .await
 }
 
@@ -163,12 +170,32 @@ async fn forget_iface(
     ctx.net_controller.net_iface.forget(&interface).await
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, Parser, TS)]
+#[ts(export)]
+struct RenameInterfaceParams {
+    #[ts(type = "string")]
+    interface: InternedString,
+    name: String,
+}
+
+async fn set_name(
+    ctx: RpcContext,
+    RenameInterfaceParams { interface, name }: RenameInterfaceParams,
+) -> Result<(), Error> {
+    ctx.net_controller
+        .net_iface
+        .set_name(&interface, &name)
+        .await
+}
+
 #[proxy(
     interface = "org.freedesktop.NetworkManager",
     default_service = "org.freedesktop.NetworkManager",
     default_path = "/org/freedesktop/NetworkManager"
 )]
 trait NetworkManager {
+    fn get_device_by_ip_iface(&self, iface: &str) -> Result<OwnedObjectPath, Error>;
+
     #[zbus(property)]
     fn all_devices(&self) -> Result<Vec<OwnedObjectPath>, Error>;
 
@@ -194,6 +221,9 @@ mod active_connection {
     )]
     pub trait ActiveConnection {
         #[zbus(property)]
+        fn connection(&self) -> Result<OwnedObjectPath, Error>;
+
+        #[zbus(property)]
         fn id(&self) -> Result<String, Error>;
 
         #[zbus(property)]
@@ -208,6 +238,19 @@ mod active_connection {
         #[zbus(property)]
         fn dhcp4_config(&self) -> Result<OwnedObjectPath, Error>;
     }
+}
+
+#[proxy(
+    interface = "org.freedesktop.NetworkManager.Settings.Connection",
+    default_service = "org.freedesktop.NetworkManager"
+)]
+trait ConnectionSettings {
+    fn update2(
+        &self,
+        settings: HashMap<String, HashMap<String, ZValue<'_>>>,
+        flags: u32,
+        args: HashMap<String, ZValue<'_>>,
+    ) -> Result<(), Error>;
 }
 
 #[proxy(
@@ -276,6 +319,8 @@ mod device {
         default_service = "org.freedesktop.NetworkManager"
     )]
     pub trait Device {
+        fn delete(&self) -> Result<(), Error>;
+
         #[zbus(property)]
         fn ip_interface(&self) -> Result<String, Error>;
 
@@ -836,7 +881,7 @@ impl NetworkInterfaceController {
         Ok(listener)
     }
 
-    pub async fn set_inbound(
+    pub async fn set_public(
         &self,
         interface: &InternedString,
         public: Option<bool>,
@@ -902,6 +947,96 @@ impl NetworkInterfaceController {
         if changed {
             sub.recv().await;
         }
+        Ok(())
+    }
+
+    pub async fn delete_iface(&self, interface: &InternedString) -> Result<(), Error> {
+        let Some(has_ip_info) = self
+            .ip_info
+            .peek(|ifaces| ifaces.get(interface).map(|i| i.ip_info.is_some()))
+        else {
+            return Ok(());
+        };
+
+        if has_ip_info {
+            let mut ip_info = self.ip_info.clone_unseen();
+
+            let connection = Connection::system().await?;
+
+            let netman_proxy = NetworkManagerProxy::new(&connection).await?;
+
+            let device = Some(netman_proxy.get_device_by_ip_iface(&**interface).await?)
+                .filter(|o| &**o != "/")
+                .or_not_found(lazy_format!("{interface} in NetworkManager"))?;
+
+            let device_proxy = DeviceProxy::new(&connection, device).await?;
+
+            device_proxy.delete().await?;
+
+            ip_info
+                .wait_for(|ifaces| ifaces.get(interface).map_or(true, |i| i.ip_info.is_none()))
+                .await;
+        }
+
+        self.forget(interface).await?;
+
+        Ok(())
+    }
+
+    pub async fn set_name(&self, interface: &InternedString, name: &str) -> Result<(), Error> {
+        let (dump, mut sub) = self
+            .db
+            .dump_and_sub(
+                "/public/serverInfo/network/networkInterfaces"
+                    .parse::<JsonPointer<_, _>>()
+                    .with_kind(ErrorKind::Database)?
+                    .join_end(&**interface)
+                    .join_end("ipInfo")
+                    .join_end("name"),
+            )
+            .await;
+        let change = dump.value.as_str().or_not_found(interface)? != name;
+
+        if !change {
+            return Ok(());
+        }
+
+        let connection = Connection::system().await?;
+
+        let netman_proxy = NetworkManagerProxy::new(&connection).await?;
+
+        let device = Some(netman_proxy.get_device_by_ip_iface(&**interface).await?)
+            .filter(|o| &**o != "/")
+            .or_not_found(lazy_format!("{interface} in NetworkManager"))?;
+
+        let device_proxy = DeviceProxy::new(&connection, device).await?;
+
+        let dac = Some(device_proxy.active_connection().await?)
+            .filter(|o| &**o != "/")
+            .or_not_found(lazy_format!("ActiveConnection for {interface}"))?;
+
+        let dac_proxy = active_connection::ActiveConnectionProxy::new(&connection, dac).await?;
+
+        let settings = Some(dac_proxy.connection().await?)
+            .filter(|o| &**o != "/")
+            .or_not_found(lazy_format!("ConnectionSettings for {interface}"))?;
+
+        let settings_proxy = ConnectionSettingsProxy::new(&connection, settings).await?;
+
+        settings_proxy.update2(
+            [(
+                "connection".into(),
+                [("id".into(), zbus::zvariant::Value::Str(name.into()))]
+                    .into_iter()
+                    .collect(),
+            )]
+            .into_iter()
+            .collect(),
+            0x1,
+            HashMap::new(),
+        );
+
+        sub.recv().await;
         Ok(())
     }
 }
