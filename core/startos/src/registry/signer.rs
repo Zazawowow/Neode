@@ -9,11 +9,8 @@ use ts_rs::TS;
 use url::Url;
 
 use crate::prelude::*;
-use crate::registry::signer::commitment::Digestable;
-use crate::registry::signer::sign::{AnySignature, AnyVerifyingKey, SignatureScheme};
-
-pub mod commitment;
-pub mod sign;
+use crate::sign::commitment::Digestable;
+use crate::sign::{AnySignature, AnyVerifyingKey, SignatureScheme};
 
 #[derive(Debug, Deserialize, Serialize, HasModel, TS)]
 #[serde(rename_all = "camelCase")]

@@ -42,6 +42,7 @@ pub mod crypto;
 pub mod future;
 pub mod http_reader;
 pub mod io;
+pub mod iter;
 pub mod logger;
 pub mod lshw;
 pub mod net;

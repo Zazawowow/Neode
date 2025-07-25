@@ -910,7 +910,7 @@ pub async fn attach(
 
         cmd.arg(&*container_id)
             .arg("--")
-            .arg("start-cli")
+            .arg("start-container")
             .arg("subcontainer")
             .arg("exec")
             .arg("--env")

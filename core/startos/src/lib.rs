@@ -60,10 +60,12 @@ pub mod s9pk;
 pub mod service;
 pub mod setup;
 pub mod shutdown;
+pub mod sign;
 pub mod sound;
 pub mod ssh;
 pub mod status;
 pub mod system;
+pub mod tunnel;
 pub mod update;
 pub mod upload;
 pub mod util;
@@ -152,9 +154,8 @@ pub fn main_api<C: Context>() -> ParentHandler<C> {
         )
         .subcommand(
             "auth",
-            auth::auth::<C>().with_about(
-                "Commands related to Authentication i.e. login, logout, reset-password",
-            ),
+            auth::auth::<C, RpcContext>()
+                .with_about("Commands related to Authentication i.e. login, logout"),
         )
         .subcommand(
             "db",
@@ -582,7 +583,7 @@ pub fn expanded_api() -> ParentHandler<CliContext> {
     main_api()
         .subcommand(
             "init",
-            from_fn_blocking(developer::init)
+            from_fn_async(developer::init)
                 .no_display()
                 .with_about("Create developer key if it doesn't exist"),
         )

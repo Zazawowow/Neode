@@ -37,7 +37,7 @@ use crate::middleware::auth::{Auth, HasValidSession};
 use crate::middleware::cors::Cors;
 use crate::middleware::db::SyncDb;
 use crate::prelude::*;
-use crate::registry::signer::commitment::merkle_archive::MerkleArchiveCommitment;
+use crate::sign::commitment::merkle_archive::MerkleArchiveCommitment;
 use crate::rpc_continuations::{Guid, RpcContinuations};
 use crate::s9pk::merkle_archive::source::http::HttpSource;
 use crate::s9pk::merkle_archive::source::multi_cursor_file::MultiCursorFile;
@@ -55,10 +55,10 @@ const INTERNAL_SERVER_ERROR: &[u8] = b"Internal Server Error";
 
 const PROXY_STRIP_HEADERS: &[&str] = &["cookie", "host", "origin", "referer", "user-agent"];
 
-#[cfg(all(feature = "daemon", not(feature = "test")))]
+#[cfg(all(feature = "startd", not(feature = "test")))]
 const EMBEDDED_UIS: Dir<'_> =
     include_dir::include_dir!("$CARGO_MANIFEST_DIR/../../web/dist/static");
-#[cfg(not(all(feature = "daemon", not(feature = "test"))))]
+#[cfg(not(all(feature = "startd", not(feature = "test"))))]
 const EMBEDDED_UIS: Dir<'_> = Dir::new("", &[]);
 
 #[derive(Clone)]

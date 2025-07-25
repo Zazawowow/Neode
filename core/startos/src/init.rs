@@ -1,18 +1,14 @@
-use std::fs::Permissions;
 use std::io::Cursor;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
-use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
 
-use axum::extract::ws::{self};
-use color_eyre::eyre::eyre;
+use axum::extract::ws;
 use const_format::formatcp;
 use futures::{StreamExt, TryStreamExt};
 use itertools::Itertools;
 use models::ResultExt;
-use rand::random;
 use rpc_toolkit::{from_fn_async, Context, Empty, HandlerArgs, HandlerExt, ParentHandler};
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
@@ -21,12 +17,12 @@ use ts_rs::TS;
 
 use crate::account::AccountInfo;
 use crate::context::config::ServerConfig;
-use crate::context::{CliContext, InitContext};
+use crate::context::{CliContext, InitContext, RpcContext};
 use crate::db::model::public::ServerStatus;
 use crate::db::model::Database;
-use crate::disk::mount::util::unmount;
+use crate::developer::OS_DEVELOPER_KEY_PATH;
 use crate::hostname::Hostname;
-use crate::middleware::auth::LOCAL_AUTH_COOKIE_PATH;
+use crate::middleware::auth::AuthContext;
 use crate::net::net_controller::{NetController, NetService};
 use crate::net::utils::find_wifi_iface;
 use crate::net::web_server::{UpgradableListener, WebServerAcceptorSetter};
@@ -38,7 +34,7 @@ use crate::rpc_continuations::{Guid, RpcContinuation};
 use crate::s9pk::v2::pack::{CONTAINER_DATADIR, CONTAINER_TOOL};
 use crate::ssh::SSH_DIR;
 use crate::system::{get_mem_info, sync_kiosk};
-use crate::util::io::{create_file, open_file, IOHook};
+use crate::util::io::{open_file, IOHook};
 use crate::util::lshw::lshw;
 use crate::util::net::WebSocketExt;
 use crate::util::{cpupower, Invoke};
@@ -167,28 +163,7 @@ pub async fn init(
     }
 
     local_auth.start();
-    tokio::fs::create_dir_all("/run/startos")
-        .await
-        .with_ctx(|_| (crate::ErrorKind::Filesystem, "mkdir -p /run/startos"))?;
-    if tokio::fs::metadata(LOCAL_AUTH_COOKIE_PATH).await.is_err() {
-        tokio::fs::write(
-            LOCAL_AUTH_COOKIE_PATH,
-            base64::encode(random::<[u8; 32]>()).as_bytes(),
-        )
-        .await
-        .with_ctx(|_| {
-            (
-                crate::ErrorKind::Filesystem,
-                format!("write {}", LOCAL_AUTH_COOKIE_PATH),
-            )
-        })?;
-        tokio::fs::set_permissions(LOCAL_AUTH_COOKIE_PATH, Permissions::from_mode(0o046)).await?;
-        Command::new("chown")
-            .arg("root:startos")
-            .arg(LOCAL_AUTH_COOKIE_PATH)
-            .invoke(crate::ErrorKind::Filesystem)
-            .await?;
-    }
+    RpcContext::init_auth_cookie().await?;
     local_auth.complete();
 
     load_database.start();
@@ -199,11 +174,28 @@ pub async fn init(
     load_database.complete();
 
     load_ssh_keys.start();
+    crate::developer::write_developer_key(
+        &peek.as_private().as_developer_key().de()?.0,
+        OS_DEVELOPER_KEY_PATH,
+    )
+    .await?;
+    Command::new("chown")
+        .arg("root:startos")
+        .arg(OS_DEVELOPER_KEY_PATH)
+        .invoke(ErrorKind::Filesystem)
+        .await?;
     crate::ssh::sync_keys(
         &Hostname(peek.as_public().as_server_info().as_hostname().de()?),
         &peek.as_private().as_ssh_privkey().de()?,
         &peek.as_private().as_ssh_pubkeys().de()?,
         SSH_DIR,
+    )
+    .await?;
+    crate::ssh::sync_keys(
+        &Hostname(peek.as_public().as_server_info().as_hostname().de()?),
+        &peek.as_private().as_ssh_privkey().de()?,
+        &Default::default(),
+        "/root/.ssh",
     )
     .await?;
     load_ssh_keys.complete();

@@ -7,9 +7,9 @@ use sha2::{Digest, Sha512};
 use tokio::io::AsyncRead;
 
 use crate::prelude::*;
-use crate::registry::signer::commitment::merkle_archive::MerkleArchiveCommitment;
-use crate::registry::signer::sign::ed25519::Ed25519;
-use crate::registry::signer::sign::SignatureScheme;
+use crate::sign::commitment::merkle_archive::MerkleArchiveCommitment;
+use crate::sign::ed25519::Ed25519;
+use crate::sign::SignatureScheme;
 use crate::s9pk::merkle_archive::directory_contents::DirectoryContents;
 use crate::s9pk::merkle_archive::file_contents::FileContents;
 use crate::s9pk::merkle_archive::sink::Sink;

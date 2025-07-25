@@ -1,5 +1,6 @@
 use std::time::SystemTime;
 
+use imbl_value::InternedString;
 use openssl::pkey::{PKey, Private};
 use openssl::x509::X509;
 use torut::onion::TorSecretKeyV3;
@@ -28,7 +29,7 @@ pub struct AccountInfo {
     pub root_ca_key: PKey<Private>,
     pub root_ca_cert: X509,
     pub ssh_key: ssh_key::PrivateKey,
-    pub compat_s9pk_key: ed25519_dalek::SigningKey,
+    pub developer_key: ed25519_dalek::SigningKey,
 }
 impl AccountInfo {
     pub fn new(password: &str, start_time: SystemTime) -> Result<Self, Error> {
@@ -40,7 +41,7 @@ impl AccountInfo {
         let ssh_key = ssh_key::PrivateKey::from(ssh_key::private::Ed25519Keypair::random(
             &mut ssh_key::rand_core::OsRng::default(),
         ));
-        let compat_s9pk_key =
+        let developer_key =
             ed25519_dalek::SigningKey::generate(&mut ssh_key::rand_core::OsRng::default());
         Ok(Self {
             server_id,
@@ -50,7 +51,7 @@ impl AccountInfo {
             root_ca_key,
             root_ca_cert,
             ssh_key,
-            compat_s9pk_key,
+            developer_key,
         })
     }
 
@@ -74,7 +75,7 @@ impl AccountInfo {
         let root_ca_key = cert_store.as_root_key().de()?.0;
         let root_ca_cert = cert_store.as_root_cert().de()?.0;
         let ssh_key = db.as_private().as_ssh_privkey().de()?.0;
-        let compat_s9pk_key = db.as_private().as_compat_s9pk_key().de()?.0;
+        let compat_s9pk_key = db.as_private().as_developer_key().de()?.0;
 
         Ok(Self {
             server_id,
@@ -84,7 +85,7 @@ impl AccountInfo {
             root_ca_key,
             root_ca_cert,
             ssh_key,
-            compat_s9pk_key,
+            developer_key: compat_s9pk_key,
         })
     }
 
@@ -111,8 +112,8 @@ impl AccountInfo {
             .as_ssh_privkey_mut()
             .ser(Pem::new_ref(&self.ssh_key))?;
         db.as_private_mut()
-            .as_compat_s9pk_key_mut()
-            .ser(Pem::new_ref(&self.compat_s9pk_key))?;
+            .as_developer_key_mut()
+            .ser(Pem::new_ref(&self.developer_key))?;
         let key_store = db.as_private_mut().as_key_store_mut();
         for tor_key in &self.tor_keys {
             key_store.as_onion_mut().insert_key(tor_key)?;
@@ -130,5 +131,18 @@ impl AccountInfo {
     pub fn set_password(&mut self, password: &str) -> Result<(), Error> {
         self.password = hash_password(password)?;
         Ok(())
+    }
+
+    pub fn hostnames(&self) -> impl IntoIterator<Item = InternedString> + Send + '_ {
+        [
+            self.hostname.no_dot_host_name(),
+            self.hostname.local_domain_name(),
+        ]
+        .into_iter()
+        .chain(
+            self.tor_keys
+                .iter()
+                .map(|k| InternedString::from_display(&k.public().get_onion_address())),
+        )
     }
 }

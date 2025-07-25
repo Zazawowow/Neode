@@ -2,7 +2,7 @@ use ed25519_dalek::{Signature, SigningKey, VerifyingKey};
 use sha2::Sha512;
 
 use crate::prelude::*;
-use crate::registry::signer::sign::SignatureScheme;
+use crate::sign::SignatureScheme;
 
 pub struct Ed25519;
 impl SignatureScheme for Ed25519 {

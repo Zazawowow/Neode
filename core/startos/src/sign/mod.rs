@@ -12,10 +12,11 @@ use sha2::Sha512;
 use ts_rs::TS;
 
 use crate::prelude::*;
-use crate::registry::signer::commitment::Digestable;
-use crate::registry::signer::sign::ed25519::Ed25519;
+use crate::sign::commitment::Digestable;
+use crate::sign::ed25519::Ed25519;
 use crate::util::serde::{deserialize_from_str, serialize_display};
 
+pub mod commitment;
 pub mod ed25519;
 
 pub trait SignatureScheme {
@@ -60,6 +61,7 @@ pub trait SignatureScheme {
     }
 }
 
+#[non_exhaustive]
 pub enum AnyScheme {
     Ed25519(Ed25519),
 }
@@ -118,6 +120,7 @@ impl SignatureScheme for AnyScheme {
 
 #[derive(Clone, Debug, PartialEq, Eq, TS)]
 #[ts(export, type = "string")]
+#[non_exhaustive]
 pub enum AnySigningKey {
     Ed25519(<Ed25519 as SignatureScheme>::SigningKey),
 }
@@ -189,6 +192,7 @@ impl Serialize for AnySigningKey {
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, TS)]
 #[ts(export, type = "string")]
+#[non_exhaustive]
 pub enum AnyVerifyingKey {
     Ed25519(<Ed25519 as SignatureScheme>::VerifyingKey),
 }
@@ -261,6 +265,7 @@ impl ValueParserFactory for AnyVerifyingKey {
 }
 
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub enum AnyDigest {
     Sha512(Sha512),
 }

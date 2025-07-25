@@ -8,7 +8,7 @@ use tokio::fs::File;
 
 use crate::dependencies::DependencyMetadata;
 use crate::prelude::*;
-use crate::registry::signer::commitment::merkle_archive::MerkleArchiveCommitment;
+use crate::sign::commitment::merkle_archive::MerkleArchiveCommitment;
 use crate::s9pk::manifest::Manifest;
 use crate::s9pk::merkle_archive::sink::Sink;
 use crate::s9pk::merkle_archive::source::multi_cursor_file::MultiCursorFile;

@@ -3,6 +3,7 @@ use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 
 use clap::Parser;
+use imbl_value::InternedString;
 use reqwest::Url;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -55,7 +56,6 @@ pub trait ContextConfig: DeserializeOwned + Default {
 #[derive(Debug, Default, Deserialize, Serialize, Parser)]
 #[serde(rename_all = "kebab-case")]
 #[command(rename_all = "kebab-case")]
-#[command(name = "start-cli")]
 #[command(version = crate::version::Current::default().semver().to_string())]
 pub struct ClientConfig {
     #[arg(short = 'c', long)]
@@ -64,6 +64,14 @@ pub struct ClientConfig {
     pub host: Option<Url>,
     #[arg(short = 'r', long)]
     pub registry: Option<Url>,
+    #[arg(long)]
+    pub registry_hostname: Option<InternedString>,
+    #[arg(skip)]
+    pub registry_listen: Option<SocketAddr>,
+    #[arg(short = 't', long)]
+    pub tunnel: Option<SocketAddr>,
+    #[arg(skip)]
+    pub tunnel_listen: Option<SocketAddr>,
     #[arg(short = 'p', long)]
     pub proxy: Option<Url>,
     #[arg(long)]
@@ -78,6 +86,8 @@ impl ContextConfig for ClientConfig {
     fn merge_with(&mut self, other: Self) {
         self.host = self.host.take().or(other.host);
         self.registry = self.registry.take().or(other.registry);
+        self.registry_hostname = self.registry_hostname.take().or(other.registry_hostname);
+        self.tunnel = self.tunnel.take().or(other.tunnel);
         self.proxy = self.proxy.take().or(other.proxy);
         self.cookie_path = self.cookie_path.take().or(other.cookie_path);
         self.developer_key_path = self.developer_key_path.take().or(other.developer_key_path);
@@ -113,6 +123,8 @@ pub struct ServerConfig {
     pub disable_encryption: Option<bool>,
     #[arg(long)]
     pub multi_arch_s9pks: Option<bool>,
+    #[arg(long)]
+    pub developer_key_path: Option<PathBuf>,
 }
 impl ContextConfig for ServerConfig {
     fn next(&mut self) -> Option<PathBuf> {
@@ -129,6 +141,7 @@ impl ContextConfig for ServerConfig {
             .or(other.revision_cache_size);
         self.disable_encryption = self.disable_encryption.take().or(other.disable_encryption);
         self.multi_arch_s9pks = self.multi_arch_s9pks.take().or(other.multi_arch_s9pks);
+        self.developer_key_path = self.developer_key_path.take().or(other.developer_key_path);
     }
 }
 

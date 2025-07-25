@@ -5,7 +5,7 @@ use tokio::io::AsyncWrite;
 use ts_rs::TS;
 
 use crate::prelude::*;
-use crate::registry::signer::commitment::{Commitment, Digestable};
+use crate::sign::commitment::{Commitment, Digestable};
 use crate::s9pk::merkle_archive::hash::VerifyingWriter;
 use crate::s9pk::merkle_archive::source::ArchiveSource;
 use crate::util::io::{ParallelBlake3Writer, TrackingIO};

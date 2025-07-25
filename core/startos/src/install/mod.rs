@@ -253,7 +253,7 @@ pub async fn sideload(
         .await;
     tokio::spawn(async move {
         if let Err(e) = async {
-            let key = ctx.db.peek().await.into_private().into_compat_s9pk_key();
+            let key = ctx.db.peek().await.into_private().into_developer_key();
 
             ctx.services
                 .install(

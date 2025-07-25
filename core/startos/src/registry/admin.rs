@@ -10,7 +10,7 @@ use ts_rs::TS;
 use crate::context::CliContext;
 use crate::prelude::*;
 use crate::registry::context::RegistryContext;
-use crate::registry::signer::sign::AnyVerifyingKey;
+use crate::sign::AnyVerifyingKey;
 use crate::registry::signer::{ContactInfo, SignerInfo};
 use crate::registry::RegistryDatabase;
 use crate::rpc_continuations::Guid;

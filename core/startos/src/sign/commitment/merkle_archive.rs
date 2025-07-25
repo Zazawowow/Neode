@@ -4,10 +4,10 @@ use tokio::io::AsyncWrite;
 use ts_rs::TS;
 
 use crate::prelude::*;
-use crate::registry::signer::commitment::{Commitment, Digestable};
 use crate::s9pk::merkle_archive::source::FileSource;
 use crate::s9pk::merkle_archive::MerkleArchive;
 use crate::s9pk::S9pk;
+use crate::sign::commitment::{Commitment, Digestable};
 use crate::util::io::TrackingIO;
 use crate::util::serde::Base64;
 

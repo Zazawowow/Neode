@@ -37,16 +37,24 @@ path = "src/main.rs"
 name = "registrybox"
 path = "src/main.rs"
 
+[[bin]]
+name = "tunnelbox"
+path = "src/main.rs"
+
 [features]
-cli = []
-container-runtime = ["procfs", "pty-process"]
-daemon = ["mail-send"]
-registry = []
-default = ["cli", "daemon", "registry", "container-runtime"]
+cli = ["cli-startd", "cli-registry", "cli-tunnel"]
+cli-container = ["procfs", "pty-process"]
+cli-registry = []
+cli-startd = []
+cli-tunnel = []
+default = ["cli", "startd", "registry", "cli-container", "tunnel"]
 dev = []
-unstable = ["console-subscriber", "tokio/tracing"]
 docker = []
+registry = []
+startd = ["mail-send"]
 test = []
+tunnel = []
+unstable = ["console-subscriber", "tokio/tracing"]
 
 [dependencies]
 aes = { version = "0.7.5", features = ["ctr"] }

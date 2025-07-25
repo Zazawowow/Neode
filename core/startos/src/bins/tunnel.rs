@@ -10,15 +10,15 @@ use crate::context::config::ClientConfig;
 use crate::context::CliContext;
 use crate::net::web_server::{Acceptor, WebServer};
 use crate::prelude::*;
-use crate::registry::context::{RegistryConfig, RegistryContext};
+use crate::tunnel::context::{TunnelConfig, TunnelContext};
 use crate::util::logger::LOGGER;
 
 #[instrument(skip_all)]
-async fn inner_main(config: &RegistryConfig) -> Result<(), Error> {
+async fn inner_main(config: &TunnelConfig) -> Result<(), Error> {
     let server = async {
-        let ctx = RegistryContext::init(config).await?;
+        let ctx = TunnelContext::init(config).await?;
         let mut server = WebServer::new(Acceptor::bind([ctx.listen]).await?);
-        server.serve_registry(ctx.clone());
+        server.serve_tunnel(ctx.clone());
 
         let mut shutdown_recv = ctx.shutdown.subscribe();
 
@@ -68,7 +68,7 @@ async fn inner_main(config: &RegistryConfig) -> Result<(), Error> {
 pub fn main(args: impl IntoIterator<Item = OsString>) {
     LOGGER.enable();
 
-    let config = RegistryConfig::parse_from(args).load().unwrap();
+    let config = TunnelConfig::parse_from(args).load().unwrap();
 
     let res = {
         let rt = tokio::runtime::Builder::new_multi_thread()
@@ -94,7 +94,7 @@ pub fn cli(args: impl IntoIterator<Item = OsString>) {
 
     if let Err(e) = CliApp::new(
         |cfg: ClientConfig| Ok(CliContext::init(cfg.load()?)?),
-        crate::registry::registry_api(),
+        crate::tunnel::tunnel_api(),
     )
     .run(args)
     {

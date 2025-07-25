@@ -1,45 +1,62 @@
 use std::collections::BTreeMap;
+use std::future::Future;
 use std::sync::Arc;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use axum::body::Body;
 use axum::extract::Request;
-use axum::response::Response;
-use chrono::Utc;
 use http::HeaderValue;
 use rpc_toolkit::yajrc::RpcError;
-use rpc_toolkit::{Middleware, RpcRequest, RpcResponse};
-use serde::{Deserialize, Serialize};
-use tokio::io::AsyncWriteExt;
+use rpc_toolkit::{Context, Middleware, RpcRequest, RpcResponse};
+use serde::de::DeserializeOwned;
+use serde::Deserialize;
 use tokio::sync::Mutex;
-use ts_rs::TS;
 use url::Url;
 
+use crate::context::CliContext;
 use crate::prelude::*;
-use crate::registry::context::RegistryContext;
-use crate::registry::signer::commitment::request::RequestCommitment;
-use crate::registry::signer::commitment::Commitment;
-use crate::registry::signer::sign::{
-    AnySignature, AnySigningKey, AnyVerifyingKey, SignatureScheme,
-};
+use crate::sign::commitment::request::RequestCommitment;
+use crate::sign::commitment::Commitment;
+use crate::sign::{AnySignature, AnySigningKey, AnyVerifyingKey, SignatureScheme};
 use crate::util::serde::Base64;
 
-pub const AUTH_SIG_HEADER: &str = "X-StartOS-Registry-Auth-Sig";
+pub trait SignatureAuthContext: Context {
+    type Database: HasModel<Model = Model<Self::Database>> + Send + Sync;
+    type AdditionalMetadata: DeserializeOwned + Send;
+    type CheckPubkeyRes: Send;
+    fn db(&self) -> &TypedPatchDb<Self::Database>;
+    fn sig_context(
+        &self,
+    ) -> impl Future<Output = impl IntoIterator<Item = Result<impl AsRef<str> + Send, Error>> + Send>
+           + Send;
+    fn check_pubkey(
+        db: &Model<Self::Database>,
+        pubkey: Option<&AnyVerifyingKey>,
+        metadata: Self::AdditionalMetadata,
+    ) -> Result<Self::CheckPubkeyRes, Error>;
+    fn post_auth_hook(
+        &self,
+        check_pubkey_res: Self::CheckPubkeyRes,
+        request: &RpcRequest,
+    ) -> impl Future<Output = Result<(), Error>> + Send;
+}
+
+pub const AUTH_SIG_HEADER: &str = "X-StartOS-Auth-Sig";
 
 #[derive(Deserialize)]
-pub struct Metadata {
-    #[serde(default)]
-    admin: bool,
+pub struct Metadata<Additional> {
+    #[serde(flatten)]
+    additional: Additional,
     #[serde(default)]
     get_signer: bool,
 }
 
 #[derive(Clone)]
-pub struct Auth {
+pub struct SignatureAuth {
     nonce_cache: Arc<Mutex<BTreeMap<Instant, u64>>>, // for replay protection
     signer: Option<Result<AnyVerifyingKey, RpcError>>,
 }
-impl Auth {
+impl SignatureAuth {
     pub fn new() -> Self {
         Self {
             nonce_cache: Arc::new(Mutex::new(BTreeMap::new())),
@@ -63,15 +80,6 @@ impl Auth {
         }
         Ok(())
     }
-}
-
-#[derive(Serialize, Deserialize, TS)]
-pub struct RegistryAdminLogRecord {
-    pub timestamp: String,
-    pub name: String,
-    #[ts(type = "{ id: string | number | null; method: string; params: any }")]
-    pub request: RpcRequest,
-    pub key: AnyVerifyingKey,
 }
 
 pub struct SignatureHeader {
@@ -120,13 +128,13 @@ impl SignatureHeader {
     }
 }
 
-impl Middleware<RegistryContext> for Auth {
-    type Metadata = Metadata;
+impl<C: SignatureAuthContext> Middleware<C> for SignatureAuth {
+    type Metadata = Metadata<C::AdditionalMetadata>;
     async fn process_http_request(
         &mut self,
-        ctx: &RegistryContext,
+        context: &C,
         request: &mut Request,
-    ) -> Result<(), Response> {
+    ) -> Result<(), axum::response::Response> {
         if request.headers().contains_key(AUTH_SIG_HEADER) {
             self.signer = Some(
                 async {
@@ -138,15 +146,27 @@ impl Middleware<RegistryContext> for Auth {
                         request
                             .headers()
                             .get(AUTH_SIG_HEADER)
-                            .or_not_found("missing X-StartOS-Registry-Auth-Sig")
+                            .or_not_found(AUTH_SIG_HEADER)
                             .with_kind(ErrorKind::InvalidRequest)?,
                     )?;
 
-                    signer.scheme().verify_commitment(
-                        &signer,
-                        &commitment,
-                        &ctx.hostname,
-                        &signature,
+                    context.sig_context().await.into_iter().fold(
+                        Err(Error::new(
+                            eyre!("no valid signature context available to verify"),
+                            ErrorKind::Authorization,
+                        )),
+                        |acc, x| {
+                            if acc.is_ok() {
+                                acc
+                            } else {
+                                signer.scheme().verify_commitment(
+                                    &signer,
+                                    &commitment,
+                                    x?.as_ref(),
+                                    &signature,
+                                )
+                            }
+                        },
                     )?;
 
                     let now = SystemTime::now()
@@ -175,48 +195,83 @@ impl Middleware<RegistryContext> for Auth {
     }
     async fn process_rpc_request(
         &mut self,
-        ctx: &RegistryContext,
+        context: &C,
         metadata: Self::Metadata,
         request: &mut RpcRequest,
     ) -> Result<(), RpcResponse> {
-        async move {
+        async {
             let signer = self.signer.take().transpose()?;
             if metadata.get_signer {
                 if let Some(signer) = &signer {
                     request.params["__auth_signer"] = to_value(signer)?;
                 }
             }
-            if metadata.admin {
-                let signer = signer
-                    .ok_or_else(|| Error::new(eyre!("UNAUTHORIZED"), ErrorKind::Authorization))?;
-                let db = ctx.db.peek().await;
-                let (guid, admin) = db.as_index().as_signers().get_signer_info(&signer)?;
-                if db.into_admins().de()?.contains(&guid) {
-                    let mut log = tokio::fs::OpenOptions::new()
-                        .create(true)
-                        .append(true)
-                        .open(ctx.datadir.join("admin.log"))
-                        .await?;
-                    log.write_all(
-                        (serde_json::to_string(&RegistryAdminLogRecord {
-                            timestamp: Utc::now().to_rfc3339(),
-                            name: admin.name,
-                            request: request.clone(),
-                            key: signer,
-                        })
-                        .with_kind(ErrorKind::Serialization)?
-                            + "\n")
-                            .as_bytes(),
-                    )
-                    .await?;
-                } else {
-                    return Err(Error::new(eyre!("UNAUTHORIZED"), ErrorKind::Authorization));
-                }
-            }
-
+            let db = context.db().peek().await;
+            let res = C::check_pubkey(&db, signer.as_ref(), metadata.additional)?;
+            context.post_auth_hook(res, request).await?;
             Ok(())
         }
         .await
-        .map_err(|e| RpcResponse::from_result(Err(e)))
+        .map_err(|e: Error| rpc_toolkit::RpcResponse::from_result(Err(e)))
+    }
+}
+
+pub async fn call_remote(
+    ctx: &CliContext,
+    url: Url,
+    sig_context: &str,
+    method: &str,
+    params: Value,
+) -> Result<Value, RpcError> {
+    use reqwest::header::{ACCEPT, CONTENT_LENGTH, CONTENT_TYPE};
+    use reqwest::Method;
+    use rpc_toolkit::yajrc::{GenericRpcMethod, Id, RpcRequest};
+    use rpc_toolkit::RpcResponse;
+
+    let rpc_req = RpcRequest {
+        id: Some(Id::Number(0.into())),
+        method: GenericRpcMethod::<_, _, Value>::new(method),
+        params,
+    };
+    let body = serde_json::to_vec(&rpc_req)?;
+    let mut req = ctx
+        .client
+        .request(Method::POST, url)
+        .header(CONTENT_TYPE, "application/json")
+        .header(ACCEPT, "application/json")
+        .header(CONTENT_LENGTH, body.len());
+    if let Ok(key) = ctx.developer_key() {
+        req = req.header(
+            AUTH_SIG_HEADER,
+            SignatureHeader::sign(&AnySigningKey::Ed25519(key.clone()), &body, sig_context)?
+                .to_header(),
+        );
+    }
+    let res = req.body(body).send().await?;
+
+    if !res.status().is_success() {
+        let status = res.status();
+        let txt = res.text().await?;
+        let mut res = Err(Error::new(
+            eyre!("{}", status.canonical_reason().unwrap_or(status.as_str())),
+            ErrorKind::Network,
+        ));
+        if !txt.is_empty() {
+            res = res.with_ctx(|_| (ErrorKind::Network, txt));
+        }
+        return res.map_err(From::from);
+    }
+
+    match res
+        .headers()
+        .get(CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+    {
+        Some("application/json") => {
+            serde_json::from_slice::<RpcResponse>(&*res.bytes().await?)
+                .with_kind(ErrorKind::Deserialization)?
+                .result
+        }
+        _ => Err(Error::new(eyre!("unknown content type"), ErrorKind::Network).into()),
     }
 }

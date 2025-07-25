@@ -102,10 +102,13 @@ test-container-runtime: container-runtime/node_modules/.package-lock.json $(shel
 	cd container-runtime && npm test
 
 cli:
-	cd core && ./install-cli.sh
+	./core/install-cli.sh
 
 registry:
-	cd core && ./build-registrybox.sh
+	./core/build-registrybox.sh
+
+tunnel:
+	./core/build-tunnelbox.sh
 
 deb: results/$(BASENAME).deb
 
@@ -129,7 +132,6 @@ install: $(ALL_TARGETS)
 	$(call cp,core/target/$(ARCH)-unknown-linux-musl/release/startbox,$(DESTDIR)/usr/bin/startbox)
 	$(call ln,/usr/bin/startbox,$(DESTDIR)/usr/bin/startd)
 	$(call ln,/usr/bin/startbox,$(DESTDIR)/usr/bin/start-cli)
-	$(call ln,/usr/bin/startbox,$(DESTDIR)/usr/bin/start-sdk)
 	if [ "$(PLATFORM)" = "raspberrypi" ]; then $(call cp,cargo-deps/aarch64-unknown-linux-musl/release/pi-beep,$(DESTDIR)/usr/bin/pi-beep); fi
 	if /bin/bash -c '[[ "${ENVIRONMENT}" =~ (^|-)unstable($$|-) ]]'; then $(call cp,cargo-deps/$(ARCH)-unknown-linux-musl/release/tokio-console,$(DESTDIR)/usr/bin/tokio-console); fi
 	$(call cp,cargo-deps/$(ARCH)-unknown-linux-musl/release/startos-backup-fs,$(DESTDIR)/usr/bin/startos-backup-fs)

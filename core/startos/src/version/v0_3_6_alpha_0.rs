@@ -293,7 +293,8 @@ impl VersionT for Version {
             let mut value = json!({});
             value["keyStore"] = to_value(&KeyStore::new(&account)?)?;
             value["password"] = to_value(&account.password)?;
-            value["compatS9pkKey"] = to_value(&crate::db::model::private::generate_compat_key())?;
+            value["compatS9pkKey"] =
+                to_value(&crate::db::model::private::generate_developer_key())?;
             value["sshPrivkey"] = to_value(Pem::new_ref(&account.ssh_key))?;
             value["sshPubkeys"] = to_value(&ssh_keys)?;
             value["availablePorts"] = to_value(&AvailablePorts::new())?;
@@ -377,7 +378,7 @@ impl VersionT for Version {
                         let package_s9pk = tokio::fs::File::open(path).await?;
                         let file = MultiCursorFile::open(&package_s9pk).await?;
 
-                        let key = ctx.db.peek().await.into_private().into_compat_s9pk_key();
+                        let key = ctx.db.peek().await.into_private().into_developer_key();
                         ctx.services
                             .install(
                                 ctx.clone(),
@@ -512,7 +513,7 @@ async fn previous_account_info(pg: &sqlx::Pool<sqlx::Postgres>) -> Result<Accoun
                     .as_bytes(),
             )
             .with_ctx(|_| (ErrorKind::Database, "X509::from_pem"))?,
-            compat_s9pk_key: SigningKey::generate(&mut ssh_key::rand_core::OsRng::default()),
+            developer_key: SigningKey::generate(&mut ssh_key::rand_core::OsRng::default()),
             ssh_key: ssh_key::PrivateKey::random(
                 &mut ssh_key::rand_core::OsRng::default(),
                 ssh_key::Algorithm::Ed25519,

@@ -284,7 +284,7 @@ pub fn launch(
     if tty {
         use pty_process::blocking as pty_process;
         let (pty, pts) = pty_process::open().with_kind(ErrorKind::Filesystem)?;
-        let mut cmd = pty_process::Command::new("/usr/bin/start-cli");
+        let mut cmd = pty_process::Command::new("/usr/bin/start-container");
         cmd = cmd.arg("subcontainer").arg("launch-init");
         if let Some(env) = env {
             cmd = cmd.arg("--env").arg(env);
@@ -339,7 +339,7 @@ pub fn launch(
             ))
         }
     } else {
-        let mut cmd = StdCommand::new("/usr/bin/start-cli");
+        let mut cmd = StdCommand::new("/usr/bin/start-container");
         cmd.arg("subcontainer").arg("launch-init");
         if let Some(env) = env {
             cmd.arg("--env").arg(env);
@@ -534,7 +534,7 @@ pub fn exec(
     if tty {
         use pty_process::blocking as pty_process;
         let (pty, pts) = pty_process::open().with_kind(ErrorKind::Filesystem)?;
-        let mut cmd = pty_process::Command::new("/usr/bin/start-cli");
+        let mut cmd = pty_process::Command::new("/usr/bin/start-container");
         cmd = cmd.arg("subcontainer").arg("exec-command");
         if let Some(env) = env {
             cmd = cmd.arg("--env").arg(env);
@@ -589,7 +589,7 @@ pub fn exec(
             ))
         }
     } else {
-        let mut cmd = StdCommand::new("/usr/bin/start-cli");
+        let mut cmd = StdCommand::new("/usr/bin/start-container");
         cmd.arg("subcontainer").arg("exec-command");
         if let Some(env) = env {
             cmd.arg("--env").arg(env);

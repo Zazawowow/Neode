@@ -23,7 +23,7 @@ use crate::install::PKG_ARCHIVE_DIR;
 use crate::notifications::{notify, NotificationLevel};
 use crate::prelude::*;
 use crate::progress::{FullProgressTracker, PhaseProgressTrackerHandle, ProgressTrackerWriter};
-use crate::registry::signer::commitment::merkle_archive::MerkleArchiveCommitment;
+use crate::sign::commitment::merkle_archive::MerkleArchiveCommitment;
 use crate::s9pk::manifest::PackageId;
 use crate::s9pk::merkle_archive::source::FileSource;
 use crate::s9pk::S9pk;

@@ -13,8 +13,8 @@ use ts_rs::TS;
 use url::Url;
 
 use crate::prelude::*;
-use crate::registry::signer::commitment::{Commitment, Digestable};
 use crate::s9pk::merkle_archive::hash::VerifyingWriter;
+use crate::sign::commitment::{Commitment, Digestable};
 use crate::util::serde::Base64;
 
 #[derive(Clone, Debug, Deserialize, Serialize, HasModel, PartialEq, Eq, TS)]

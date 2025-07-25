@@ -8,7 +8,7 @@ use ts_rs::TS;
 use crate::prelude::*;
 use crate::registry::asset::RegistryAsset;
 use crate::registry::context::RegistryContext;
-use crate::registry::signer::commitment::blake3::Blake3Commitment;
+use crate::sign::commitment::blake3::Blake3Commitment;
 use crate::rpc_continuations::Guid;
 
 #[derive(Debug, Default, Deserialize, Serialize, HasModel, TS)]

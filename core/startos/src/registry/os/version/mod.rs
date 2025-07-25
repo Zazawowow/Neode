@@ -15,7 +15,7 @@ use crate::prelude::*;
 use crate::registry::context::RegistryContext;
 use crate::registry::device_info::DeviceInfo;
 use crate::registry::os::index::OsVersionInfo;
-use crate::registry::signer::sign::AnyVerifyingKey;
+use crate::sign::AnyVerifyingKey;
 use crate::util::serde::{display_serializable, HandlerExtSerde, WithIoFormat};
 
 pub mod signer;

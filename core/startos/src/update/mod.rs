@@ -33,8 +33,8 @@ use crate::registry::asset::RegistryAsset;
 use crate::registry::context::{RegistryContext, RegistryUrlParams};
 use crate::registry::os::index::OsVersionInfo;
 use crate::registry::os::SIG_CONTEXT;
-use crate::registry::signer::commitment::blake3::Blake3Commitment;
-use crate::registry::signer::commitment::Commitment;
+use crate::sign::commitment::blake3::Blake3Commitment;
+use crate::sign::commitment::Commitment;
 use crate::rpc_continuations::{Guid, RpcContinuation};
 use crate::s9pk::merkle_archive::source::multi_cursor_file::MultiCursorFile;
 use crate::sound::{

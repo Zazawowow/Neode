@@ -86,7 +86,7 @@ impl OsBackupV0 {
                     ssh_key::Algorithm::Ed25519,
                 )?,
                 tor_keys: vec![TorSecretKeyV3::from(self.tor_key.0)],
-                compat_s9pk_key: ed25519_dalek::SigningKey::generate(
+                developer_key: ed25519_dalek::SigningKey::generate(
                     &mut ssh_key::rand_core::OsRng::default(),
                 ),
             },
@@ -117,7 +117,7 @@ impl OsBackupV1 {
                 root_ca_cert: self.root_ca_cert.0,
                 ssh_key: ssh_key::PrivateKey::from(Ed25519Keypair::from_seed(&self.net_key.0)),
                 tor_keys: vec![TorSecretKeyV3::from(ed25519_expand_key(&self.net_key.0))],
-                compat_s9pk_key: ed25519_dalek::SigningKey::from_bytes(&self.net_key),
+                developer_key: ed25519_dalek::SigningKey::from_bytes(&self.net_key),
             },
             ui: self.ui,
         }
@@ -149,7 +149,7 @@ impl OsBackupV2 {
                 root_ca_cert: self.root_ca_cert.0,
                 ssh_key: self.ssh_key.0,
                 tor_keys: self.tor_keys,
-                compat_s9pk_key: self.compat_s9pk_key.0,
+                developer_key: self.compat_s9pk_key.0,
             },
             ui: self.ui,
         }
@@ -162,7 +162,7 @@ impl OsBackupV2 {
             root_ca_cert: Pem(backup.account.root_ca_cert.clone()),
             ssh_key: Pem(backup.account.ssh_key.clone()),
             tor_keys: backup.account.tor_keys.clone(),
-            compat_s9pk_key: Pem(backup.account.compat_s9pk_key.clone()),
+            compat_s9pk_key: Pem(backup.account.developer_key.clone()),
             ui: backup.ui.clone(),
         }
     }
