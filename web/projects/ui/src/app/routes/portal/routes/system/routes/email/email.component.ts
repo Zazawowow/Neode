@@ -42,7 +42,7 @@ import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
           <a
             tuiLink
             docsLink
-            href="/user-manual/smtp"
+            path="/user-manual/smtp.html"
             appearance="action-grayscale"
             iconEnd="@tui.external-link"
             [pseudo]="true"

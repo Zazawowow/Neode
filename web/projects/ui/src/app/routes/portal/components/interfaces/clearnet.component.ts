@@ -60,7 +60,7 @@ type ClearnetForm = {
         <a
           tuiLink
           docsLink
-          href="/user-manual/connecting-remotely/clearnet.html"
+          path="/user-manual/connecting-remotely/clearnet.html"
         >
           {{ 'Learn more' | i18n }}
         </a>

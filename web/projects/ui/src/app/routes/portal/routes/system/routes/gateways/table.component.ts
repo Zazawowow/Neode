@@ -18,31 +18,34 @@ import { ApiService } from 'src/app/services/api/embassy-api.service'
 import { FormDialogService } from 'src/app/services/form-dialog.service'
 import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
 import { TableComponent } from 'src/app/routes/portal/components/table.component'
-import { WireguardProxy } from './item.component'
-import { ProxiesItemComponent } from './item.component'
+import { GatewayWithID } from './item.component'
+import { GatewaysItemComponent } from './item.component'
 
 @Component({
-  selector: '[proxies]',
+  selector: '[gateways]',
   template: `
-    <table [appTable]="['Label', 'Type', null]">
-      @for (proxy of proxies(); track $index) {
+    <table
+      [appTable]="[
+        'Name',
+        'Type',
+        'Access',
+        $any('LAN IPs'),
+        $any('WAN IP'),
+        null,
+      ]"
+    >
+      @for (proxy of gateways(); track $index) {
         <tr
           [proxy]="proxy"
           (onRename)="rename($event)"
           (onRemove)="remove($event.id)"
         ></tr>
       } @empty {
-        @if (proxies()) {
-          <tr>
-            <td colspan="5">{{ 'No proxies' | i18n }}</td>
-          </tr>
-        } @else {
-          <tr>
-            <td colspan="5">
-              <div [tuiSkeleton]="true">{{ 'Loading' | i18n }}</div>
-            </td>
-          </tr>
-        }
+        <tr>
+          <td colspan="5">
+            <div [tuiSkeleton]="true">{{ 'Loading' | i18n }}</div>
+          </td>
+        </tr>
       }
     </table>
   `,
@@ -52,10 +55,10 @@ import { ProxiesItemComponent } from './item.component'
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TuiSkeleton, i18nPipe, TableComponent, ProxiesItemComponent],
+  imports: [TuiSkeleton, i18nPipe, TableComponent, GatewaysItemComponent],
 })
-export class ProxiesTableComponent<T extends WireguardProxy> {
-  readonly proxies = input<readonly T[] | null>(null)
+export class GatewaysTableComponent<T extends GatewayWithID> {
+  readonly gateways = input<readonly T[] | null>(null)
 
   private readonly dialog = inject(DialogService)
   private readonly loader = inject(LoadingService)
@@ -80,24 +83,24 @@ export class ProxiesTableComponent<T extends WireguardProxy> {
       })
   }
 
-  async rename(proxy: WireguardProxy) {
+  async rename(gateway: GatewayWithID) {
     const renameSpec = ISB.InputSpec.of({
       label: ISB.Value.text({
         name: 'Label',
         required: true,
-        default: proxy.ipInfo?.name || null,
+        default: gateway.ipInfo?.name || null,
       }),
     })
 
     this.formDialog.open(FormComponent, {
-      label: 'Update Label',
+      label: 'Rename',
       data: {
         spec: await configBuilderToSpec(renameSpec),
         buttons: [
           {
             text: 'Save',
             handler: (value: typeof renameSpec._TYPE) =>
-              this.update(proxy.id, value.label),
+              this.update(gateway.id, value.label),
           },
         ],
       },

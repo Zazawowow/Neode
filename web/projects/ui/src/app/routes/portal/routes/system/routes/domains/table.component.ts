@@ -1,134 +1,122 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  EventEmitter,
   inject,
-  Input,
-  Output,
+  input,
 } from '@angular/core'
-import { TuiDialogService, TuiLink, TuiButton } from '@taiga-ui/core'
-import { Domain } from 'src/app/services/patch-db/data-model'
+import {
+  DialogService,
+  ErrorService,
+  i18nPipe,
+  LoadingService,
+} from '@start9labs/shared'
+import { ISB } from '@start9labs/start-sdk'
+import { TuiSkeleton } from '@taiga-ui/kit'
+import { filter } from 'rxjs'
+import { FormComponent } from 'src/app/routes/portal/components/form.component'
+import { ApiService } from 'src/app/services/api/embassy-api.service'
+import { FormDialogService } from 'src/app/services/form-dialog.service'
+import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
+import { TableComponent } from 'src/app/routes/portal/components/table.component'
+import { DomainsItemComponent } from './item.component'
+import { PlaceholderComponent } from 'src/app/routes/portal/components/placeholder.component'
 
 @Component({
-  selector: 'table[domains]',
+  selector: '[domains]',
   template: `
-    <thead>
-      <tr>
-        <th>Domain</th>
-        <th>DDNS Provider</th>
-        <th>Network Strategy</th>
-        <th>Used By</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      @for (domain of domains; track $index) {
-        <tr>
-          <td class="title">{{ domain.value }}</td>
-          <td class="provider">{{ domain.provider }}</td>
-          <td class="strategy">{{ getStrategy(domain) }}</td>
-          <td class="used">
-            @if (domain.usedBy.length; as qty) {
-              <button tuiLink (click)="onUsedBy(domain)">
-                Used by: {{ qty }}
-              </button>
-            } @else {
-              N/A
-            }
-          </td>
-          <td class="actions">
-            <button
-              tuiIconButton
-              size="xs"
-              appearance="icon"
-              iconStart="@tui.trash-2"
-              (click)="delete.emit(domain)"
-            >
-              Delete
-            </button>
-          </td>
-        </tr>
+    <table [appTable]="['Domain', 'Gateway', 'Default ACME', null]">
+      @for (domain of domains(); track $index) {
+        <tr
+          [domain]="domain"
+          (onGateway)="changeGateway($event)"
+          (onAcme)="changeAcme($event)"
+          (onRemove)="remove($event)"
+        ></tr>
       } @empty {
-        <tr><td colspan="6">No domains</td></tr>
+        @if (domains()) {
+          <app-placeholder icon="@tui.award">
+            {{ 'No domains' | i18n }}
+          </app-placeholder>
+        } @else {
+          <tr>
+            <td colspan="5">
+              <div [tuiSkeleton]="true">{{ 'Loading' | i18n }}</div>
+            </td>
+          </tr>
+        }
       }
-    </tbody>
+    </table>
   `,
   styles: `
-    :host-context(tui-root._mobile) {
-      tr {
-        grid-template-columns: 2fr 1fr;
-      }
-
-      td:only-child {
-        grid-column: span 2;
-      }
-
-      .title {
-        order: 1;
-        font-weight: bold;
-      }
-
-      .actions {
-        order: 2;
-        padding: 0;
-        text-align: right;
-      }
-
-      .strategy {
-        order: 3;
-        grid-column: span 2;
-
-        &::before {
-          content: 'Strategy: ';
-          color: var(--tui-text-secondary);
-        }
-      }
-
-      .provider {
-        order: 4;
-
-        &::before {
-          content: 'DDNS: ';
-          color: var(--tui-text-secondary);
-        }
-      }
-
-      .used {
-        order: 5;
-        text-align: right;
-
-        &:not(:has(button)) {
-          display: none;
-        }
-      }
+    :host {
+      grid-column: span 6;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TuiButton, TuiLink],
+  imports: [
+    TuiSkeleton,
+    i18nPipe,
+    TableComponent,
+    DomainsItemComponent,
+    PlaceholderComponent,
+  ],
 })
-export class DomainsTableComponent {
-  private readonly dialogs = inject(TuiDialogService)
+export class DomainsTableComponent<T extends any> {
+  readonly domains = input<readonly T[] | null>(null)
 
-  @Input()
-  domains: readonly Domain[] = []
+  private readonly dialog = inject(DialogService)
+  private readonly loader = inject(LoadingService)
+  private readonly errorService = inject(ErrorService)
+  private readonly api = inject(ApiService)
+  private readonly formDialog = inject(FormDialogService)
 
-  @Output()
-  readonly delete = new EventEmitter<Domain>()
+  remove(domain: any) {
+    this.dialog
+      .openConfirm({ label: 'Are you sure?', size: 's' })
+      .pipe(filter(Boolean))
+      .subscribe(async () => {
+        const loader = this.loader.open('Deleting').subscribe()
 
-  getStrategy(domain: any) {
-    return domain.networkStrategy.ipStrategy || domain.networkStrategy.proxy
+        try {
+        } catch (e: any) {
+          this.errorService.handleError(e)
+        } finally {
+          loader.unsubscribe()
+        }
+      })
   }
 
-  onUsedBy({ value, usedBy }: Domain) {
-    const interfaces = usedBy.map(u =>
-      u.interfaces.map(i => `<li>${u.service.title} - ${i.title}</li>`),
-    )
+  async changeGateway(domain: any) {
+    const renameSpec = ISB.InputSpec.of({})
 
-    this.dialogs
-      .open(`${value} is currently being used by:<ul>${interfaces}</ul>`, {
-        label: 'Used by',
-        size: 's',
-      })
-      .subscribe()
+    this.formDialog.open(FormComponent, {
+      label: 'Change gateway',
+      data: {
+        spec: await configBuilderToSpec(renameSpec),
+        buttons: [
+          {
+            text: 'Save',
+            handler: (value: typeof renameSpec._TYPE) => {},
+          },
+        ],
+      },
+    })
+  }
+
+  async changeAcme(domain: any) {
+    const renameSpec = ISB.InputSpec.of({})
+
+    this.formDialog.open(FormComponent, {
+      label: 'Change default ACME',
+      data: {
+        spec: await configBuilderToSpec(renameSpec),
+        buttons: [
+          {
+            text: 'Save',
+            handler: (value: typeof renameSpec._TYPE) => {},
+          },
+        ],
+      },
+    })
   }
 }

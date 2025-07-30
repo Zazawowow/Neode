@@ -12,13 +12,13 @@ import { FormComponent } from 'src/app/routes/portal/components/form.component'
 import { DataModel } from 'src/app/services/patch-db/data-model'
 import { FormDialogService } from 'src/app/services/form-dialog.service'
 import { ApiService } from 'src/app/services/api/embassy-api.service'
-import { ProxiesTableComponent } from './table.component'
+import { GatewaysTableComponent } from './table.component'
 import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
 import { TitleDirective } from 'src/app/services/title.service'
 import { TuiHeader } from '@taiga-ui/layout'
 import { map } from 'rxjs'
-import { ISB, T } from '@start9labs/start-sdk'
-import { WireguardIpInfo, WireguardProxy } from './item.component'
+import { ISB } from '@start9labs/start-sdk'
+import { GatewayWithID } from './item.component'
 
 @Component({
   template: `
@@ -26,24 +26,24 @@ import { WireguardIpInfo, WireguardProxy } from './item.component'
       <a routerLink=".." tuiIconButton iconStart="@tui.arrow-left">
         {{ 'Back' | i18n }}
       </a>
-      {{ 'Inbound Proxies' | i18n }}
+      {{ 'Gateways' | i18n }}
     </ng-container>
     <header tuiHeader>
       <hgroup tuiTitle>
-        <h3>{{ 'Inbound Proxies' | i18n }}</h3>
+        <h3>{{ 'Gateways' | i18n }}</h3>
         <p tuiSubtitle>
           {{
-            'Inbound proxies provide remote access to your server and installed services.'
+            'Gateways connect your server to the Internet. They process outbound traffic, and under certain conditions, they also permit inbound traffic.'
               | i18n
           }}
           <a
             tuiLink
             docsLink
-            href="/user-manual/inbound-proxies"
+            path="/user-manual/gateways.html"
             appearance="action-grayscale"
             iconEnd="@tui.external-link"
             [pseudo]="true"
-            [textContent]="'View instructions'"
+            [textContent]="'view instructions'"
           ></a>
         </p>
       </hgroup>
@@ -51,19 +51,25 @@ import { WireguardIpInfo, WireguardProxy } from './item.component'
 
     <section class="g-card">
       <header>
-        {{ 'Saved Proxies' | i18n }}
-        <button tuiButton size="xs" iconStart="@tui.plus" (click)="add()">
+        {{ 'Gateways' | i18n }}
+        <button
+          tuiButton
+          size="xs"
+          [style.margin]="'0 0.5rem 0 auto'"
+          iconStart="@tui.plus"
+          (click)="add()"
+        >
           Add
         </button>
       </header>
-      <div #table [proxies]="proxies$ | async"></div>
+      <div #table [gateways]="gateways$ | async"></div>
     </section>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     TuiButton,
-    ProxiesTableComponent,
+    GatewaysTableComponent,
     TuiHeader,
     TitleDirective,
     i18nPipe,
@@ -71,46 +77,37 @@ import { WireguardIpInfo, WireguardProxy } from './item.component'
     DocsLinkDirective,
   ],
 })
-export default class ProxiesComponent {
+export default class GatewaysComponent {
   private readonly loader = inject(LoadingService)
   private readonly errorService = inject(ErrorService)
   private readonly api = inject(ApiService)
   private readonly formDialog = inject(FormDialogService)
 
-  readonly proxies$ = inject<PatchDB<DataModel>>(PatchDB)
-    .watch$('serverInfo', 'network')
+  readonly gateways$ = inject<PatchDB<DataModel>>(PatchDB)
+    .watch$('serverInfo', 'network', 'networkInterfaces')
     .pipe(
-      map(network =>
-        Object.entries(network.networkInterfaces)
-          .filter(
-            (
-              record,
-            ): record is [
-              string,
-              T.NetworkInterfaceInfo & { ipInfo: WireguardIpInfo },
-            ] => record[1].ipInfo?.deviceType === 'wireguard',
-          )
-          .map(
-            ([id, val]) =>
-              ({
-                ...val,
-                id,
-              }) as WireguardProxy,
-          ),
+      map(gateways =>
+        Object.entries(gateways).map(
+          ([id, val]) =>
+            ({
+              ...val,
+              id,
+            }) as GatewayWithID,
+        ),
       ),
     )
 
-  readonly wireguardSpec = ISB.InputSpec.of({
-    label: ISB.Value.text({
-      name: 'Label',
-      description: 'To help identify this proxy',
+  readonly gatewaySpec = ISB.InputSpec.of({
+    name: ISB.Value.text({
+      name: 'Name',
+      description: 'A name to easily identify the gateway',
       required: true,
       default: null,
     }),
     type: ISB.Value.select({
       name: 'Type',
       description:
-        '-**Private**: a private inbound proxy is used to access your server and installed services privately. Only clients configured and authorized to use the proxy will be granted access.\n-**Public**: a public inbound proxy is used to expose service interfaces on a case-by-case basis to the public Internet without exposing your home IP address. Only service interfaces explicitly marked "Public" will be accessible via the proxy.',
+        '-**Private**: select this option if the gateway is configured for private access to authorized clients only, which usually means ports are closed and traffic blocked otherwise. StartTunnel is a private gateway.\n-**Public**: select this option if the gateway is configured for unfettered public access, which usually means ports are open and traffic forwarded.',
       default: 'private',
       values: {
         private: 'Private',
@@ -118,26 +115,26 @@ export default class ProxiesComponent {
       },
     }),
     config: ISB.Value.union({
-      name: 'Config',
-      default: 'upload',
+      name: 'Wireguard Config',
+      default: 'paste',
       variants: ISB.Variants.of({
-        upload: {
-          name: 'File',
-          spec: ISB.InputSpec.of({
-            file: ISB.Value.file({
-              name: 'Wiregaurd Config',
-              required: true,
-              extensions: ['.conf'],
-            }),
-          }),
-        },
         paste: {
-          name: 'Copy/Paste',
+          name: 'Paste File Contents',
           spec: ISB.InputSpec.of({
             file: ISB.Value.textarea({
               name: 'Paste File Contents',
               default: null,
               required: true,
+            }),
+          }),
+        },
+        upload: {
+          name: 'Upload File',
+          spec: ISB.InputSpec.of({
+            file: ISB.Value.file({
+              name: 'File',
+              required: true,
+              extensions: ['.conf'],
             }),
           }),
         },
@@ -147,27 +144,26 @@ export default class ProxiesComponent {
 
   async add() {
     this.formDialog.open(FormComponent, {
-      label: 'Add Proxy',
+      label: 'Add Gateway',
       data: {
-        spec: await configBuilderToSpec(this.wireguardSpec),
+        spec: await configBuilderToSpec(this.gatewaySpec),
         buttons: [
           {
             text: 'Save',
-            handler: (input: typeof this.wireguardSpec._TYPE) =>
-              this.save(input),
+            handler: (input: typeof this.gatewaySpec._TYPE) => this.save(input),
           },
         ],
       },
     })
   }
 
-  private async save(input: typeof this.wireguardSpec._TYPE): Promise<boolean> {
+  private async save(input: typeof this.gatewaySpec._TYPE): Promise<boolean> {
     const loader = this.loader.open('Saving').subscribe()
 
     try {
       await this.api.addTunnel({
-        name: input.label,
-        config: input.config.value.file as string, // @TODO alex this is the file represented as a string
+        name: input.name,
+        config: '' as string, // @TODO alex/matt when types arrive
         public: input.type === 'public',
       })
       return true

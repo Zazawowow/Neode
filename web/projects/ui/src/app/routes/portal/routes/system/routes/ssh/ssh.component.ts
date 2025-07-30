@@ -44,7 +44,7 @@ import { SSHTableComponent } from './table.component'
           <a
             tuiLink
             docsLink
-            href="/user-manual/ssh"
+            path="/user-manual/ssh.html"
             appearance="action-grayscale"
             iconEnd="@tui.external-link"
             [pseudo]="true"

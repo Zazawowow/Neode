@@ -5,7 +5,6 @@ import {
   output,
 } from '@angular/core'
 import { i18nPipe } from '@start9labs/shared'
-import { T } from '@start9labs/start-sdk'
 import {
   TuiButton,
   TuiDataList,
@@ -13,23 +12,13 @@ import {
   TuiOptGroup,
 } from '@taiga-ui/core'
 
-export type WireguardProxy = T.NetworkInterfaceInfo & {
-  id: string
-  ipInfo: WireguardIpInfo
-}
-
-export type WireguardIpInfo = T.IpInfo & {
-  deviceType: 'wireguard'
-}
-
 @Component({
-  selector: 'tr[proxy]',
+  selector: 'tr[domain]',
   template: `
-    <td class="label">{{ proxy().ipInfo.name }}</td>
-    <td class="type">
-      {{ proxy().public ? ('Public' | i18n) : ('Private' | i18n) }}
-    </td>
-    <td class="actions">
+    <td></td>
+    <td></td>
+    <td></td>
+    <td>
       <button
         tuiIconButton
         iconStart="@tui.ellipsis"
@@ -37,24 +26,29 @@ export type WireguardIpInfo = T.IpInfo & {
         [tuiDropdown]="content"
         [(tuiDropdownOpen)]="open"
         [tuiDropdownMaxHeight]="9999"
-      >
-        <img [style.max-width.%]="60" src="assets/img/icon.png" alt="StartOS" />
-      </button>
+      ></button>
       <ng-template #content>
         <tui-data-list [style.width.rem]="13">
           <tui-opt-group>
             <button
               tuiOption
-              iconStart="@tui.pencil"
-              (click)="onRename.emit(proxy())"
+              iconStart="@tui.globe"
+              (click)="onGateway.emit(domain())"
             >
-              {{ 'Rename' | i18n }}
+              Change gateway
+            </button>
+            <button
+              tuiOption
+              iconStart="@tui.shield"
+              (click)="onAcme.emit(domain())"
+            >
+              Change default ACME
             </button>
             <button
               tuiOption
               appearance="negative"
               iconStart="@tui.trash-2"
-              (click)="onRemove.emit(proxy())"
+              (click)="onRemove.emit(domain())"
             >
               {{ 'Delete' | i18n }}
             </button>
@@ -89,11 +83,12 @@ export type WireguardIpInfo = T.IpInfo & {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TuiButton, i18nPipe, TuiDropdown, TuiDataList, TuiOptGroup],
 })
-export class ProxiesItemComponent {
-  readonly proxy = input.required<WireguardProxy>()
+export class DomainsItemComponent {
+  readonly domain = input.required<any>()
 
-  onRename = output<WireguardProxy>()
-  onRemove = output<WireguardProxy>()
+  onGateway = output<any>()
+  onAcme = output<any>()
+  onRemove = output<any>()
 
   open = false
 }
