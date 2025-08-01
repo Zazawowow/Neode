@@ -46,6 +46,20 @@ import {
             </button>
             <button
               tuiOption
+              iconStart="@tui.shield"
+              (click)="onShowDns.emit(domain())"
+            >
+              Show DNS
+            </button>
+            <button
+              tuiOption
+              iconStart="@tui.shield"
+              (click)="onTestDns.emit(domain())"
+            >
+              Test DNS
+            </button>
+            <button
+              tuiOption
               appearance="negative"
               iconStart="@tui.trash-2"
               (click)="onRemove.emit(domain())"
@@ -88,6 +102,8 @@ export class DomainsItemComponent {
 
   onGateway = output<any>()
   onAcme = output<any>()
+  onShowDns = output<any>()
+  onTestDns = output<any>()
   onRemove = output<any>()
 
   open = false
