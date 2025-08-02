@@ -28,8 +28,9 @@ import { PlaceholderComponent } from 'src/app/routes/portal/components/placehold
       @for (domain of domains(); track $index) {
         <tr
           [domain]="domain"
-          (onGateway)="changeGateway($event)"
-          (onAcme)="changeAcme($event)"
+          (onEdit)="edit($event)"
+          (onShowDns)="showDns($event)"
+          (onTestDns)="testDns($event)"
           (onRemove)="remove($event)"
         ></tr>
       } @empty {
@@ -86,11 +87,11 @@ export class DomainsTableComponent<T extends any> {
       })
   }
 
-  async changeGateway(domain: any) {
+  async edit(domain: any) {
     const renameSpec = ISB.InputSpec.of({})
 
     this.formDialog.open(FormComponent, {
-      label: 'Change gateway',
+      label: 'Edit',
       data: {
         spec: await configBuilderToSpec(renameSpec),
         buttons: [
@@ -103,20 +104,7 @@ export class DomainsTableComponent<T extends any> {
     })
   }
 
-  async changeAcme(domain: any) {
-    const renameSpec = ISB.InputSpec.of({})
+  async showDns(domain: any) {}
 
-    this.formDialog.open(FormComponent, {
-      label: 'Change default ACME',
-      data: {
-        spec: await configBuilderToSpec(renameSpec),
-        buttons: [
-          {
-            text: 'Save',
-            handler: (value: typeof renameSpec._TYPE) => {},
-          },
-        ],
-      },
-    })
-  }
+  async testDns(domain: any) {}
 }

@@ -32,17 +32,10 @@ import {
           <tui-opt-group>
             <button
               tuiOption
-              iconStart="@tui.globe"
-              (click)="onGateway.emit(domain())"
+              iconStart="@tui.pencil"
+              (click)="onEdit.emit(domain())"
             >
-              Change gateway
-            </button>
-            <button
-              tuiOption
-              iconStart="@tui.shield"
-              (click)="onAcme.emit(domain())"
-            >
-              Change default ACME
+              Edit
             </button>
             <button
               tuiOption
@@ -100,8 +93,7 @@ import {
 export class DomainsItemComponent {
   readonly domain = input.required<any>()
 
-  onGateway = output<any>()
-  onAcme = output<any>()
+  onEdit = output<any>()
   onShowDns = output<any>()
   onTestDns = output<any>()
   onRemove = output<any>()
