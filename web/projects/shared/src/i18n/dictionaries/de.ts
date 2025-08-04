@@ -539,4 +539,7 @@ export default {
   543: 'Gateway ändern',
   544: 'Standard-ACME ändern',
   545: 'Keine Domains',
+  546: 'Anbieter',
+  547: 'DNS anzeigen',
+  548: 'DNS testen',
 } satisfies i18n

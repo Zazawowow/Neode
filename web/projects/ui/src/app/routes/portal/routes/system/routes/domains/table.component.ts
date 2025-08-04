@@ -1,110 +1,68 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  inject,
+  computed,
   input,
 } from '@angular/core'
-import {
-  DialogService,
-  ErrorService,
-  i18nPipe,
-  LoadingService,
-} from '@start9labs/shared'
-import { ISB } from '@start9labs/start-sdk'
+import { i18nPipe } from '@start9labs/shared'
 import { TuiSkeleton } from '@taiga-ui/kit'
-import { filter } from 'rxjs'
-import { FormComponent } from 'src/app/routes/portal/components/form.component'
-import { ApiService } from 'src/app/services/api/embassy-api.service'
-import { FormDialogService } from 'src/app/services/form-dialog.service'
-import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
-import { TableComponent } from 'src/app/routes/portal/components/table.component'
-import { DomainsItemComponent } from './item.component'
 import { PlaceholderComponent } from 'src/app/routes/portal/components/placeholder.component'
+import { TableComponent } from 'src/app/routes/portal/components/table.component'
+
+import { DomainsAcmeComponent } from './acme.component'
+import { DomainsDomainComponent } from './domain.component'
 
 @Component({
-  selector: '[domains]',
+  selector: 'domains-table',
   template: `
-    <table [appTable]="['Domain', 'Gateway', 'Default ACME', null]">
-      @for (domain of domains(); track $index) {
-        <tr
-          [domain]="domain"
-          (onEdit)="edit($event)"
-          (onShowDns)="showDns($event)"
-          (onTestDns)="testDns($event)"
-          (onRemove)="remove($event)"
-        ></tr>
-      } @empty {
-        @if (domains()) {
-          <app-placeholder icon="@tui.award">
-            {{ 'No domains' | i18n }}
-          </app-placeholder>
-        } @else {
-          <tr>
-            <td colspan="5">
-              <div [tuiSkeleton]="true">{{ 'Loading' | i18n }}</div>
-            </td>
-          </tr>
+    <table [appTable]="titles()">
+      @for (item of items(); track $index) {
+        @if (mode() === 'domains') {
+          <tr [domain]="item"></tr>
+        } @else if (mode() === 'acme') {
+          <tr [acme]="item"></tr>
         }
+      } @empty {
+        <tr>
+          <td [attr.colspan]="titles().length">
+            @if (items()) {
+              <app-placeholder icon="@tui.globe">
+                @if (mode() === 'domains') {
+                  {{ 'No domains' | i18n }}
+                } @else {
+                  {{ 'No saved providers' | i18n }}
+                }
+              </app-placeholder>
+            } @else {
+              <div [tuiSkeleton]="true">{{ 'Loading' | i18n }}</div>
+            }
+          </td>
+        </tr>
       }
     </table>
-  `,
-  styles: `
-    :host {
-      grid-column: span 6;
-    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TuiSkeleton,
     i18nPipe,
     TableComponent,
-    DomainsItemComponent,
     PlaceholderComponent,
+    DomainsDomainComponent,
+    DomainsAcmeComponent,
   ],
 })
-export class DomainsTableComponent<T extends any> {
-  readonly domains = input<readonly T[] | null>(null)
+export class DomainsTableComponent {
+  // @TODO Alex proper types
+  readonly items = input<readonly any[] | null>()
+  readonly mode = input<'domains' | 'acme'>('domains')
 
-  private readonly dialog = inject(DialogService)
-  private readonly loader = inject(LoadingService)
-  private readonly errorService = inject(ErrorService)
-  private readonly api = inject(ApiService)
-  private readonly formDialog = inject(FormDialogService)
+  readonly titles = computed(() =>
+    this.mode() === 'domains'
+      ? (['Domain', 'Gateway', 'Default ACME', null] as const)
+      : (['Provider', 'Contact', null] as const),
+  )
 
-  remove(domain: any) {
-    this.dialog
-      .openConfirm({ label: 'Are you sure?', size: 's' })
-      .pipe(filter(Boolean))
-      .subscribe(async () => {
-        const loader = this.loader.open('Deleting').subscribe()
-
-        try {
-        } catch (e: any) {
-          this.errorService.handleError(e)
-        } finally {
-          loader.unsubscribe()
-        }
-      })
-  }
-
-  async edit(domain: any) {
-    const renameSpec = ISB.InputSpec.of({})
-
-    this.formDialog.open(FormComponent, {
-      label: 'Edit',
-      data: {
-        spec: await configBuilderToSpec(renameSpec),
-        buttons: [
-          {
-            text: 'Save',
-            handler: (value: typeof renameSpec._TYPE) => {},
-          },
-        ],
-      },
-    })
-  }
-
-  async showDns(domain: any) {}
-
-  async testDns(domain: any) {}
+  readonly icon = computed(() =>
+    this.mode() === 'domains' ? '@tui.globe' : '@tui.shield-question',
+  )
 }

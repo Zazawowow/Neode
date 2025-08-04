@@ -539,4 +539,7 @@ export default {
   543: 'Zmień bramę',
   544: 'Zmień domyślny ACME',
   545: 'Brak domen',
+  546: 'Dostawca',
+  547: 'Pokaż DNS',
+  548: 'Test DNS',
 } satisfies i18n

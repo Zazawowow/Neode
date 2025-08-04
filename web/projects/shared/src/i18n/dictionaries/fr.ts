@@ -539,4 +539,7 @@ export default {
   543: 'Changer de passerelle',
   544: 'Changer l’ACME par défaut',
   545: 'Aucun domaine',
+  546: 'Fournisseur',
+  547: 'Afficher le DNS',
+  548: 'Tester le DNS',
 } satisfies i18n

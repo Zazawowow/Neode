@@ -40,13 +40,13 @@ export const SYSTEM_MENU = [
   [
     {
       icon: '@tui.globe',
-      item: 'Gateways',
-      link: 'gateways',
-    },
-    {
-      icon: '@tui.award',
       item: 'Domains',
       link: 'domains',
+    },
+    {
+      icon: '@tui.door-open',
+      item: 'Gateways',
+      link: 'gateways',
     },
   ],
   [

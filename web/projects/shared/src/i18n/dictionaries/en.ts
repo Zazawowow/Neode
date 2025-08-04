@@ -538,4 +538,7 @@ export const ENGLISH = {
   'Change gateway': 543, // as in, change the network gateway for a computer
   'Change default ACME': 544, // as in, change the default ACME provider for a domain
   'No domains': 545,
+  'Provider': 546,
+  'Show DNS': 547,
+  'Test DNS': 548,
 } as const

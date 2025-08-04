@@ -539,4 +539,7 @@ export default {
   543: 'Cambiar puerta de enlace',
   544: 'Cambiar ACME predeterminado',
   545: 'Sin dominios',
+  546: 'Proveedor',
+  547: 'Mostrar DNS',
+  548: 'Probar DNS',
 } satisfies i18n
