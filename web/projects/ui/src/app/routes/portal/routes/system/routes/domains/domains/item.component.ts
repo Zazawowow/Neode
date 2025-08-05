@@ -11,66 +11,68 @@ import {
   TuiDropdown,
   TuiTextfield,
 } from '@taiga-ui/core'
-import { DomainsService } from './domains.service'
+import { DomainService } from './domain.service'
 
 @Component({
   selector: 'tr[domain]',
   template: `
-    <td>{{ domain().domain }}</td>
-    <td [style.order]="-1">{{ domain().gateway.name }}</td>
-    <td>{{ domain().acme.name }}</td>
-    <td>
-      <button
-        tuiIconButton
-        tuiDropdown
-        size="s"
-        appearance="flat-grayscale"
-        iconStart="@tui.ellipsis-vertical"
-        [tuiAppearanceState]="open ? 'hover' : null"
-        [(tuiDropdownOpen)]="open"
-      >
-        {{ 'More' | i18n }}
-        <tui-data-list size="s" *tuiTextfieldDropdown>
-          <tui-opt-group>
-            <button
-              tuiOption
-              new
-              iconStart="@tui.pencil"
-              (click)="domainsService.edit(domain())"
-            >
-              {{ 'Edit' | i18n }}
-            </button>
-            <button
-              tuiOption
-              new
-              iconStart="@tui.shield"
-              (click)="domainsService.showDns(domain())"
-            >
-              {{ 'Show DNS' | i18n }}
-            </button>
-            <button
-              tuiOption
-              new
-              iconStart="@tui.shield"
-              (click)="domainsService.testDns(domain())"
-            >
-              {{ 'Test DNS' | i18n }}
-            </button>
-          </tui-opt-group>
-          <tui-opt-group>
-            <button
-              tuiOption
-              new
-              iconStart="@tui.trash"
-              class="g-negative"
-              (click)="domainsService.remove(domain())"
-            >
-              {{ 'Delete' | i18n }}
-            </button>
-          </tui-opt-group>
-        </tui-data-list>
-      </button>
-    </td>
+    @if (domain(); as domain) {
+      <td>{{ domain.domain }}</td>
+      <td [style.order]="-1">{{ domain.gateway.name }}</td>
+      <td>{{ domain.authority.name }}</td>
+      <td>
+        <button
+          tuiIconButton
+          tuiDropdown
+          size="s"
+          appearance="flat-grayscale"
+          iconStart="@tui.ellipsis-vertical"
+          [tuiAppearanceState]="open ? 'hover' : null"
+          [(tuiDropdownOpen)]="open"
+        >
+          {{ 'More' | i18n }}
+          <tui-data-list size="s" *tuiTextfieldDropdown>
+            <tui-opt-group>
+              <button
+                tuiOption
+                new
+                iconStart="@tui.pencil"
+                (click)="domainService.edit(domain)"
+              >
+                {{ 'Edit' | i18n }}
+              </button>
+              <button
+                tuiOption
+                new
+                iconStart="@tui.eye"
+                (click)="domainService.showDns(domain)"
+              >
+                {{ 'Show DNS' | i18n }}
+              </button>
+              <button
+                tuiOption
+                new
+                iconStart="@tui.arrow-up-down"
+                (click)="domainService.testDns(domain)"
+              >
+                {{ 'Test DNS' | i18n }}
+              </button>
+            </tui-opt-group>
+            <tui-opt-group>
+              <button
+                tuiOption
+                new
+                iconStart="@tui.trash"
+                class="g-negative"
+                (click)="domainService.remove(domain)"
+              >
+                {{ 'Delete' | i18n }}
+              </button>
+            </tui-opt-group>
+          </tui-data-list>
+        </button>
+      </td>
+    }
   `,
   styles: `
     td:last-child {
@@ -91,8 +93,8 @@ import { DomainsService } from './domains.service'
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TuiButton, i18nPipe, TuiDropdown, TuiDataList, TuiTextfield],
 })
-export class DomainsItemComponent {
-  protected readonly domainsService = inject(DomainsService)
+export class DomainItemComponent {
+  protected readonly domainService = inject(DomainService)
 
   readonly domain = input.required<any>()
 

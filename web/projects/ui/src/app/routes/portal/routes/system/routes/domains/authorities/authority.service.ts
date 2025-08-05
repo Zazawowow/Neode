@@ -13,18 +13,19 @@ import { ApiService } from 'src/app/services/api/embassy-api.service'
 import { FormDialogService } from 'src/app/services/form-dialog.service'
 import { PatchDB } from 'patch-db-client'
 import { DataModel } from 'src/app/services/patch-db/data-model'
-import { knownACME } from 'src/app/utils/acme'
+import { knownAuthorities, toAuthorityName } from 'src/app/utils/acme'
 import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
-import { toAcmeName } from 'src/app/utils/acme'
 
-export type ACMEInfo = {
+export type Authority = {
+  url: string | null
   name: string
-  url: string
-  contact: readonly string[]
+  contact: readonly string[] | null
 }
 
+export type RemoteAuthority = Authority & { url: string }
+
 @Injectable()
-export class AcmeService {
+export class AuthorityService {
   private readonly patch = inject<PatchDB<DataModel>>(PatchDB)
   private readonly loader = inject(LoadingService)
   private readonly errorService = inject(ErrorService)
@@ -33,31 +34,36 @@ export class AcmeService {
   private readonly i18n = inject(i18nPipe)
   private readonly dialog = inject(DialogService)
 
-  readonly acmes = toSignal<ACMEInfo[]>(
+  readonly authorities = toSignal<Authority[]>(
     this.patch.watch$('serverInfo', 'network', 'acme').pipe(
-      map(acme =>
-        Object.keys(acme).map(url => ({
+      map(acme => [
+        {
+          url: null,
+          name: toAuthorityName(null),
+          contact: null,
+        },
+        ...Object.keys(acme).map(url => ({
           url,
-          name: toAcmeName(url),
+          name: toAuthorityName(url),
           contact:
             acme[url]?.contact.map(mailto => mailto.replace('mailto:', '')) ||
-            [],
+            null,
         })),
-      ),
+      ]),
     ),
   )
 
-  async add(acmes: ACMEInfo[]) {
-    const availableAcme = knownACME.filter(
-      acme => !acmes.map(a => a.url).includes(acme.url),
+  async add(authorities: Authority[]) {
+    const availableAuthorities = knownAuthorities.filter(
+      ca => !authorities.map(a => a.url).includes(ca.url),
     )
 
     const addSpec = ISB.InputSpec.of({
       provider: ISB.Value.union({
         name: 'Provider',
-        default: (availableAcme[0]?.url as any) || 'other',
+        default: (availableAuthorities[0]?.url as any) || 'other',
         variants: ISB.Variants.of({
-          ...availableAcme.reduce(
+          ...availableAuthorities.reduce(
             (obj, curr) => ({
               ...obj,
               [curr.url]: {
@@ -85,7 +91,7 @@ export class AcmeService {
     })
 
     this.formDialog.open(FormComponent, {
-      label: 'Add ACME Provider',
+      label: 'Add Certificate Authority',
       data: {
         spec: await configBuilderToSpec(addSpec),
         buttons: [
@@ -105,13 +111,13 @@ export class AcmeService {
     })
   }
 
-  async edit({ url, contact }: ACMEInfo) {
+  async edit({ url, contact }: RemoteAuthority) {
     const editSpec = ISB.InputSpec.of({
       contact: this.emailListSpec(),
     })
 
     this.formDialog.open(FormComponent, {
-      label: 'Edit ACME Provider',
+      label: 'Edit Contact Info',
       data: {
         spec: await configBuilderToSpec(editSpec),
         buttons: [
@@ -126,7 +132,7 @@ export class AcmeService {
     })
   }
 
-  remove({ url }: ACMEInfo) {
+  remove({ url }: RemoteAuthority) {
     this.dialog
       .openConfirm({ label: 'Are you sure?', size: 's' })
       .pipe(filter(Boolean))

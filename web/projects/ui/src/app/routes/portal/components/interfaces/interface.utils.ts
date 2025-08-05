@@ -72,7 +72,7 @@ export function getAddresses(
             url,
             disabled: !h.public,
             isDomain: hostnameKind == 'domain',
-            acme:
+            authority:
               hostnameKind == 'domain'
                 ? host.domains[h.hostname.domain]?.acme || null
                 : null,
@@ -118,7 +118,7 @@ export type MappedServiceInterface = T.ServiceInterface & {
 
 export type ClearnetAddress = {
   url: string
-  acme: string | null
+  authority: string | null
   isDomain: boolean
   disabled: boolean
 }

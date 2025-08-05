@@ -24,7 +24,7 @@ import { AuthService } from '../auth.service'
 import { T } from '@start9labs/start-sdk'
 import { MarketplacePkg } from '@start9labs/marketplace'
 import { WebSocketSubject } from 'rxjs/webSocket'
-import { toAcmeUrl } from 'src/app/utils/acme'
+import { toAuthorityUrl } from 'src/app/utils/acme'
 
 import markdown from './md-sample.md'
 
@@ -1396,7 +1396,7 @@ export class MockApiService extends ApiService {
         op: PatchOp.ADD,
         path: `/serverInfo/acme`,
         value: {
-          [toAcmeUrl(params.provider)]: { contact: params.contact },
+          [toAuthorityUrl(params.provider)]: { contact: params.contact },
         },
       },
     ]

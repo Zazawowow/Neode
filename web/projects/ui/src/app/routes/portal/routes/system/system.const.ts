@@ -39,14 +39,14 @@ export const SYSTEM_MENU = [
   ],
   [
     {
-      icon: '@tui.globe',
-      item: 'Domains',
-      link: 'domains',
-    },
-    {
       icon: '@tui.door-open',
       item: 'Gateways',
       link: 'gateways',
+    },
+    {
+      icon: '@tui.globe',
+      item: 'Domains',
+      link: 'domains',
     },
   ],
   [

@@ -1,6 +1,6 @@
 import { DataModel } from 'src/app/services/patch-db/data-model'
 import { Mock } from './api.fixures'
-import { knownACME } from 'src/app/utils/acme'
+import { knownAuthorities } from 'src/app/utils/acme'
 const version = require('../../../../../../package.json').version
 
 export const mockPatchData: DataModel = {
@@ -28,7 +28,7 @@ export const mockPatchData: DataModel = {
         lastRegion: null,
       },
       acme: {
-        [knownACME[0].url]: {
+        [knownAuthorities[0].url]: {
           contact: ['mailto:support@start9.com'],
         },
       },
@@ -152,6 +152,20 @@ export const mockPatchData: DataModel = {
             name: 'Wireless Connection 1',
             scopeId: 2,
             deviceType: 'wireless',
+            subnets: [
+              '10.0.90.12/24',
+              'fe80::cd00:0000:0cde:1257:0000:211e:72cd/64',
+            ],
+            wanIp: '203.0.113.45',
+            ntpServers: [],
+          },
+        },
+        wireguard1: {
+          public: false,
+          ipInfo: {
+            name: 'StartTunnel',
+            scopeId: 2,
+            deviceType: 'wireguard',
             subnets: [
               '10.0.90.12/24',
               'fe80::cd00:0000:0cde:1257:0000:211e:72cd/64',

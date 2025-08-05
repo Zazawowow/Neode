@@ -1,20 +1,23 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core'
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core'
 import { i18nPipe } from '@start9labs/shared'
 import { TuiSkeleton } from '@taiga-ui/kit'
 import { PlaceholderComponent } from 'src/app/routes/portal/components/placeholder.component'
 import { TableComponent } from 'src/app/routes/portal/components/table.component'
-import { DomainsItemComponent } from './item.component'
+import { DomainItemComponent } from './item.component'
+import { DomainService } from './domain.service'
 
 @Component({
   selector: 'domains-table',
   template: `
-    <table [appTable]="['Domain', 'Gateway', 'Default ACME', null]">
-      @for (domain of domains(); track $index) {
+    <table
+      [appTable]="['Domain', 'Gateway', 'Default Certificate Authority', null]"
+    >
+      @for (domain of domainService.data()?.domains; track $index) {
         <tr [domain]="domain"></tr>
       } @empty {
         <tr>
           <td [attr.colspan]="4">
-            @if (domains()) {
+            @if (domainService.data()?.domains) {
               <app-placeholder icon="@tui.globe">
                 {{ 'No domains' | i18n }}
               </app-placeholder>
@@ -32,10 +35,9 @@ import { DomainsItemComponent } from './item.component'
     i18nPipe,
     TableComponent,
     PlaceholderComponent,
-    DomainsItemComponent,
+    DomainItemComponent,
   ],
 })
 export class DomainsTableComponent {
-  // @TODO Alex proper types
-  readonly domains = input<readonly any[] | null>()
+  protected readonly domainService = inject(DomainService)
 }

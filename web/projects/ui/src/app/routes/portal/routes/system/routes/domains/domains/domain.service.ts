@@ -14,12 +14,12 @@ import { FormDialogService } from 'src/app/services/form-dialog.service'
 import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
 import { PatchDB } from 'patch-db-client'
 import { DataModel } from 'src/app/services/patch-db/data-model'
-import { toAcmeName } from 'src/app/utils/acme'
+import { toAuthorityName } from 'src/app/utils/acme'
 
 // @TODO translations
 
 @Injectable()
-export class DomainsService {
+export class DomainService {
   private readonly patch = inject<PatchDB<DataModel>>(PatchDB)
   private readonly loader = inject(LoadingService)
   private readonly errorService = inject(ErrorService)
@@ -46,32 +46,32 @@ export class DomainsService {
             {
               domain: 'blog.mydomain.com',
               gateway: {
-                id: '',
+                id: 'wireguard1',
                 name: 'StartTunnel',
               },
-              acme: {
-                url: '',
-                name: `Lert's Encrypt`,
+              authority: {
+                url: 'https://acme-v02.api.letsencrypt.org/directory',
+                name: `Let's Encrypt`,
               },
             },
             {
               domain: 'store.mydomain.com',
               gateway: {
-                id: '',
+                id: 'eth0',
                 name: 'Ethernet',
               },
-              acme: {
-                url: null,
-                name: 'System',
+              authority: {
+                url: 'local',
+                name: toAuthorityName(null),
               },
             },
           ],
-          acme: Object.keys(network.acme).reduce<Record<string, string>>(
+          authorities: Object.keys(network.acme).reduce<Record<string, string>>(
             (obj, url) => ({
               ...obj,
-              [url]: toAcmeName(url),
+              [url]: toAuthorityName(url),
             }),
-            { none: 'None (use system Root CA)' },
+            { local: toAuthorityName(null) },
           ),
         }
       }),
@@ -88,7 +88,7 @@ export class DomainsService {
         default: null,
         patterns: [utils.Patterns.domain],
       }),
-      ...this.gatewaysAndAcme(),
+      ...this.gatewaysAndAuthorities(),
     })
 
     this.formDialog.open(FormComponent, {
@@ -107,11 +107,11 @@ export class DomainsService {
 
   async edit(domain: any) {
     const editSpec = ISB.InputSpec.of({
-      ...this.gatewaysAndAcme(),
+      ...this.gatewaysAndAuthorities(),
     })
 
     this.formDialog.open(FormComponent, {
-      label: 'Edit Domain' as any, // @TODO translation
+      label: 'Edit Domain',
       data: {
         spec: await configBuilderToSpec(editSpec),
         buttons: [
@@ -126,7 +126,7 @@ export class DomainsService {
         ],
         value: {
           gateway: domain.gateway.id,
-          acme: domain.acme.url,
+          authority: domain.authority.url,
         },
       },
     })
@@ -172,7 +172,7 @@ export class DomainsService {
     }
   }
 
-  private gatewaysAndAcme() {
+  private gatewaysAndAuthorities() {
     return {
       gateway: ISB.Value.select({
         name: 'Gateway',
@@ -181,11 +181,11 @@ export class DomainsService {
         values: this.data()!.gateways,
         default: '',
       }),
-      acme: ISB.Value.select({
-        name: 'Default ACME',
+      authority: ISB.Value.select({
+        name: 'Default Certificate Authority',
         description:
-          'Select the default ACME provider for this domain. This can be overridden on a case-by-case basis.',
-        values: this.data()!.acme,
+          'Select the default certificate authority that will sign certificates for this domain. You can override this on a case-by-case basis.',
+        values: this.data()!.authorities,
         default: '',
       }),
     }
