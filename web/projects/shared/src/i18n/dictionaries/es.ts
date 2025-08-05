@@ -112,7 +112,7 @@ export default {
   109: 'Privado',
   110: 'Agrega una dirección onion para exponer esta interfaz de forma anónima en la darknet. Las direcciones onion solo se pueden acceder a través de la red Tor.',
   111: 'Sin direcciones onion',
-  112: 'Nueva dirección Onion',
+  112: 'Nueva dirección onion',
   113: 'Clave privada (opcional)',
   114: 'Opcionalmente proporciona una clave privada ed25519 codificada en base64 para generar la dirección Tor V3 (.onion). Si no se proporciona, se generará una clave aleatoria.',
   115: 'Procesando 10,000 registros',
@@ -294,7 +294,6 @@ export default {
   297: 'Se detectó un paquete s9pk de versión 1. Este formato está obsoleto. Puedes instalarlo manualmente con start-cli si es necesario.',
   298: 'Archivo de paquete inválido',
   299: 'Agregar un dominio a StartOS significa que puedes usarlo y sus subdominios para alojar interfaces de servicios en Internet público.',
-
   300: 'Ver instrucciones',
   303: 'Contacto',
   304: 'Editar',
@@ -540,6 +539,5 @@ export default {
   544: 'Editar dominio',
   545: 'Sin dominios',
   546: 'Proveedor',
-  547: 'Mostrar DNS',
-  548: 'Probar DNS',
+  547: 'Administrar DNS',
 } satisfies i18n

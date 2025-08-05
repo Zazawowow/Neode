@@ -6,7 +6,7 @@ import {
   LoadingService,
 } from '@start9labs/shared'
 import { toSignal } from '@angular/core/rxjs-interop'
-import { ISB, utils } from '@start9labs/start-sdk'
+import { ISB, T, utils } from '@start9labs/start-sdk'
 import { filter, map } from 'rxjs'
 import { FormComponent } from 'src/app/routes/portal/components/form.component'
 import { ApiService } from 'src/app/services/api/embassy-api.service'
@@ -15,8 +15,25 @@ import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
 import { PatchDB } from 'patch-db-client'
 import { DataModel } from 'src/app/services/patch-db/data-model'
 import { toAuthorityName } from 'src/app/utils/acme'
+import { parse } from 'tldts'
+import { RR } from 'src/app/services/api/api.types'
+import { DNS } from './dns.component'
 
 // @TODO translations
+
+export type MappedDomain = {
+  fqdn: string
+  subdomain: string | null
+  gateway: {
+    id: string
+    name: string | null
+    ipInfo: T.IpInfo | null
+  }
+  authority: {
+    url: string | null
+    name: string | null
+  }
+}
 
 @Injectable()
 export class DomainService {
@@ -30,57 +47,45 @@ export class DomainService {
 
   readonly data = toSignal(
     this.patch.watch$('serverInfo', 'network').pipe(
-      map(network => {
-        return {
-          gateways: Object.entries(network.networkInterfaces).reduce<
-            Record<string, string>
-          >(
-            (obj, [id, n]) => ({
-              ...obj,
-              [id]: n.ipInfo?.name || '',
-            }),
-            {},
-          ),
-          // @TODO use real data
-          domains: [
-            {
-              domain: 'blog.mydomain.com',
+      map(({ networkInterfaces, domains, acme }) => ({
+        gateways: Object.entries(networkInterfaces).reduce<
+          Record<string, string>
+        >(
+          (obj, [id, n]) => ({
+            ...obj,
+            [id]: n.ipInfo?.name || '',
+          }),
+          {},
+        ),
+        domains: Object.entries(domains).map(
+          ([fqdn, { gateway, acme }]) =>
+            ({
+              fqdn,
+              subdomain: parse(fqdn).subdomain,
               gateway: {
-                id: 'wireguard1',
-                name: 'StartTunnel',
+                id: gateway,
+                ipInfo: networkInterfaces[gateway]?.ipInfo || null,
               },
               authority: {
-                url: 'https://acme-v02.api.letsencrypt.org/directory',
-                name: `Let's Encrypt`,
+                url: acme,
+                name: toAuthorityName(acme),
               },
-            },
-            {
-              domain: 'store.mydomain.com',
-              gateway: {
-                id: 'eth0',
-                name: 'Ethernet',
-              },
-              authority: {
-                url: 'local',
-                name: toAuthorityName(null),
-              },
-            },
-          ],
-          authorities: Object.keys(network.acme).reduce<Record<string, string>>(
-            (obj, url) => ({
-              ...obj,
-              [url]: toAuthorityName(url),
-            }),
-            { local: toAuthorityName(null) },
-          ),
-        }
-      }),
+            }) as MappedDomain,
+        ),
+        authorities: Object.keys(acme).reduce<Record<string, string>>(
+          (obj, url) => ({
+            ...obj,
+            [url]: toAuthorityName(url),
+          }),
+          { local: toAuthorityName(null) },
+        ),
+      })),
     ),
   )
 
   async add() {
     const addSpec = ISB.InputSpec.of({
-      domain: ISB.Value.text({
+      fqdn: ISB.Value.text({
         name: 'Domain',
         description:
           'Enter a domain/subdomain. For example, if you control domain.com, you could enter domain.com or subdomain.domain.com or another.subdomain.domain.com. In any case, the domain you enter and all possible subdomains of the domain will be available for assignment in StartOS',
@@ -92,26 +97,31 @@ export class DomainService {
     })
 
     this.formDialog.open(FormComponent, {
-      label: 'Add Domain' as any,
+      label: 'Add domain',
       data: {
         spec: await configBuilderToSpec(addSpec),
         buttons: [
           {
             text: 'Save',
-            handler: (input: typeof addSpec._TYPE) => this.save(input),
+            handler: (input: typeof addSpec._TYPE) =>
+              this.save({
+                fqdn: input.fqdn,
+                gateway: input.gateway,
+                acme: input.authority === 'local' ? null : input.authority,
+              }),
           },
         ],
       },
     })
   }
 
-  async edit(domain: any) {
+  async edit(domain: MappedDomain) {
     const editSpec = ISB.InputSpec.of({
       ...this.gatewaysAndAuthorities(),
     })
 
     this.formDialog.open(FormComponent, {
-      label: 'Edit Domain',
+      label: 'Edit domain',
       data: {
         spec: await configBuilderToSpec(editSpec),
         buttons: [
@@ -119,20 +129,21 @@ export class DomainService {
             text: 'Save',
             handler: (input: typeof editSpec._TYPE) =>
               this.save({
-                domain: domain.domain,
-                ...input,
+                fqdn: domain.fqdn,
+                gateway: input.gateway,
+                acme: input.authority === 'local' ? null : input.authority,
               }),
           },
         ],
         value: {
           gateway: domain.gateway.id,
-          authority: domain.authority.url,
+          authority: domain.authority.url || 'local',
         },
       },
     })
   }
 
-  remove(domain: any) {
+  remove(fqdn: string) {
     this.dialog
       .openConfirm({ label: 'Are you sure?', size: 's' })
       .pipe(filter(Boolean))
@@ -140,7 +151,7 @@ export class DomainService {
         const loader = this.loader.open('Deleting').subscribe()
 
         try {
-          // @TODO API
+          await this.api.removeDomain({ fqdn })
         } catch (e: any) {
           this.errorService.handleError(e)
         } finally {
@@ -149,20 +160,17 @@ export class DomainService {
       })
   }
 
-  showDns(domain: any) {
-    // @TODO
+  showDns(domain: MappedDomain) {
+    this.dialog
+      .openComponent(DNS, { label: 'Manage DNS', data: domain })
+      .subscribe()
   }
 
-  testDns(domain: any) {
-    // @TODO
-  }
-
-  // @TODO different endpoints for create and edit?
-  private async save(params: any) {
+  private async save(params: RR.AddDomainReq) {
     const loader = this.loader.open('Saving').subscribe()
 
     try {
-      // @TODO API
+      await this.api.addDomain(params)
       return true
     } catch (e: any) {
       this.errorService.handleError(e)

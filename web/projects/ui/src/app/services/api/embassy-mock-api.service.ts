@@ -601,113 +601,50 @@ export class MockApiService extends ApiService {
     return null
   }
 
-  // async setOutboundProxy(
-  //   params: RR.SetOutboundTunnelReq,
-  // ): Promise<RR.SetOutboundTunnelRes> {
-  //   await pauseFor(2000)
-
-  //   const patch: ReplaceOperation<string | null>[] = [
-  //     {
-  //       op: PatchOp.REPLACE,
-  //       path: '/serverInfo/network/outboundInterface',
-  //       value: params.id,
-  //     },
-  //   ]
-  //   this.mockRevision(patch)
-
-  //   return null
-  // }
-
   // domains
 
-  // async claimStart9ToDomain(
-  //   params: RR.ClaimStart9ToReq,
-  // ): Promise<RR.ClaimStart9ToRes> {
-  //   await pauseFor(2000)
+  async addDomain(params: RR.AddDomainReq): Promise<RR.AddDomainRes> {
+    await pauseFor(2000)
 
-  //   const patch = [
-  //     {
-  //       op: PatchOp.REPLACE,
-  //       path: '/serverInfo/network/start9To',
-  //       value: {
-  //         subdomain: 'xyz',
-  //         gatewayId: params.gatewayId,
-  //       },
-  //     },
-  //   ]
-  //   this.mockRevision(patch)
+    const patch = [
+      {
+        op: PatchOp.REPLACE,
+        path: `/serverInfo/network/domains`,
+        value: {
+          [params.fqdn]: {
+            gateway: params.gateway,
+            acme: params.acme,
+          },
+        },
+      },
+    ]
+    this.mockRevision(patch)
 
-  //   return null
-  // }
+    return null
+  }
 
-  // async deleteStart9ToDomain(
-  //   params: RR.DeleteStart9ToReq,
-  // ): Promise<RR.DeleteStart9ToRes> {
-  //   await pauseFor(2000)
-  //   const patch = [
-  //     {
-  //       op: PatchOp.REPLACE,
-  //       path: '/serverInfo/network/start9To',
-  //       value: null,
-  //     },
-  //   ]
-  //   this.mockRevision(patch)
+  async removeDomain(params: RR.RemoveDomainReq): Promise<RR.RemoveDomainRes> {
+    await pauseFor(2000)
+    const patch = [
+      {
+        op: PatchOp.REPLACE,
+        path: '/serverInfo/network/domains',
+        value: {},
+      },
+    ]
+    this.mockRevision(patch)
 
-  //   return null
-  // }
+    return null
+  }
 
-  // async addDomain(params: RR.AddDomainReq): Promise<RR.AddDomainRes> {
-  //   await pauseFor(2000)
+  async testDomain(params: RR.TestDomainReq): Promise<RR.TestDomainRes> {
+    await pauseFor(2000)
 
-  //   const patch = [
-  //     {
-  //       op: PatchOp.REPLACE,
-  //       path: `/serverInfo/network/domains`,
-  //       value: {
-  //         [params.hostname]: {
-  //           gatewayId: params.gatewayId,
-  //           provider: params.provider.name,
-  //         },
-  //       },
-  //     },
-  //   ]
-  //   this.mockRevision(patch)
-
-  //   return null
-  // }
-
-  // async deleteDomain(params: RR.DeleteDomainReq): Promise<RR.DeleteDomainRes> {
-  //   await pauseFor(2000)
-  //   const patch = [
-  //     {
-  //       op: PatchOp.REPLACE,
-  //       path: '/serverInfo/network/domains',
-  //       value: {},
-  //     },
-  //   ]
-  //   this.mockRevision(patch)
-
-  //   return null
-  // }
-
-  // port forwards
-
-  // async overridePortForward(
-  //   params: RR.OverridePortReq,
-  // ): Promise<RR.OverridePortRes> {
-  //   await pauseFor(2000)
-
-  //   const patch = [
-  //     {
-  //       op: PatchOp.REPLACE,
-  //       path: '/serverInfo/network/wanConfig/forwards/0/override',
-  //       value: params.port,
-  //     },
-  //   ]
-  //   this.mockRevision(patch)
-
-  //   return null
-  // }
+    return {
+      root: true,
+      wildcard: true,
+    }
+  }
 
   // wifi
 
@@ -1496,7 +1433,9 @@ export class MockApiService extends ApiService {
     return null
   }
 
-  async serverAddDomain(params: RR.PkgAddDomainReq): Promise<RR.AddDomainRes> {
+  async osUiAddDomain(
+    params: RR.OsUiAddDomainReq,
+  ): Promise<RR.OsUiAddDomainRes> {
     await pauseFor(2000)
 
     const patch: Operation<any>[] = [
@@ -1529,9 +1468,9 @@ export class MockApiService extends ApiService {
     return null
   }
 
-  async serverRemoveDomain(
-    params: RR.PkgRemoveDomainReq,
-  ): Promise<RR.RemoveDomainRes> {
+  async osUiRemoveDomain(
+    params: RR.OsUiRemoveDomainReq,
+  ): Promise<RR.OsUiRemoveDomainRes> {
     await pauseFor(2000)
 
     const patch: RemoveOperation[] = [
@@ -1613,7 +1552,7 @@ export class MockApiService extends ApiService {
     return null
   }
 
-  async pkgAddDomain(params: RR.PkgAddDomainReq): Promise<RR.AddDomainRes> {
+  async pkgAddDomain(params: RR.PkgAddDomainReq): Promise<RR.PkgAddDomainRes> {
     await pauseFor(2000)
 
     const patch: Operation<any>[] = [
@@ -1648,7 +1587,7 @@ export class MockApiService extends ApiService {
 
   async pkgRemoveDomain(
     params: RR.PkgRemoveDomainReq,
-  ): Promise<RR.RemoveDomainRes> {
+  ): Promise<RR.PkgRemoveDomainRes> {
     await pauseFor(2000)
 
     const patch: RemoveOperation[] = [

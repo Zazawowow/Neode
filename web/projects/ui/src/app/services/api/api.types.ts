@@ -234,7 +234,28 @@ export namespace RR {
   }
   export type CreateBackupRes = null
 
-  // tunnel
+  // network
+
+  export type AddDomainReq = {
+    fqdn: string
+    gateway: string
+    acme: string | null
+  } // net.domain.add
+  export type AddDomainRes = null
+
+  export type RemoveDomainReq = {
+    fqdn: string
+  } // net.domain.remove
+  export type RemoveDomainRes = null
+
+  export type TestDomainReq = {
+    fqdn: string
+    gateway: string
+  } // net.domain.test
+  export type TestDomainRes = {
+    root: boolean
+    wildcard: boolean
+  }
 
   export type AddTunnelReq = {
     name: string
@@ -255,7 +276,7 @@ export namespace RR {
   export type RemoveTunnelRes = null
 
   export type InitAcmeReq = {
-    provider: 'letsencrypt' | 'letsencrypt-staging' | string
+    provider: string
     contact: string[]
   }
   export type InitAcmeRes = null
@@ -288,19 +309,19 @@ export namespace RR {
   export type ServerRemoveOnionReq = ServerAddOnionReq // server.host.address.onion.remove
   export type RemoveOnionRes = null
 
-  export type ServerAddDomainReq = {
+  export type OsUiAddDomainReq = {
     // server.host.address.domain.add
     domain: string // FQDN
     private: boolean
-    acme: string | null // "letsencrypt" | "letsencrypt-staging" | Url | null
+    acme: string | null // Url | null
   }
-  export type AddDomainRes = null
+  export type OsUiAddDomainRes = null
 
-  export type ServerRemoveDomainReq = {
+  export type OsUiRemoveDomainReq = {
     // server.host.address.domain.remove
     domain: string // FQDN
   }
-  export type RemoveDomainRes = null
+  export type OsUiRemoveDomainRes = null
 
   export type PkgBindingSetPublicReq = ServerBindingSetPublicReq & {
     // package.host.binding.set-public
@@ -316,17 +337,19 @@ export namespace RR {
 
   export type PkgRemoveOnionReq = PkgAddOnionReq // package.host.address.onion.remove
 
-  export type PkgAddDomainReq = ServerAddDomainReq & {
+  export type PkgAddDomainReq = OsUiAddDomainReq & {
     // package.host.address.domain.add
     package: T.PackageId // string
     host: T.HostId // string
   }
+  export type PkgAddDomainRes = null
 
-  export type PkgRemoveDomainReq = ServerRemoveDomainReq & {
+  export type PkgRemoveDomainReq = OsUiRemoveDomainReq & {
     // package.host.address.domain.remove
     package: T.PackageId // string
     host: T.HostId // string
   }
+  export type PkgRemoveDomainRes = null
 
   export type GetPackageLogsReq = FetchLogsReq & { id: string } // package.logs
   export type GetPackageLogsRes = FetchLogsRes
@@ -624,32 +647,6 @@ export type DependencyErrorTransitive = {
 // @TODO 041
 
 // export namespace RR041 {
-//   // ** domains **
-
-//   export type ClaimStart9ToReq = { gatewayId: string } // net.domain.me.claim
-//   export type ClaimStart9ToRes = null
-
-//   export type DeleteStart9ToReq = {} // net.domain.me.delete
-//   export type DeleteStart9ToRes = null
-
-//   export type AddDomainReq = {
-//     hostname: string
-//     provider: {
-//       name: string
-//       username: string | null
-//       password: string | null
-//     }
-//     gatewayId: string
-//   } // net.domain.add
-//   export type AddDomainRes = null
-
-//   export type DeleteDomainReq = { hostname: string } // net.domain.delete
-//   export type DeleteDomainRes = null
-
-//   // port forwards
-
-//   export type OverridePortReq = { target: number; port: number } // net.port-forwards.override
-//   export type OverridePortRes = null
 
 //   // ** automated backups **
 
@@ -730,20 +727,6 @@ export type DependencyErrorTransitive = {
 // }
 
 // @TODO 041 types
-
-// export type AppMetrics = {
-//   memory: {
-//     percentageUsed: MetricData
-//     used: MetricData
-//   }
-//   cpu: {
-//     percentageUsed: MetricData
-//   }
-//   disk: {
-//     percentageUsed: MetricData
-//     used: MetricData
-//   }
-// }
 
 // export type RemoteBackupTarget = CifsBackupTarget | CloudBackupTarget
 // export type BackupTarget = RemoteBackupTarget | DiskBackupTarget

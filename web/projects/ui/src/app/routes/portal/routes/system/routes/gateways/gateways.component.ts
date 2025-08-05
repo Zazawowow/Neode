@@ -18,7 +18,7 @@ import { TitleDirective } from 'src/app/services/title.service'
 import { TuiHeader } from '@taiga-ui/layout'
 import { map } from 'rxjs'
 import { ISB } from '@start9labs/start-sdk'
-import { GatewayWithID } from './item.component'
+import { GatewayPlus } from './item.component'
 
 @Component({
   template: `
@@ -87,19 +87,24 @@ export default class GatewaysComponent {
     .watch$('serverInfo', 'network', 'networkInterfaces')
     .pipe(
       map(gateways =>
-        Object.entries(gateways).map(
-          ([id, val]) =>
-            ({
-              ...val,
-              id,
-            }) as GatewayWithID,
-        ),
+        Object.entries(gateways)
+          .filter(([_, val]) => !!val.ipInfo)
+          .map(
+            ([id, val]) =>
+              ({
+                ...val,
+                id,
+                ipv4: val.ipInfo?.subnets
+                  .filter(s => !s.includes('::'))
+                  .map(s => s.split('/')[0]),
+              }) as GatewayPlus,
+          ),
       ),
     )
 
   async add() {
     this.formDialog.open(FormComponent, {
-      label: 'Add Gateway',
+      label: 'Add gateway',
       data: {
         spec: await configBuilderToSpec(gatewaySpec),
         buttons: [

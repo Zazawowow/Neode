@@ -24,55 +24,64 @@ import { ApiService } from 'src/app/services/api/embassy-api.service'
 import { FormDialogService } from 'src/app/services/form-dialog.service'
 import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
 
-export type GatewayWithID = T.NetworkInterfaceInfo & {
+export type GatewayPlus = T.NetworkInterfaceInfo & {
   id: string
   ipInfo: T.IpInfo
+  ipv4: string[]
 }
 
 @Component({
   selector: 'tr[proxy]',
   template: `
-    <td [style.grid-column]="'span 2'">{{ proxy().ipInfo.name }}</td>
-    <td class="type">{{ proxy().ipInfo.deviceType || '-' }}</td>
-    <td [style.order]="-2">
-      {{ proxy().public ? ('Public' | i18n) : ('Private' | i18n) }}
-    </td>
-    <!-- // @TODO show both LAN IPs? -->
-    <td class="lan">{{ proxy().ipInfo.subnets[0] }}</td>
-    <td class="wan">{{ proxy().ipInfo.wanIp }}</td>
-    <td>
-      <button
-        tuiIconButton
-        tuiDropdown
-        size="s"
-        appearance="flat-grayscale"
-        iconStart="@tui.ellipsis-vertical"
-        [tuiAppearanceState]="open ? 'hover' : null"
-        [(tuiDropdownOpen)]="open"
+    @if (proxy(); as proxy) {
+      <td [style.grid-column]="'span 2'">{{ proxy.ipInfo.name }}</td>
+      <td class="type">{{ proxy.ipInfo.deviceType || '-' }}</td>
+      <td [style.order]="-2">
+        {{ proxy.public ? ('Public' | i18n) : ('Private' | i18n) }}
+      </td>
+      <td class="lan">{{ proxy.ipv4.join(', ') }}</td>
+      <td
+        class="wan"
+        [style.color]="
+          proxy.ipInfo.wanIp ? 'var(--tui-text-warning)' : undefined
+        "
       >
-        {{ 'More' | i18n }}
-        <tui-data-list size="s" *tuiTextfieldDropdown>
-          <tui-opt-group>
-            <button tuiOption new iconStart="@tui.pencil" (click)="rename()">
-              {{ 'Rename' | i18n }}
-            </button>
-          </tui-opt-group>
-          @if (proxy().ipInfo.deviceType === 'wireguard') {
+        {{ proxy.ipInfo.wanIp || ('Error' | i18n) }}
+      </td>
+      <td>
+        <button
+          tuiIconButton
+          tuiDropdown
+          size="s"
+          appearance="flat-grayscale"
+          iconStart="@tui.ellipsis-vertical"
+          [tuiAppearanceState]="open ? 'hover' : null"
+          [(tuiDropdownOpen)]="open"
+        >
+          {{ 'More' | i18n }}
+          <tui-data-list size="s" *tuiTextfieldDropdown>
             <tui-opt-group>
-              <button
-                tuiOption
-                new
-                iconStart="@tui.trash"
-                class="g-negative"
-                (click)="remove()"
-              >
-                {{ 'Delete' | i18n }}
+              <button tuiOption new iconStart="@tui.pencil" (click)="rename()">
+                {{ 'Rename' | i18n }}
               </button>
             </tui-opt-group>
-          }
-        </tui-data-list>
-      </button>
-    </td>
+            @if (proxy.ipInfo.deviceType === 'wireguard') {
+              <tui-opt-group>
+                <button
+                  tuiOption
+                  new
+                  iconStart="@tui.trash"
+                  class="g-negative"
+                  (click)="remove()"
+                >
+                  {{ 'Delete' | i18n }}
+                </button>
+              </tui-opt-group>
+            }
+          </tui-data-list>
+        </button>
+      </td>
+    }
   `,
   styles: `
     td:last-child {
@@ -106,7 +115,7 @@ export type GatewayWithID = T.NetworkInterfaceInfo & {
         grid-column: span 2;
 
         &::before {
-          content: 'LAN IPs: ';
+          content: 'LAN IP: ';
           color: var(--tui-text-primary);
         }
       }
@@ -133,7 +142,7 @@ export class GatewaysItemComponent {
   private readonly api = inject(ApiService)
   private readonly formDialog = inject(FormDialogService)
 
-  readonly proxy = input.required<GatewayWithID>()
+  readonly proxy = input.required<GatewayPlus>()
 
   open = false
 

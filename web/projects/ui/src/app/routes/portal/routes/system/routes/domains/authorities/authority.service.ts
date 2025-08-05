@@ -117,7 +117,7 @@ export class AuthorityService {
     })
 
     this.formDialog.open(FormComponent, {
-      label: 'Edit Contact Info',
+      label: 'Edit contact info',
       data: {
         spec: await configBuilderToSpec(editSpec),
         buttons: [

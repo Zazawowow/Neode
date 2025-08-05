@@ -358,41 +358,19 @@ export class LiveApiService extends ApiService {
     return this.rpcRequest({ method: 'net.tunnel.remove', params })
   }
 
-  // async setOutboundProxy(
-  //   params: RR.SetOutboundTunnelReq,
-  // ): Promise<RR.SetOutboundTunnelRes> {
-  //   return this.rpcRequest({ method: 'server.proxy.set-outbound', params })
-  // }
-
   // domains
 
-  // async claimStart9ToDomain(
-  //   params: RR.ClaimStart9ToReq,
-  // ): Promise<RR.ClaimStart9ToRes> {
-  //   return this.rpcRequest({ method: 'net.domain.me.claim', params })
-  // }
+  async addDomain(params: RR.AddDomainReq): Promise<RR.AddDomainRes> {
+    return this.rpcRequest({ method: 'net.domain.add', params })
+  }
 
-  // async deleteStart9ToDomain(
-  //   params: RR.DeleteStart9ToReq,
-  // ): Promise<RR.DeleteStart9ToRes> {
-  //   return this.rpcRequest({ method: 'net.domain.me.delete', params })
-  // }
+  async removeDomain(params: RR.RemoveDomainReq): Promise<RR.RemoveDomainRes> {
+    return this.rpcRequest({ method: 'net.domain.remove', params })
+  }
 
-  // async addDomain(params: RR.AddDomainReq): Promise<RR.AddDomainRes> {
-  //   return this.rpcRequest({ method: 'net.domain.add', params })
-  // }
-
-  // async deleteDomain(params: RR.DeleteDomainReq): Promise<RR.DeleteDomainRes> {
-  //   return this.rpcRequest({ method: 'net.domain.delete', params })
-  // }
-
-  // port forwards
-
-  // async overridePortForward(
-  //   params: RR.OverridePortReq,
-  // ): Promise<RR.OverridePortRes> {
-  //   return this.rpcRequest({ method: 'net.port-forwards.override', params })
-  // }
+  async testDomain(params: RR.TestDomainReq): Promise<RR.TestDomainRes> {
+    return this.rpcRequest({ method: 'net.domain.test', params })
+  }
 
   // wifi
 
@@ -685,18 +663,18 @@ export class LiveApiService extends ApiService {
     })
   }
 
-  async serverAddDomain(
-    params: RR.ServerAddDomainReq,
-  ): Promise<RR.AddDomainRes> {
+  async osUiAddDomain(
+    params: RR.OsUiAddDomainReq,
+  ): Promise<RR.OsUiAddDomainRes> {
     return this.rpcRequest({
       method: 'server.host.address.domain.add',
       params,
     })
   }
 
-  async serverRemoveDomain(
-    params: RR.ServerRemoveDomainReq,
-  ): Promise<RR.RemoveDomainRes> {
+  async osUiRemoveDomain(
+    params: RR.OsUiRemoveDomainReq,
+  ): Promise<RR.OsUiRemoveDomainRes> {
     return this.rpcRequest({
       method: 'server.host.address.domain.remove',
       params,
@@ -728,7 +706,7 @@ export class LiveApiService extends ApiService {
     })
   }
 
-  async pkgAddDomain(params: RR.PkgAddDomainReq): Promise<RR.AddDomainRes> {
+  async pkgAddDomain(params: RR.PkgAddDomainReq): Promise<RR.PkgAddDomainRes> {
     return this.rpcRequest({
       method: 'package.host.address.domain.add',
       params,
@@ -737,7 +715,7 @@ export class LiveApiService extends ApiService {
 
   async pkgRemoveDomain(
     params: RR.PkgRemoveDomainReq,
-  ): Promise<RR.RemoveDomainRes> {
+  ): Promise<RR.PkgRemoveDomainRes> {
     return this.rpcRequest({
       method: 'package.host.address.domain.remove',
       params,

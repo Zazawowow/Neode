@@ -1,7 +1,20 @@
 import { Languages } from '@start9labs/shared'
 import { T } from '@start9labs/start-sdk'
 
-export type DataModel = T.Public & { ui: UIData; packageData: AllPackageData }
+export type DataModel = T.Public & {
+  ui: UIData
+  packageData: AllPackageData
+  serverInfo: T.ServerInfo & {
+    network: T.NetworkInfo & {
+      domains: {
+        [fqdn: string]: {
+          gateway: string
+          acme: string | null
+        }
+      }
+    }
+  }
+}
 
 export type UIData = {
   name: string | null
@@ -9,22 +22,6 @@ export type UIData = {
   snakeHighScore: number
   startosRegistry: string
   language: Languages
-}
-
-export type NetworkInfo = T.NetworkInfo & {
-  // @TODO 041
-  // start9To: {
-  //   subdomain: string
-  //   gatewayId: string
-  // } | null
-  // domains: {
-  //   [key: string]: Domain
-  // }
-  // wanConfig: {
-  //   upnp: boolean
-  //   forwards: PortForward[]
-  // }
-  // outboundProxy: string | null
 }
 
 export type PackageDataEntry<T extends StateInfo = StateInfo> =

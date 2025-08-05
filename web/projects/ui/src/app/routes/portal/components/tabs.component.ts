@@ -133,7 +133,7 @@ export class TabsComponent {
   )
 
   more(content: TemplateRef<any>) {
-    this.dialogs.open(content, { label: 'Start OS' }).subscribe({
+    this.dialogs.open(content, { label: 'StartOS' }).subscribe({
       complete: () => this.update(),
     })
   }

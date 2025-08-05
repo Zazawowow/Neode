@@ -112,7 +112,7 @@ export default {
   109: 'Prywatny',
   110: 'Dodaj adres onion, aby anonimowo udostępnić ten interfejs w sieci Tor. Adresy onion są dostępne tylko przez sieć Tor.',
   111: 'Brak adresów onion',
-  112: 'Nowy adres Onion',
+  112: 'Nowy adres onion',
   113: 'Klucz prywatny (opcjonalnie)',
   114: 'Opcjonalnie podaj klucz prywatny ed25519 zakodowany w base64, aby wygenerować adres Tor V3 (.onion). Jeśli nie zostanie podany, zostanie wygenerowany i użyty losowy klucz.',
   115: 'Przetwarzanie 10 000 logów',
@@ -539,6 +539,5 @@ export default {
   544: 'Edytuj domenę',
   545: 'Brak domen',
   546: 'Dostawca',
-  547: 'Pokaż DNS',
-  548: 'Test DNS',
+  547: 'Zarządzaj DNS',
 } satisfies i18n

@@ -102,7 +102,7 @@ import { SystemWipeComponent } from './wipe.component'
       <div tuiCell tuiAppearance="outline-grayscale">
         <tui-icon icon="@tui.app-window" />
         <span tuiTitle>
-          <strong>{{ 'Browser Tab Title' | i18n }}</strong>
+          <strong>{{ 'Browser tab title' | i18n }}</strong>
           <span tuiSubtitle>
             {{ 'Customize the name appearing in your browser tab' | i18n }}
           </span>
@@ -302,7 +302,7 @@ export default class SystemGeneralComponent {
   onTitle() {
     const sub = this.dialog
       .openPrompt<string>({
-        label: 'Browser Tab Title',
+        label: 'Browser tab title',
         data: {
           label: 'Device Name',
           message:

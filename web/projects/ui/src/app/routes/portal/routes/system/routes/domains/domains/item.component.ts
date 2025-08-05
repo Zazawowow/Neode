@@ -11,14 +11,14 @@ import {
   TuiDropdown,
   TuiTextfield,
 } from '@taiga-ui/core'
-import { DomainService } from './domain.service'
+import { DomainService, MappedDomain } from './domain.service'
 
 @Component({
   selector: 'tr[domain]',
   template: `
     @if (domain(); as domain) {
-      <td>{{ domain.domain }}</td>
-      <td [style.order]="-1">{{ domain.gateway.name }}</td>
+      <td>{{ domain.fqdn }}</td>
+      <td [style.order]="-1">{{ domain.gateway.ipInfo?.name || '-' }}</td>
       <td>{{ domain.authority.name }}</td>
       <td>
         <button
@@ -47,15 +47,7 @@ import { DomainService } from './domain.service'
                 iconStart="@tui.eye"
                 (click)="domainService.showDns(domain)"
               >
-                {{ 'Show DNS' | i18n }}
-              </button>
-              <button
-                tuiOption
-                new
-                iconStart="@tui.arrow-up-down"
-                (click)="domainService.testDns(domain)"
-              >
-                {{ 'Test DNS' | i18n }}
+                {{ 'Manage DNS' | i18n }}
               </button>
             </tui-opt-group>
             <tui-opt-group>
@@ -64,7 +56,7 @@ import { DomainService } from './domain.service'
                 new
                 iconStart="@tui.trash"
                 class="g-negative"
-                (click)="domainService.remove(domain)"
+                (click)="domainService.remove(domain.fqdn)"
               >
                 {{ 'Delete' | i18n }}
               </button>
@@ -96,7 +88,7 @@ import { DomainService } from './domain.service'
 export class DomainItemComponent {
   protected readonly domainService = inject(DomainService)
 
-  readonly domain = input.required<any>()
+  readonly domain = input.required<MappedDomain>()
 
   open = false
 }

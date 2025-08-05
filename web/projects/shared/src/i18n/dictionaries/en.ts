@@ -15,7 +15,7 @@ export const ENGLISH = {
   'Change Password': 13,
   'General Settings': 14,
   'Manage your overall setup and preferences': 15,
-  'Browser Tab Title': 16,
+  'Browser tab title': 16,
   'Language': 17,
   'Disk Repair': 18,
   'Attempt automatic repair': 19,
@@ -103,7 +103,7 @@ export const ENGLISH = {
   'You have unsaved changes. Are you sure you want to leave?': 101,
   'Leave': 102,
   'Are you sure?': 103,
-  'Select Domain': 104,
+  'Select domain': 104,
   'Local': 105,
   'Local addresses can only be accessed by devices connected to the same LAN as your server, either directly or using a VPN.': 106,
   'Learn More': 107,
@@ -111,7 +111,7 @@ export const ENGLISH = {
   'Private': 109,
   'Add an onion address to anonymously expose this interface on the darknet. Onion addresses can only be reached over the Tor network.': 110,
   'No onion addresses': 111,
-  'New Onion Address': 112,
+  'New onion address': 112,
   'Private Key (optional)': 113,
   'Optionally provide a base64-encoded ed25519 private key for generating the Tor V3 (.onion) address. If not provided, a random key will be generated and used.': 114,
   'Processing 10,000 logs': 115,
@@ -297,16 +297,16 @@ export const ENGLISH = {
   'Contact': 303, //  as in, "contact us"
   'Edit': 304,
   'Add Certificate Authority': 305,
-  'Edit Contact Info': 306,
+  'Edit contact info': 306,
   'Contact Emails': 307,
   'Needed to obtain a certificate from a Certificate Authority': 308,
   'Toggle all': 309,
   'Done': 310,
-  'Master Password Needed': 311,
+  'Master password needed': 311,
   'Enter your master password to encrypt this backup.': 312,
   'Master Password': 313,
   'Enter master password': 314,
-  'Original Password Needed': 315,
+  'Original password needed': 315,
   'This backup was created with a different password. Enter the original password that was used to encrypt this backup.': 316,
   'Original Password': 317,
   'Enter original password': 318,
@@ -363,7 +363,7 @@ export const ENGLISH = {
   'Ready to restore': 369,
   'Local Hostname': 370,
   'Created': 371,
-  'Password Required': 372,
+  'Password required': 372,
   'Enter the master password that was used to encrypt this backup. On the next screen, you will select the individual services you want to restore.': 373,
   'Decrypting drive': 374,
   'Select services to restore': 375,
@@ -395,7 +395,7 @@ export const ENGLISH = {
   'Terminate selected': 401,
   'Terminating sessions': 402,
   'No sessions': 403,
-  'Password Needed': 404,
+  'Password needed': 404,
   'Connected': 405,
   'Forget': 406, // as in, delete or remove
   'WiFi Credentials': 407,
@@ -526,7 +526,7 @@ export const ENGLISH = {
   'Finished': 532, // an in, complete
   'Gateways': 533, // as in, a device or software that connects two different networks
   'Gateways connect your server to the Internet. They process outbound traffic, and under certain conditions, they also permit inbound traffic.': 534,
-  'Add Gateway': 535, // as in, add a new network gateway to StartOS
+  'Add gateway': 535, // as in, add a new network gateway to StartOS
   'Rename': 536,
   'Access': 537, // as in, public or private access, almost "permission"
   'Domains': 538, // as in, internet domains
@@ -535,9 +535,8 @@ export const ENGLISH = {
   'Gateway': 541, // as in, a device or software that connects two different networks
   'Default Certificate Authority': 542,
   'Certificate Authority': 543,
-  'Edit Domain': 544,
+  'Edit domain': 544,
   'No domains': 545,
   'Provider': 546,
-  'Show DNS': 547,
-  'Test DNS': 548,
+  'Manage DNS': 547,
 } as const

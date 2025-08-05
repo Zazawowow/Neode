@@ -19,7 +19,9 @@ import { Authority, AuthorityService } from './authority.service'
     @if (authority(); as authority) {
       <td>{{ authority.name }}</td>
       <td>{{ authority.url || '-' }}</td>
-      <td>{{ authority.contact ? authority.contact.join(', ') : '-' }}</td>
+      <td class="hidden">
+        {{ authority.contact ? authority.contact.join(', ') : '-' }}
+      </td>
       <td>
         <button
           tuiIconButton
@@ -73,7 +75,7 @@ import { Authority, AuthorityService } from './authority.service'
   `,
   styles: `
     td:last-child {
-      grid-area: 1 / 2 / 3;
+      grid-area: 1 / 2 / 4;
       align-self: center;
       text-align: right;
     }
@@ -84,6 +86,10 @@ import { Authority, AuthorityService } from './authority.service'
       td:first-child {
         font: var(--tui-font-text-m);
         font-weight: bold;
+      }
+
+      .hidden {
+        display: none;
       }
     }
   `,

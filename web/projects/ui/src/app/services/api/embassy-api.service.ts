@@ -184,33 +184,15 @@ export abstract class ApiService {
 
   // @TODO 041
 
-  // abstract setOutboundProxy(
-  //   params: RR.SetOutboundTunnelReq,
-  // ): Promise<RR.SetOutboundTunnelRes>
-
   // ** domains **
 
   // @TODO 041
 
-  // abstract claimStart9ToDomain(
-  //   params: RR.ClaimStart9ToReq,
-  // ): Promise<RR.ClaimStart9ToRes>
+  abstract addDomain(params: RR.AddDomainReq): Promise<RR.AddDomainRes>
 
-  // abstract deleteStart9ToDomain(
-  //   params: RR.DeleteStart9ToReq,
-  // ): Promise<RR.DeleteStart9ToRes>
+  abstract removeDomain(params: RR.RemoveDomainReq): Promise<RR.RemoveDomainRes>
 
-  // abstract addDomain(params: RR.AddDomainReq): Promise<RR.AddDomainRes>
-
-  // abstract deleteDomain(params: RR.DeleteDomainReq): Promise<RR.DeleteDomainRes>
-
-  // ** port forwards **
-
-  // @TODO 041
-
-  // abstract overridePortForward(
-  //   params: RR.OverridePortReq,
-  // ): Promise<RR.OverridePortRes>
+  abstract testDomain(params: RR.TestDomainReq): Promise<RR.TestDomainRes>
 
   // wifi
 
@@ -387,13 +369,13 @@ export abstract class ApiService {
     params: RR.ServerRemoveOnionReq,
   ): Promise<RR.RemoveOnionRes>
 
-  abstract serverAddDomain(
-    params: RR.ServerAddDomainReq,
-  ): Promise<RR.AddDomainRes>
+  abstract osUiAddDomain(
+    params: RR.OsUiAddDomainReq,
+  ): Promise<RR.OsUiAddDomainRes>
 
-  abstract serverRemoveDomain(
-    params: RR.ServerRemoveDomainReq,
-  ): Promise<RR.RemoveDomainRes>
+  abstract osUiRemoveDomain(
+    params: RR.OsUiRemoveDomainReq,
+  ): Promise<RR.OsUiRemoveDomainRes>
 
   abstract pkgBindingSetPubic(
     params: RR.PkgBindingSetPublicReq,
@@ -405,9 +387,9 @@ export abstract class ApiService {
     params: RR.PkgRemoveOnionReq,
   ): Promise<RR.RemoveOnionRes>
 
-  abstract pkgAddDomain(params: RR.PkgAddDomainReq): Promise<RR.AddDomainRes>
+  abstract pkgAddDomain(params: RR.PkgAddDomainReq): Promise<RR.PkgAddDomainRes>
 
   abstract pkgRemoveDomain(
     params: RR.PkgRemoveDomainReq,
-  ): Promise<RR.RemoveDomainRes>
+  ): Promise<RR.PkgRemoveDomainRes>
 }

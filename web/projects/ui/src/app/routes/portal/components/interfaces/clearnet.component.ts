@@ -221,7 +221,7 @@ export class InterfaceClearnetComponent {
           host: this.interface.value().addressInfo.hostId,
         })
       } else {
-        await this.api.serverRemoveDomain(params)
+        await this.api.osUiRemoveDomain(params)
       }
       return true
     } catch (e: any) {
@@ -256,7 +256,7 @@ export class InterfaceClearnetComponent {
     })
 
     this.formDialog.open<FormContext<ClearnetForm>>(FormComponent, {
-      label: 'Select Domain',
+      label: 'Select domain',
       data: {
         spec: await configBuilderToSpec(
           ISB.InputSpec.of(
@@ -292,7 +292,7 @@ export class InterfaceClearnetComponent {
           host: this.interface.value().addressInfo.hostId,
         })
       } else {
-        await this.api.serverAddDomain(params)
+        await this.api.osUiAddDomain(params)
       }
       return true
     } catch (e: any) {

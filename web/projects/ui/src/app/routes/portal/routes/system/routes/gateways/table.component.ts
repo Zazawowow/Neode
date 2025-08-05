@@ -3,7 +3,7 @@ import { i18nPipe } from '@start9labs/shared'
 import { TuiSkeleton } from '@taiga-ui/kit'
 import { PlaceholderComponent } from 'src/app/routes/portal/components/placeholder.component'
 import { TableComponent } from 'src/app/routes/portal/components/table.component'
-import { GatewaysItemComponent, GatewayWithID } from './item.component'
+import { GatewaysItemComponent, GatewayPlus } from './item.component'
 
 @Component({
   selector: '[gateways]',
@@ -13,7 +13,7 @@ import { GatewaysItemComponent, GatewayWithID } from './item.component'
         'Name',
         'Type',
         'Access',
-        $any('LAN IPs'),
+        $any('LAN IP'),
         $any('WAN IP'),
         null,
       ]"
@@ -25,7 +25,7 @@ import { GatewaysItemComponent, GatewayWithID } from './item.component'
           <td colspan="5">
             @if (gateways()) {
               <app-placeholder icon="@tui.door-closed-locked">
-                <!-- @TODO Matt finalize text and add translations -->
+                <!-- @TODO translation -->
                 No gateways
               </app-placeholder>
             } @else {
@@ -45,6 +45,6 @@ import { GatewaysItemComponent, GatewayWithID } from './item.component'
     PlaceholderComponent,
   ],
 })
-export class GatewaysTableComponent<T extends GatewayWithID> {
+export class GatewaysTableComponent<T extends GatewayPlus> {
   readonly gateways = input<readonly T[] | null>(null)
 }

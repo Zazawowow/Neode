@@ -32,6 +32,16 @@ export const mockPatchData: DataModel = {
           contact: ['mailto:support@start9.com'],
         },
       },
+      domains: {
+        'cloud.private.com': {
+          gateway: 'eth0',
+          acme: null,
+        },
+        'public.com': {
+          gateway: 'wireguard1',
+          acme: 'https://acme-v02.api.letsencrypt.org/directory',
+        },
+      },
       host: {
         bindings: {
           80: {

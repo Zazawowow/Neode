@@ -179,7 +179,7 @@ export class InterfaceTorComponent {
 
   async add() {
     this.formDialog.open<FormContext<OnionForm>>(FormComponent, {
-      label: 'New Onion Address',
+      label: 'New onion address',
       data: {
         spec: await configBuilderToSpec(
           ISB.InputSpec.of({

@@ -50,7 +50,7 @@
 //     const options: Partial<
 //       TuiDialogOptions<FormContext<typeof config.validator._TYPE>>
 //     > = {
-//       label: 'Outbound Proxy',
+//       label: 'Outbound proxy',
 //       data: {
 //         spec: await configBuilderToSpec(config),
 //         buttons: [

@@ -539,6 +539,5 @@ export default {
   544: 'Modifier le domaine',
   545: 'Aucun domaine',
   546: 'Fournisseur',
-  547: 'Afficher le DNS',
-  548: 'Tester le DNS',
+  547: 'Gérer le DNS',
 } satisfies i18n
