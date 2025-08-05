@@ -556,6 +556,7 @@ export class MockApiService extends ApiService {
         path: `/serverInfo/network/networkInterfaces/${id}`,
         value: {
           public: params.public,
+          secure: false,
           ipInfo: {
             name: params.name,
             scopeId: 3,
@@ -630,7 +631,7 @@ export class MockApiService extends ApiService {
   //       path: '/serverInfo/network/start9To',
   //       value: {
   //         subdomain: 'xyz',
-  //         networkInterfaceId: params.networkInterfaceId,
+  //         gatewayId: params.gatewayId,
   //       },
   //     },
   //   ]
@@ -664,7 +665,7 @@ export class MockApiService extends ApiService {
   //       path: `/serverInfo/network/domains`,
   //       value: {
   //         [params.hostname]: {
-  //           networkInterfaceId: params.networkInterfaceId,
+  //           gatewayId: params.gatewayId,
   //           provider: params.provider.name,
   //         },
   //       },
@@ -1511,7 +1512,7 @@ export class MockApiService extends ApiService {
         path: `/serverInfo/host/hostnameInfo/80/0`,
         value: {
           kind: 'ip',
-          networkInterfaceId: 'eth0',
+          gatewayId: 'eth0',
           public: false,
           hostname: {
             kind: 'domain',
@@ -1628,7 +1629,7 @@ export class MockApiService extends ApiService {
         path: `/packageData/${params.package}/hosts/${params.host}/hostnameInfo/80/0`,
         value: {
           kind: 'ip',
-          networkInterfaceId: 'eth0',
+          gatewayId: 'eth0',
           public: false,
           hostname: {
             kind: 'domain',

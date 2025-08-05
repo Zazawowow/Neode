@@ -120,7 +120,7 @@ export class ConfigService {
       if (local) {
         hostnameInfo.unshift({
           kind: 'ip',
-          networkInterfaceId: 'lo',
+          gatewayId: 'lo',
           public: false,
           hostname: {
             kind: 'local',

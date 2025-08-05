@@ -2059,7 +2059,8 @@ export namespace Mock {
             net: {
               assignedPort: 80,
               assignedSslPort: 443,
-              public: false,
+              publicEnabled: [],
+              privateDisabled: [],
             },
             options: {
               addSsl: null,
@@ -2074,7 +2075,7 @@ export namespace Mock {
           80: [
             {
               kind: 'ip',
-              networkInterfaceId: 'eth0',
+              gatewayId: 'eth0',
               public: false,
               hostname: {
                 kind: 'local',
@@ -2085,7 +2086,7 @@ export namespace Mock {
             },
             {
               kind: 'ip',
-              networkInterfaceId: 'wlan0',
+              gatewayId: 'wlan0',
               public: false,
               hostname: {
                 kind: 'local',
@@ -2096,7 +2097,7 @@ export namespace Mock {
             },
             {
               kind: 'ip',
-              networkInterfaceId: 'eth0',
+              gatewayId: 'eth0',
               public: false,
               hostname: {
                 kind: 'ipv4',
@@ -2107,7 +2108,7 @@ export namespace Mock {
             },
             {
               kind: 'ip',
-              networkInterfaceId: 'wlan0',
+              gatewayId: 'wlan0',
               public: false,
               hostname: {
                 kind: 'ipv4',
@@ -2118,7 +2119,7 @@ export namespace Mock {
             },
             {
               kind: 'ip',
-              networkInterfaceId: 'eth0',
+              gatewayId: 'eth0',
               public: false,
               hostname: {
                 kind: 'ipv6',
@@ -2130,7 +2131,7 @@ export namespace Mock {
             },
             {
               kind: 'ip',
-              networkInterfaceId: 'wlan0',
+              gatewayId: 'wlan0',
               public: false,
               hostname: {
                 kind: 'ipv6',
@@ -2158,7 +2159,8 @@ export namespace Mock {
             net: {
               assignedPort: 8332,
               assignedSslPort: null,
-              public: false,
+              publicEnabled: [],
+              privateDisabled: [],
             },
             options: {
               addSsl: null,
@@ -2180,7 +2182,8 @@ export namespace Mock {
             net: {
               assignedPort: 8333,
               assignedSslPort: null,
-              public: false,
+              publicEnabled: [],
+              privateDisabled: [],
             },
             options: {
               addSsl: null,

@@ -39,7 +39,8 @@ export const mockPatchData: DataModel = {
             net: {
               assignedPort: null,
               assignedSslPort: 443,
-              public: false,
+              publicEnabled: [],
+              privateDisabled: [],
             },
             options: {
               preferredExternalPort: 80,
@@ -57,7 +58,7 @@ export const mockPatchData: DataModel = {
           80: [
             {
               kind: 'ip',
-              networkInterfaceId: 'eth0',
+              gatewayId: 'eth0',
               public: false,
               hostname: {
                 kind: 'local',
@@ -68,7 +69,7 @@ export const mockPatchData: DataModel = {
             },
             {
               kind: 'ip',
-              networkInterfaceId: 'wlan0',
+              gatewayId: 'wlan0',
               public: false,
               hostname: {
                 kind: 'local',
@@ -79,7 +80,7 @@ export const mockPatchData: DataModel = {
             },
             {
               kind: 'ip',
-              networkInterfaceId: 'eth0',
+              gatewayId: 'eth0',
               public: false,
               hostname: {
                 kind: 'ipv4',
@@ -90,7 +91,7 @@ export const mockPatchData: DataModel = {
             },
             {
               kind: 'ip',
-              networkInterfaceId: 'wlan0',
+              gatewayId: 'wlan0',
               public: false,
               hostname: {
                 kind: 'ipv4',
@@ -101,7 +102,7 @@ export const mockPatchData: DataModel = {
             },
             {
               kind: 'ip',
-              networkInterfaceId: 'eth0',
+              gatewayId: 'eth0',
               public: false,
               hostname: {
                 kind: 'ipv6',
@@ -113,7 +114,7 @@ export const mockPatchData: DataModel = {
             },
             {
               kind: 'ip',
-              networkInterfaceId: 'wlan0',
+              gatewayId: 'wlan0',
               public: false,
               hostname: {
                 kind: 'ipv6',
@@ -136,7 +137,8 @@ export const mockPatchData: DataModel = {
       },
       networkInterfaces: {
         eth0: {
-          public: false,
+          public: null,
+          secure: null,
           ipInfo: {
             name: 'Wired Connection 1',
             scopeId: 1,
@@ -147,7 +149,8 @@ export const mockPatchData: DataModel = {
           },
         },
         wlan0: {
-          public: false,
+          public: null,
+          secure: null,
           ipInfo: {
             name: 'Wireless Connection 1',
             scopeId: 2,
@@ -161,7 +164,8 @@ export const mockPatchData: DataModel = {
           },
         },
         wireguard1: {
-          public: false,
+          public: null,
+          secure: null,
           ipInfo: {
             name: 'StartTunnel',
             scopeId: 2,
@@ -321,7 +325,8 @@ export const mockPatchData: DataModel = {
               net: {
                 assignedPort: 80,
                 assignedSslPort: 443,
-                public: false,
+                publicEnabled: [],
+                privateDisabled: [],
               },
               options: {
                 addSsl: null,
@@ -336,7 +341,7 @@ export const mockPatchData: DataModel = {
             80: [
               {
                 kind: 'ip',
-                networkInterfaceId: 'eth0',
+                gatewayId: 'eth0',
                 public: false,
                 hostname: {
                   kind: 'local',
@@ -347,7 +352,7 @@ export const mockPatchData: DataModel = {
               },
               {
                 kind: 'ip',
-                networkInterfaceId: 'wlan0',
+                gatewayId: 'wlan0',
                 public: false,
                 hostname: {
                   kind: 'local',
@@ -358,7 +363,7 @@ export const mockPatchData: DataModel = {
               },
               {
                 kind: 'ip',
-                networkInterfaceId: 'eth0',
+                gatewayId: 'eth0',
                 public: false,
                 hostname: {
                   kind: 'ipv4',
@@ -369,7 +374,7 @@ export const mockPatchData: DataModel = {
               },
               {
                 kind: 'ip',
-                networkInterfaceId: 'wlan0',
+                gatewayId: 'wlan0',
                 public: false,
                 hostname: {
                   kind: 'ipv4',
@@ -380,7 +385,7 @@ export const mockPatchData: DataModel = {
               },
               {
                 kind: 'ip',
-                networkInterfaceId: 'eth0',
+                gatewayId: 'eth0',
                 public: false,
                 hostname: {
                   kind: 'ipv6',
@@ -392,7 +397,7 @@ export const mockPatchData: DataModel = {
               },
               {
                 kind: 'ip',
-                networkInterfaceId: 'wlan0',
+                gatewayId: 'wlan0',
                 public: false,
                 hostname: {
                   kind: 'ipv6',
@@ -420,7 +425,8 @@ export const mockPatchData: DataModel = {
               net: {
                 assignedPort: 8332,
                 assignedSslPort: null,
-                public: false,
+                publicEnabled: [],
+                privateDisabled: [],
               },
               options: {
                 addSsl: null,
@@ -442,7 +448,8 @@ export const mockPatchData: DataModel = {
               net: {
                 assignedPort: 8333,
                 assignedSslPort: null,
-                public: false,
+                publicEnabled: [],
+                privateDisabled: [],
               },
               options: {
                 addSsl: null,

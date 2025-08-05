@@ -626,7 +626,7 @@ export type DependencyErrorTransitive = {
 // export namespace RR041 {
 //   // ** domains **
 
-//   export type ClaimStart9ToReq = { networkInterfaceId: string } // net.domain.me.claim
+//   export type ClaimStart9ToReq = { gatewayId: string } // net.domain.me.claim
 //   export type ClaimStart9ToRes = null
 
 //   export type DeleteStart9ToReq = {} // net.domain.me.delete
@@ -639,7 +639,7 @@ export type DependencyErrorTransitive = {
 //       username: string | null
 //       password: string | null
 //     }
-//     networkInterfaceId: string
+//     gatewayId: string
 //   } // net.domain.add
 //   export type AddDomainRes = null
 

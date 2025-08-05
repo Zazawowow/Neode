@@ -34,7 +34,7 @@ export function getAddresses(
     if (local) {
       hostnames.unshift({
         kind: 'ip',
-        networkInterfaceId: 'lo',
+        gatewayId: 'lo',
         public: false,
         hostname: {
           kind: 'local',
@@ -82,7 +82,7 @@ export function getAddresses(
             nid:
               hostnameKind === 'local'
                 ? 'Local'
-                : `${h.networkInterfaceId} (${hostnameKind})`,
+                : `${h.gatewayId} (${hostnameKind})`,
             url,
           })
         }

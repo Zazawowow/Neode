@@ -15,7 +15,7 @@ export type NetworkInfo = T.NetworkInfo & {
   // @TODO 041
   // start9To: {
   //   subdomain: string
-  //   networkInterfaceId: string
+  //   gatewayId: string
   // } | null
   // domains: {
   //   [key: string]: Domain
