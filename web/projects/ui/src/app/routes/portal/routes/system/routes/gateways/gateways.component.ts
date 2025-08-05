@@ -43,7 +43,7 @@ import { GatewayWithID } from './item.component'
             appearance="action-grayscale"
             iconEnd="@tui.external-link"
             [pseudo]="true"
-            [textContent]="'view instructions'"
+            [textContent]="'View instructions' | i18n"
           ></a>
         </p>
       </hgroup>
@@ -62,7 +62,7 @@ import { GatewayWithID } from './item.component'
           Add
         </button>
       </header>
-      <div #table [gateways]="gateways$ | async"></div>
+      <div [gateways]="gateways$ | async"></div>
     </section>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
