@@ -1,4 +1,5 @@
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
+use std::net::{Ipv4Addr, SocketAddr};
 
 use axum::Router;
 use futures::future::ready;
@@ -17,17 +18,9 @@ use crate::tunnel::context::TunnelContext;
 
 pub mod context;
 pub mod db;
+pub mod init;
 
 pub const TUNNEL_DEFAULT_PORT: u16 = 5960;
-
-#[derive(Debug, Default, Deserialize, Serialize, HasModel)]
-#[serde(rename_all = "camelCase")]
-#[model = "Model<Self>"]
-pub struct TunnelDatabase {
-    pub sessions: Sessions,
-    pub password: String,
-    pub auth_pubkeys: HashSet<AnyVerifyingKey>,
-}
 
 pub fn tunnel_api<C: Context>() -> ParentHandler<C> {
     ParentHandler::new().subcommand(

@@ -1,8 +1,7 @@
 use std::future::Future;
 use std::net::SocketAddr;
 use std::ops::Deref;
-use std::sync::atomic::AtomicBool;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use std::task::Poll;
 use std::time::Duration;
 
@@ -16,7 +15,7 @@ use tokio::sync::oneshot;
 
 use crate::context::{DiagnosticContext, InitContext, InstallContext, RpcContext, SetupContext};
 use crate::net::network_interface::{
-    NetworkInterfaceListener, SelfContainedNetworkInterfaceListener,
+    lookup_info_by_addr, NetworkInterfaceListener, SelfContainedNetworkInterfaceListener,
 };
 use crate::net::static_server::{
     diagnostic_ui_router, init_ui_router, install_ui_router, main_ui_router, redirecter, refresher,
@@ -50,10 +49,15 @@ impl Accept for Vec<TcpListener> {
 }
 impl Accept for NetworkInterfaceListener {
     fn poll_accept(&mut self, cx: &mut std::task::Context<'_>) -> Poll<Result<Accepted, Error>> {
-        NetworkInterfaceListener::poll_accept(self, cx, true).map(|res| {
-            res.map(|a| Accepted {
-                https_redirect: a.is_public,
-                stream: a.stream,
+        NetworkInterfaceListener::poll_accept(self, cx, &true).map(|res| {
+            res.map(|a| {
+                let public = self
+                    .ip_info
+                    .peek(|i| lookup_info_by_addr(i, a.bind).map_or(true, |(_, i)| i.public()));
+                Accepted {
+                    https_redirect: public,
+                    stream: a.stream,
+                }
             })
         })
     }

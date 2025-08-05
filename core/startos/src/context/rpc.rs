@@ -174,7 +174,7 @@ impl RpcContext {
                 )
                 .await?,
             );
-            webserver.try_upgrade(|a| net_ctrl.net_iface.upgrade_listener(a))?;
+            webserver.try_upgrade(|a| net_ctrl.net_iface.watcher.upgrade_listener(a))?;
             let os_net_service = net_ctrl.os_bindings().await?;
             (net_ctrl, os_net_service)
         };

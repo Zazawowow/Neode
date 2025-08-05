@@ -16,11 +16,14 @@ use crate::db::model::Database;
 use crate::error::ErrorCollection;
 use crate::hostname::Hostname;
 use crate::net::dns::DnsController;
-use crate::net::forward::LanPortForwardController;
+use crate::net::forward::{PortForwardController, START9_BRIDGE_IFACE};
 use crate::net::host::address::HostAddress;
 use crate::net::host::binding::{AddSslOptions, BindId, BindOptions};
 use crate::net::host::{host_for, Host, Hosts};
-use crate::net::network_interface::NetworkInterfaceController;
+use crate::net::network_interface::{
+    AndFilter, DynInterfaceFilter, InterfaceFilter, LoopbackFilter, NetworkInterfaceController,
+    SecureFilter,
+};
 use crate::net::service_interface::{HostnameInfo, IpHostname, OnionHostname};
 use crate::net::tor::TorController;
 use crate::net::utils::ipv6_is_local;
@@ -36,7 +39,7 @@ pub struct NetController {
     pub(super) vhost: VHostController,
     pub(crate) net_iface: Arc<NetworkInterfaceController>,
     pub(super) dns: DnsController,
-    pub(super) forward: LanPortForwardController,
+    pub(super) forward: PortForwardController,
     pub(super) server_hostnames: Vec<Option<InternedString>>,
     pub(crate) callbacks: Arc<ServiceCallbacks>,
 }
@@ -53,8 +56,13 @@ impl NetController {
             db: db.clone(),
             tor: TorController::new(tor_control, tor_socks),
             vhost: VHostController::new(db, net_iface.clone()),
-            dns: DnsController::init(net_iface.lxcbr_status()).await?,
-            forward: LanPortForwardController::new(net_iface.subscribe()),
+            dns: DnsController::init(
+                net_iface
+                    .watcher
+                    .wait_for_activated(START9_BRIDGE_IFACE.into()),
+            )
+            .await?,
+            forward: PortForwardController::new(net_iface.watcher.subscribe()),
             net_iface,
             server_hostnames: vec![
                 // LAN IP
@@ -126,7 +134,7 @@ impl NetController {
 
 #[derive(Default, Debug)]
 struct HostBinds {
-    forwards: BTreeMap<u16, (SocketAddr, bool, Arc<()>)>,
+    forwards: BTreeMap<u16, (SocketAddr, DynInterfaceFilter, Arc<()>)>,
     vhosts: BTreeMap<(Option<InternedString>, u16), (TargetInfo, Arc<()>)>,
     tor: BTreeMap<OnionAddressV3, (OrdMap<u16, SocketAddr>, Vec<Arc<()>>)>,
 }
@@ -217,7 +225,7 @@ impl NetServiceData {
     }
 
     async fn update(&mut self, ctrl: &NetController, id: HostId, host: Host) -> Result<(), Error> {
-        let mut forwards: BTreeMap<u16, (SocketAddr, bool)> = BTreeMap::new();
+        let mut forwards: BTreeMap<u16, (SocketAddr, DynInterfaceFilter)> = BTreeMap::new();
         let mut vhosts: BTreeMap<(Option<InternedString>, u16), TargetInfo> = BTreeMap::new();
         let mut tor: BTreeMap<OnionAddressV3, (TorSecretKeyV3, OrdMap<u16, SocketAddr>)> =
             BTreeMap::new();
@@ -228,7 +236,7 @@ impl NetServiceData {
 
         // LAN
         let server_info = peek.as_public().as_server_info();
-        let net_ifaces = ctrl.net_iface.ip_info();
+        let net_ifaces = ctrl.net_iface.watcher.ip_info();
         let hostname = server_info.as_hostname().de()?;
         for (port, bind) in &host.bindings {
             if !bind.enabled {
@@ -255,7 +263,7 @@ impl NetServiceData {
                         vhosts.insert(
                             (hostname, external),
                             TargetInfo {
-                                public: bind.net.public,
+                                filter: bind.net.clone().into_dyn(),
                                 acme: None,
                                 addr,
                                 connect_ssl: connect_ssl.clone(),
@@ -270,7 +278,7 @@ impl NetServiceData {
                                     vhosts.insert(
                                         (Some(hostname), external),
                                         TargetInfo {
-                                            public: false,
+                                            filter: LoopbackFilter.into_dyn(),
                                             acme: None,
                                             addr,
                                             connect_ssl: connect_ssl.clone(),
@@ -286,11 +294,11 @@ impl NetServiceData {
                                 if hostnames.insert(address.clone()) {
                                     let address = Some(address.clone());
                                     if ssl.preferred_external_port == 443 {
-                                        if public && bind.net.public {
+                                        if public {
                                             vhosts.insert(
                                                 (address.clone(), 5443),
                                                 TargetInfo {
-                                                    public: false,
+                                                    filter: bind.net.clone().into_dyn(),
                                                     acme: acme.clone(),
                                                     addr,
                                                     connect_ssl: connect_ssl.clone(),
@@ -300,7 +308,7 @@ impl NetServiceData {
                                         vhosts.insert(
                                             (address.clone(), 443),
                                             TargetInfo {
-                                                public: public && bind.net.public,
+                                                filter: bind.net.clone().into_dyn(),
                                                 acme,
                                                 addr,
                                                 connect_ssl: connect_ssl.clone(),
@@ -310,7 +318,7 @@ impl NetServiceData {
                                         vhosts.insert(
                                             (address.clone(), external),
                                             TargetInfo {
-                                                public: public && bind.net.public,
+                                                filter: bind.net.clone().into_dyn(),
                                                 acme,
                                                 addr,
                                                 connect_ssl: connect_ssl.clone(),
@@ -322,28 +330,35 @@ impl NetServiceData {
                         }
                     }
                 }
-                if let Some(security) = bind.options.secure {
-                    if bind.options.add_ssl.is_some() && security.ssl {
-                        // doesn't make sense to have 2 listening ports, both with ssl
-                    } else {
-                        let external = bind.net.assigned_port.or_not_found("assigned lan port")?;
-                        forwards.insert(external, ((self.ip, *port).into(), bind.net.public));
-                    }
+                if bind
+                    .options
+                    .secure
+                    .map_or(true, |s| !(s.ssl && bind.options.add_ssl.is_some()))
+                {
+                    let external = bind.net.assigned_port.or_not_found("assigned lan port")?;
+                    forwards.insert(
+                        external,
+                        (
+                            (self.ip, *port).into(),
+                            AndFilter(
+                                SecureFilter {
+                                    secure: bind.options.secure.is_some(),
+                                },
+                                bind.net.clone(),
+                            )
+                            .into_dyn(),
+                        ),
+                    );
                 }
                 let mut bind_hostname_info: Vec<HostnameInfo> =
                     hostname_info.remove(port).unwrap_or_default();
-                for (interface, public, ip_info) in
-                    net_ifaces.iter().filter_map(|(interface, info)| {
-                        if let Some(ip_info) = &info.ip_info {
-                            Some((interface, info.public(), ip_info))
-                        } else {
-                            None
-                        }
-                    })
+                for (interface, info) in net_ifaces
+                    .iter()
+                    .filter(|(id, info)| bind.net.filter(id, info))
                 {
-                    if !public {
+                    if !info.public() {
                         bind_hostname_info.push(HostnameInfo::Ip {
-                            network_interface_id: interface.clone(),
+                            gateway_id: interface.clone(),
                             public: false,
                             hostname: IpHostname::Local {
                                 value: InternedString::from_display(&{
@@ -357,47 +372,44 @@ impl NetServiceData {
                     }
                     for address in host.addresses() {
                         if let HostAddress::Domain {
-                            address,
-                            public: domain_public,
-                            ..
+                            address, public, ..
                         } = address
                         {
-                            if !public || (domain_public && bind.net.public) {
-                                if bind
-                                    .options
-                                    .add_ssl
-                                    .as_ref()
-                                    .map_or(false, |ssl| ssl.preferred_external_port == 443)
-                                {
-                                    bind_hostname_info.push(HostnameInfo::Ip {
-                                        network_interface_id: interface.clone(),
-                                        public: public && domain_public && bind.net.public, // TODO: check if port forward is active
-                                        hostname: IpHostname::Domain {
-                                            domain: address.clone(),
-                                            subdomain: None,
-                                            port: None,
-                                            ssl_port: Some(443),
-                                        },
-                                    });
-                                } else {
-                                    bind_hostname_info.push(HostnameInfo::Ip {
-                                        network_interface_id: interface.clone(),
-                                        public,
-                                        hostname: IpHostname::Domain {
-                                            domain: address.clone(),
-                                            subdomain: None,
-                                            port: bind.net.assigned_port,
-                                            ssl_port: bind.net.assigned_ssl_port,
-                                        },
-                                    });
-                                }
+                            if bind
+                                .options
+                                .add_ssl
+                                .as_ref()
+                                .map_or(false, |ssl| ssl.preferred_external_port == 443)
+                            {
+                                bind_hostname_info.push(HostnameInfo::Ip {
+                                    gateway_id: interface.clone(),
+                                    public, // TODO: check if port forward is active
+                                    hostname: IpHostname::Domain {
+                                        domain: address.clone(),
+                                        subdomain: None,
+                                        port: None,
+                                        ssl_port: Some(443),
+                                    },
+                                });
+                            } else {
+                                bind_hostname_info.push(HostnameInfo::Ip {
+                                    gateway_id: interface.clone(),
+                                    public,
+                                    hostname: IpHostname::Domain {
+                                        domain: address.clone(),
+                                        subdomain: None,
+                                        port: bind.net.assigned_port,
+                                        ssl_port: bind.net.assigned_ssl_port,
+                                    },
+                                });
                             }
                         }
                     }
-                    if !public || bind.net.public {
+                    if let Some(ip_info) = &info.ip_info {
+                        let public = info.public();
                         if let Some(wan_ip) = ip_info.wan_ip.filter(|_| public) {
                             bind_hostname_info.push(HostnameInfo::Ip {
-                                network_interface_id: interface.clone(),
+                                gateway_id: interface.clone(),
                                 public,
                                 hostname: IpHostname::Ipv4 {
                                     value: wan_ip,
@@ -411,7 +423,7 @@ impl NetServiceData {
                                 IpNet::V4(net) => {
                                     if !public {
                                         bind_hostname_info.push(HostnameInfo::Ip {
-                                            network_interface_id: interface.clone(),
+                                            gateway_id: interface.clone(),
                                             public,
                                             hostname: IpHostname::Ipv4 {
                                                 value: net.addr(),
@@ -423,7 +435,7 @@ impl NetServiceData {
                                 }
                                 IpNet::V6(net) => {
                                     bind_hostname_info.push(HostnameInfo::Ip {
-                                        network_interface_id: interface.clone(),
+                                        gateway_id: interface.clone(),
                                         public: public && !ipv6_is_local(net.addr()),
                                         hostname: IpHostname::Ipv6 {
                                             value: net.addr(),
@@ -509,8 +521,8 @@ impl NetServiceData {
             .collect::<BTreeSet<_>>();
         for external in all {
             let mut prev = binds.forwards.remove(&external);
-            if let Some((internal, public)) = forwards.remove(&external) {
-                prev = prev.filter(|(i, p, _)| i == &internal && *p == public);
+            if let Some((internal, filter)) = forwards.remove(&external) {
+                prev = prev.filter(|(i, f, _)| i == &internal && *f == filter);
                 binds.forwards.insert(
                     external,
                     if let Some(prev) = prev {
@@ -518,8 +530,8 @@ impl NetServiceData {
                     } else {
                         (
                             internal,
-                            public,
-                            ctrl.forward.add(external, public, internal).await?,
+                            filter.clone(),
+                            ctrl.forward.add(external, filter, internal).await?,
                         )
                     },
                 );
@@ -662,7 +674,7 @@ impl NetService {
     }
 
     fn new(data: NetServiceData) -> Result<Self, Error> {
-        let mut ip_info = data.net_controller()?.net_iface.subscribe();
+        let mut ip_info = data.net_controller()?.net_iface.watcher.subscribe();
         let data = Arc::new(Mutex::new(data));
         let thread_data = data.clone();
         let sync_task = tokio::spawn(async move {

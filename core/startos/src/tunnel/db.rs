@@ -1,3 +1,5 @@
+use std::collections::{BTreeMap, HashSet};
+use std::net::{Ipv4Addr, SocketAddr};
 use std::path::PathBuf;
 
 use clap::Parser;
@@ -10,11 +12,30 @@ use serde::{Deserialize, Serialize};
 use tracing::instrument;
 use ts_rs::TS;
 
+use crate::auth::Sessions;
 use crate::context::CliContext;
 use crate::prelude::*;
+use crate::sign::AnyVerifyingKey;
 use crate::tunnel::context::TunnelContext;
-use crate::tunnel::TunnelDatabase;
 use crate::util::serde::{apply_expr, HandlerExtSerde};
+
+#[derive(Debug, Default, Deserialize, Serialize, HasModel)]
+#[serde(rename_all = "camelCase")]
+#[model = "Model<Self>"]
+pub struct TunnelDatabase {
+    pub sessions: Sessions,
+    pub password: String,
+    pub auth_pubkeys: HashSet<AnyVerifyingKey>,
+    pub clients: BTreeMap<Ipv4Addr, ClientInfo>,
+    pub port_forwards: BTreeMap<SocketAddr, SocketAddr>,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, HasModel)]
+#[serde(rename_all = "camelCase")]
+#[model = "Model<Self>"]
+pub struct ClientInfo {
+    pub server: bool,
+}
 
 pub fn db_api<C: Context>() -> ParentHandler<C> {
     ParentHandler::new()

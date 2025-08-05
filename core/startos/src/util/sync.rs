@@ -140,6 +140,9 @@ impl<T: Clone> Watch<T> {
     pub fn read(&self) -> T {
         self.peek(|a| a.clone())
     }
+    pub fn read_and_mark_seen(&mut self) -> T {
+        self.peek_and_mark_seen(|a| a.clone())
+    }
 }
 impl<T: Clone> futures::Stream for Watch<T> {
     type Item = T;

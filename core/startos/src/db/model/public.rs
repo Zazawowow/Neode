@@ -1,13 +1,15 @@
 use std::collections::{BTreeMap, BTreeSet};
-use std::net::{IpAddr, Ipv4Addr};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use chrono::{DateTime, Utc};
 use exver::{Version, VersionRange};
+use imbl::{OrdMap, OrdSet};
 use imbl_value::InternedString;
 use ipnet::IpNet;
 use isocountry::CountryCode;
 use itertools::Itertools;
-use models::PackageId;
+use lazy_static::lazy_static;
+use models::{GatewayId, PackageId};
 use openssl::hash::MessageDigest;
 use patch_db::{HasModel, Value};
 use serde::{Deserialize, Serialize};
@@ -71,7 +73,8 @@ impl Public {
                                 net: NetInfo {
                                     assigned_port: None,
                                     assigned_ssl_port: Some(443),
-                                    public: false,
+                                    private_disabled: OrdSet::new(),
+                                    public_enabled: OrdSet::new(),
                                 },
                             },
                         )]
@@ -89,7 +92,7 @@ impl Public {
                         enabled: true,
                         ..Default::default()
                     },
-                    network_interfaces: BTreeMap::new(),
+                    network_interfaces: OrdMap::new(),
                     acme: BTreeMap::new(),
                 },
                 status_info: ServerStatus {
@@ -186,9 +189,9 @@ pub struct ServerInfo {
 pub struct NetworkInfo {
     pub wifi: WifiInfo,
     pub host: Host,
-    #[ts(as = "BTreeMap::<String, NetworkInterfaceInfo>")]
+    #[ts(as = "BTreeMap::<GatewayId, NetworkInterfaceInfo>")]
     #[serde(default)]
-    pub network_interfaces: BTreeMap<InternedString, NetworkInterfaceInfo>,
+    pub network_interfaces: OrdMap<GatewayId, NetworkInterfaceInfo>,
     #[serde(default)]
     pub acme: BTreeMap<AcmeProvider, AcmeSettings>,
 }
@@ -199,9 +202,33 @@ pub struct NetworkInfo {
 #[ts(export)]
 pub struct NetworkInterfaceInfo {
     pub public: Option<bool>,
+    pub secure: Option<bool>,
     pub ip_info: Option<IpInfo>,
 }
 impl NetworkInterfaceInfo {
+    pub fn loopback() -> (&'static GatewayId, &'static Self) {
+        lazy_static! {
+            static ref LO: GatewayId = GatewayId::from("lo");
+            static ref LOOPBACK: NetworkInterfaceInfo = NetworkInterfaceInfo {
+                public: Some(false),
+                secure: Some(true),
+                ip_info: Some(IpInfo {
+                    name: "lo".into(),
+                    scope_id: 1,
+                    device_type: None,
+                    subnets: [
+                        IpNet::new(Ipv4Addr::LOCALHOST.into(), 8).unwrap(),
+                        IpNet::new(Ipv6Addr::LOCALHOST.into(), 128).unwrap(),
+                    ]
+                    .into_iter()
+                    .collect(),
+                    wan_ip: None,
+                    ntp_servers: Default::default(),
+                }),
+            };
+        }
+        (&*LO, &*LOOPBACK)
+    }
     pub fn public(&self) -> bool {
         self.public.unwrap_or_else(|| {
             !self.ip_info.as_ref().map_or(true, |ip_info| {
@@ -233,6 +260,14 @@ impl NetworkInterfaceInfo {
             })
         })
     }
+
+    pub fn secure(&self) -> bool {
+        self.secure.unwrap_or_else(|| {
+            self.ip_info.as_ref().map_or(false, |ip_info| {
+                ip_info.device_type == Some(NetworkInterfaceType::Wireguard)
+            })
+        })
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Deserialize, Serialize, TS, HasModel)]
@@ -245,10 +280,10 @@ pub struct IpInfo {
     pub scope_id: u32,
     pub device_type: Option<NetworkInterfaceType>,
     #[ts(type = "string[]")]
-    pub subnets: BTreeSet<IpNet>,
+    pub subnets: OrdSet<IpNet>,
     pub wan_ip: Option<Ipv4Addr>,
     #[ts(type = "string[]")]
-    pub ntp_servers: BTreeSet<InternedString>,
+    pub ntp_servers: OrdSet<InternedString>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize, TS)]

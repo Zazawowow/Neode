@@ -25,6 +25,7 @@ use crate::prelude::*;
 use crate::progress::FullProgressTracker;
 use crate::rpc_continuations::{Guid, RpcContinuation, RpcContinuations};
 use crate::setup::SetupProgress;
+use crate::shutdown::Shutdown;
 use crate::util::net::WebSocketExt;
 use crate::MAIN_DATA;
 
@@ -71,7 +72,8 @@ pub struct SetupContextSeed {
     pub progress: FullProgressTracker,
     pub task: OnceCell<NonDetachingJoinHandle<()>>,
     pub result: OnceCell<Result<(SetupResult, RpcContext), Error>>,
-    pub shutdown: Sender<()>,
+    pub disk_guid: OnceCell<Arc<String>>,
+    pub shutdown: Sender<Option<Shutdown>>,
     pub rpc_continuations: RpcContinuations,
 }
 
@@ -97,6 +99,7 @@ impl SetupContext {
             progress: FullProgressTracker::new(),
             task: OnceCell::new(),
             result: OnceCell::new(),
+            disk_guid: OnceCell::new(),
             shutdown,
             rpc_continuations: RpcContinuations::new(),
         })))

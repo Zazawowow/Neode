@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use cookie::{Cookie, Expiration, SameSite};
-use cookie_store::{CookieStore, RawCookie};
+use cookie_store::CookieStore;
 use imbl_value::InternedString;
 use josekit::jwk::Jwk;
 use once_cell::sync::OnceCell;
@@ -13,7 +13,7 @@ use reqwest::Proxy;
 use reqwest_cookie_store::CookieStoreMutex;
 use rpc_toolkit::reqwest::{Client, Url};
 use rpc_toolkit::yajrc::RpcError;
-use rpc_toolkit::{call_remote_http, CallRemote, Context, Empty};
+use rpc_toolkit::{CallRemote, Context, Empty};
 use tokio::net::TcpStream;
 use tokio::runtime::Runtime;
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
@@ -27,7 +27,6 @@ use crate::middleware::auth::AuthContext;
 use crate::prelude::*;
 use crate::rpc_continuations::Guid;
 use crate::tunnel::context::TunnelContext;
-use crate::tunnel::TUNNEL_DEFAULT_PORT;
 
 #[derive(Debug)]
 pub struct CliContextSeed {

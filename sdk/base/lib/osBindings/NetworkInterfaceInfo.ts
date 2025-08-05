@@ -3,5 +3,6 @@ import type { IpInfo } from "./IpInfo"
 
 export type NetworkInterfaceInfo = {
   public: boolean | null
+  secure: boolean | null
   ipInfo: IpInfo | null
 }

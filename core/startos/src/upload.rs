@@ -359,7 +359,7 @@ impl UploadHandle {
             });
         }
     }
-    async fn process_body<E: Into<Box<(dyn std::error::Error + Send + Sync + 'static)>>>(
+    async fn process_body<E: Into<Box<dyn std::error::Error + Send + Sync + 'static>>>(
         &mut self,
         mut body: impl Stream<Item = Result<Bytes, E>> + Unpin,
     ) {

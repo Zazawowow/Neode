@@ -1,5 +1,6 @@
 use clap::Parser;
 use imbl_value::InternedString;
+use models::GatewayId;
 use rpc_toolkit::{from_fn_async, Context, HandlerExt, ParentHandler};
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
@@ -44,7 +45,7 @@ pub async fn add_tunnel(
         config,
         public,
     }: AddTunnelParams,
-) -> Result<InternedString, Error> {
+) -> Result<GatewayId, Error> {
     let existing = ctx
         .db
         .peek()
@@ -54,17 +55,17 @@ pub async fn add_tunnel(
         .into_network()
         .into_network_interfaces()
         .keys()?;
-    let mut iface = InternedString::intern("wg0");
+    let mut iface = GatewayId::from("wg0");
     for id in 1.. {
         if !existing.contains(&iface) {
             break;
         }
-        iface = InternedString::from_display(&lazy_format!("wg{id}"));
+        iface = InternedString::from_display(&lazy_format!("wg{id}")).into();
     }
     let tmpdir = TmpDir::new().await?;
-    let conf = tmpdir.join(&*iface).with_extension("conf");
+    let conf = tmpdir.join(&iface).with_extension("conf");
     write_file_atomic(&conf, &config).await?;
-    let mut ifaces = ctx.net_controller.net_iface.subscribe();
+    let mut ifaces = ctx.net_controller.net_iface.watcher.subscribe();
     Command::new("nmcli")
         .arg("connection")
         .arg("import")
@@ -91,8 +92,7 @@ pub async fn add_tunnel(
 #[derive(Debug, Clone, Deserialize, Serialize, Parser, TS)]
 #[ts(export)]
 pub struct RemoveTunnelParams {
-    #[ts(type = "string")]
-    id: InternedString,
+    id: GatewayId,
 }
 pub async fn remove_tunnel(
     ctx: RpcContext,

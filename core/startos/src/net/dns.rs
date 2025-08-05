@@ -1,5 +1,6 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
+use std::future::Future;
 use std::net::Ipv4Addr;
 use std::sync::{Arc, Weak};
 use std::time::Duration;
@@ -18,7 +19,6 @@ use trust_dns_server::server::{Request, RequestHandler, ResponseHandler, Respons
 use trust_dns_server::ServerFuture;
 
 use crate::net::forward::START9_BRIDGE_IFACE;
-use crate::util::sync::Watch;
 use crate::util::Invoke;
 use crate::{Error, ErrorKind, ResultExt};
 
@@ -140,7 +140,9 @@ impl RequestHandler for Resolver {
 
 impl DnsController {
     #[instrument(skip_all)]
-    pub async fn init(mut lxcbr_status: Watch<bool>) -> Result<Self, Error> {
+    pub async fn init(
+        bridge_activated: impl Future<Output = ()> + Send + Sync + 'static,
+    ) -> Result<Self, Error> {
         let services = Arc::new(RwLock::new(BTreeMap::new()));
 
         let mut server = ServerFuture::new(Resolver {
@@ -160,7 +162,7 @@ impl DnsController {
                     .with_kind(ErrorKind::Network)?,
             );
 
-            lxcbr_status.wait_for(|a| *a).await;
+            bridge_activated.await;
 
             Command::new("resolvectl")
                 .arg("dns")

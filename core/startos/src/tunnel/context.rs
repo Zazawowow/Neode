@@ -1,10 +1,11 @@
 use std::collections::BTreeSet;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use clap::Parser;
+use imbl::OrdMap;
 use imbl_value::InternedString;
 use patch_db::PatchDb;
 use rpc_toolkit::yajrc::RpcError;
@@ -15,13 +16,15 @@ use tracing::instrument;
 
 use crate::auth::{check_password, Sessions};
 use crate::context::config::ContextConfig;
-use crate::context::{CliContext, RpcContext};
+use crate::context::CliContext;
 use crate::middleware::auth::AuthContext;
 use crate::middleware::signature::SignatureAuthContext;
+use crate::net::forward::PortForwardController;
+use crate::net::network_interface::NetworkInterfaceWatcher;
 use crate::prelude::*;
 use crate::rpc_continuations::{OpenAuthedContinuations, RpcContinuations};
-use crate::tunnel::{TunnelDatabase, TUNNEL_DEFAULT_PORT};
-use crate::util::iter::TransposeResultIterExt;
+use crate::tunnel::db::TunnelDatabase;
+use crate::tunnel::TUNNEL_DEFAULT_PORT;
 use crate::util::sync::SyncMutex;
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize, Parser)]
@@ -62,6 +65,8 @@ pub struct TunnelContextSeed {
     pub rpc_continuations: RpcContinuations,
     pub open_authed_continuations: OpenAuthedContinuations<Option<InternedString>>,
     pub ephemeral_sessions: SyncMutex<Sessions>,
+    pub net_iface: NetworkInterfaceWatcher,
+    pub forward: PortForwardController,
     pub shutdown: Sender<()>,
 }
 
@@ -89,6 +94,8 @@ impl TunnelContext {
             Ipv6Addr::UNSPECIFIED.into(),
             TUNNEL_DEFAULT_PORT,
         ));
+        let net_iface = NetworkInterfaceWatcher::new(async { OrdMap::new() }, []);
+        let forward = PortForwardController::new(net_iface.subscribe());
         Ok(Self(Arc::new(TunnelContextSeed {
             listen,
             addrs: crate::net::utils::all_socket_addrs_for(listen.port())
@@ -101,6 +108,8 @@ impl TunnelContext {
             rpc_continuations: RpcContinuations::new(),
             open_authed_continuations: OpenAuthedContinuations::new(),
             ephemeral_sessions: SyncMutex::new(Sessions::new()),
+            net_iface,
+            forward,
             shutdown,
         })))
     }
@@ -211,16 +220,5 @@ impl CallRemote<TunnelContext> for CliContext {
             params,
         )
         .await
-    }
-}
-
-impl CallRemote<TunnelContext, TunnelAddrParams> for RpcContext {
-    async fn call_remote(
-        &self,
-        mut method: &str,
-        params: Value,
-        TunnelAddrParams { tunnel }: TunnelAddrParams,
-    ) -> Result<Value, RpcError> {
-        todo!()
     }
 }

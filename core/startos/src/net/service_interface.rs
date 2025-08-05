@@ -2,7 +2,7 @@ use std::net::{Ipv4Addr, Ipv6Addr};
 
 use imbl_value::InternedString;
 use lazy_format::lazy_format;
-use models::{HostId, ServiceInterfaceId};
+use models::{GatewayId, HostId, ServiceInterfaceId};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -14,7 +14,7 @@ use ts_rs::TS;
 pub enum HostnameInfo {
     Ip {
         #[ts(type = "string")]
-        network_interface_id: InternedString,
+        gateway_id: GatewayId,
         public: bool,
         hostname: IpHostname,
     },

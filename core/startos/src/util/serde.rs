@@ -7,7 +7,7 @@ use base64::Engine;
 use clap::builder::ValueParserFactory;
 use clap::{ArgMatches, CommandFactory, FromArgMatches};
 use color_eyre::eyre::eyre;
-use imbl::OrdMap;
+use imbl_value::imbl::OrdMap;
 use models::FromStrParser;
 use openssl::pkey::{PKey, Private};
 use openssl::x509::X509;

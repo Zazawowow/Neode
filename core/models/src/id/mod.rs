@@ -6,6 +6,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use yasi::InternedString;
 
 mod action;
+mod gateway;
 mod health_check;
 mod host;
 mod image;
@@ -16,6 +17,7 @@ mod service_interface;
 mod volume;
 
 pub use action::ActionId;
+pub use gateway::GatewayId;
 pub use health_check::HealthCheckId;
 pub use host::HostId;
 pub use image::ImageId;

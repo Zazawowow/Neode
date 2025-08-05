@@ -131,7 +131,7 @@ pub fn address_api<C: Context, Kind: HostApiKind>(
                     use prettytable::*;
 
                     if let Some(format) = params.format {
-                        display_serializable(format, res);
+                        display_serializable(format, res)?;
                         return Ok(());
                     }
 

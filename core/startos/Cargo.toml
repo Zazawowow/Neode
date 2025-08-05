@@ -124,8 +124,11 @@ id-pool = { version = "0.2.2", default-features = false, features = [
   "serde",
   "u16",
 ] }
-imbl = "4.0.1"
-imbl-value = "0.3.2"
+imbl = { version = "6", git = "https://github.com/dr-bonez/imbl.git", branch = "bugfix/ordmap-lifetimes", features = [
+  "serde",
+  "small-chunks",
+] }
+imbl-value = "0.4.0"
 include_dir = { version = "0.7.3", features = ["metadata"] }
 indexmap = { version = "2.0.2", features = ["serde"] }
 indicatif = { version = "0.17.7", features = ["tokio"] }
