@@ -11,14 +11,12 @@ import {
   TuiDropdown,
   TuiTextfield,
 } from '@taiga-ui/core'
-import { toAcmeName } from 'src/app/utils/acme'
-
-import { AcmeService } from './acme.service'
+import { ACMEInfo, AcmeService } from './acme.service'
 
 @Component({
   selector: 'tr[acme]',
   template: `
-    <td>{{ toAcmeName(acme().url) }}</td>
+    <td>{{ acme().name }}</td>
     <td>{{ acme().contact.join(', ') }}</td>
     <td>
       <button
@@ -76,12 +74,10 @@ import { AcmeService } from './acme.service'
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TuiButton, i18nPipe, TuiDropdown, TuiDataList, TuiTextfield],
 })
-export class DomainsAcmeComponent {
+export class AcmeItemComponent {
   protected readonly service = inject(AcmeService)
 
-  readonly acme = input.required<{ url: string; contact: readonly string[] }>()
+  readonly acme = input.required<ACMEInfo>()
 
   open = false
-
-  toAcmeName = toAcmeName
 }

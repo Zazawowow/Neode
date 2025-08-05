@@ -1,21 +1,13 @@
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  signal,
-} from '@angular/core'
-import { toSignal } from '@angular/core/rxjs-interop'
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core'
 import { RouterLink } from '@angular/router'
 import { DocsLinkDirective, i18nPipe } from '@start9labs/shared'
 import { TuiButton, TuiLink, TuiTitle } from '@taiga-ui/core'
 import { TuiHeader } from '@taiga-ui/layout'
-import { PatchDB } from 'patch-db-client'
-import { map } from 'rxjs'
-import { DataModel } from 'src/app/services/patch-db/data-model'
 import { TitleDirective } from 'src/app/services/title.service'
-
-import { AcmeService } from './acme.service'
-import { DomainsTableComponent } from './table.component'
+import { AcmeService } from './acme/acme.service'
+import { DomainsService } from './domains/domains.service'
+import { DomainsTableComponent } from './domains/table.component'
+import { AcmeTableComponent } from './acme/table.component'
 
 @Component({
   template: `
@@ -29,15 +21,14 @@ import { DomainsTableComponent } from './table.component'
       <hgroup tuiTitle>
         <h3>{{ 'Domains' | i18n }}</h3>
         <p tuiSubtitle>
+          <!-- @TODO translation -->
           {{
-            'Add ACME providers in order to generate SSL (https) certificates for clearnet access.'
-              | i18n
+            'Adding a domain to StartOS means you can use it and its subdomains to host service interfaces on the public Internet.'
           }}
           <a
             tuiLink
             docsLink
-            path="/user-manual/connecting-remotely/clearnet.html"
-            fragment="#adding-acme"
+            path="/user-manual/domains.html"
             appearance="action-grayscale"
             iconEnd="@tui.external-link"
             [pseudo]="true"
@@ -46,41 +37,43 @@ import { DomainsTableComponent } from './table.component'
         </p>
       </hgroup>
     </header>
+
     <section class="g-card">
       <header>
         {{ 'ACME Providers' | i18n }}
-        @if (acme(); as value) {
+        @if (acmeService.acmes(); as acmes) {
           <button
             tuiButton
             size="xs"
             iconStart="@tui.plus"
             [style.margin-inline-start]="'auto'"
-            (click)="service.add(value)"
+            (click)="acmeService.add(acmes)"
           >
             {{ 'Add' | i18n }}
           </button>
         }
       </header>
-      <domains-table mode="acme" [items]="acme()" />
+      <acme-table [acmes]="acmeService.acmes()" />
     </section>
 
     <section class="g-card">
       <header>
         {{ 'Domains' | i18n }}
-        <button
-          tuiButton
-          size="xs"
-          iconStart="@tui.plus"
-          [style.margin-inline-start]="'auto'"
-          (click)="addDomain()"
-        >
-          Add
-        </button>
+        @if (domainsService.data(); as value) {
+          <button
+            tuiButton
+            size="xs"
+            iconStart="@tui.plus"
+            [style.margin-inline-start]="'auto'"
+            (click)="domainsService.add()"
+          >
+            Add
+          </button>
+        }
       </header>
-      <domains-table mode="domains" [items]="domains()" />
+      <domains-table [domains]="domainsService.data()?.domains" />
     </section>
   `,
-  styles: ``,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TuiButton,
@@ -92,37 +85,11 @@ import { DomainsTableComponent } from './table.component'
     i18nPipe,
     DocsLinkDirective,
     DomainsTableComponent,
+    AcmeTableComponent,
   ],
+  providers: [AcmeService, DomainsService],
 })
 export default class SystemDomainsComponent {
-  protected readonly patch = inject<PatchDB<DataModel>>(PatchDB)
-  protected readonly service = inject(AcmeService)
-
-  readonly acme = toSignal(
-    this.patch.watch$('serverInfo', 'network', 'acme').pipe(
-      map(acme =>
-        Object.keys(acme).map(url => ({
-          url,
-          contact:
-            acme[url]?.contact.map(mailto => mailto.replace('mailto:', '')) ||
-            [],
-        })),
-      ),
-    ),
-  )
-
-  readonly domains = signal([
-    {
-      domain: 'blog.mydomain.com',
-      gateway: 'StartTunnel',
-      acme: 'System',
-    },
-    {
-      domain: 'blog. mydomain.com',
-      gateway: 'StartTunnel',
-      acme: 'System',
-    },
-  ])
-
-  async addDomain() {}
+  protected readonly acmeService = inject(AcmeService)
+  protected readonly domainsService = inject(DomainsService)
 }

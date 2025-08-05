@@ -241,12 +241,12 @@ export class InterfaceClearnetComponent {
       name: 'ACME Provider',
       description:
         'Select which ACME provider to use for obtaining your SSL certificate. Add new ACME providers in the System tab. Optionally use your system Root CA. Note: only devices that have trusted your Root CA will be able to access the domain without security warnings.',
-      values: this.acme().reduce(
+      values: this.acme().reduce<Record<string, string>>(
         (obj, url) => ({
           ...obj,
           [url]: toAcmeName(url),
         }),
-        { none: 'None (use system Root CA)' } as Record<string, string>,
+        { none: 'None (use system Root CA)' },
       ),
       default: '',
     })
