@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common'
 import { NgModule } from '@angular/core'
 import { FormsModule, ReactiveFormsModule } from '@angular/forms'
 import { MaskitoDirective } from '@maskito/angular'
+import { i18nPipe } from '@start9labs/shared'
 import { TuiMapperPipe, TuiValueChanges } from '@taiga-ui/cdk'
 import {
   TuiAppearance,
@@ -14,6 +15,7 @@ import {
   TuiNumberFormat,
 } from '@taiga-ui/core'
 import {
+  TuiChip,
   TuiElasticContainer,
   TuiFieldErrorPipe,
   TuiFiles,
@@ -28,11 +30,11 @@ import {
   TuiInputTimeModule,
   TuiMultiSelectModule,
   TuiSelectModule,
-  TuiTagModule,
   TuiTextareaModule,
   TuiTextfieldControllerModule,
 } from '@taiga-ui/legacy'
 import { ControlDirective } from './control.directive'
+import { FilterHiddenPipe } from './filter-hidden.pipe'
 import { FormArrayComponent } from './form-array/form-array.component'
 import { FormColorComponent } from './form-color/form-color.component'
 import { FormControlComponent } from './form-control/form-control.component'
@@ -49,8 +51,6 @@ import { FormToggleComponent } from './form-toggle/form-toggle.component'
 import { FormUnionComponent } from './form-union/form-union.component'
 import { HintPipe } from './hint.pipe'
 import { MustachePipe } from './mustache.pipe'
-import { FilterHiddenPipe } from './filter-hidden.pipe'
-import { i18nPipe } from '@start9labs/shared'
 
 @NgModule({
   imports: [
@@ -66,7 +66,7 @@ import { i18nPipe } from '@start9labs/shared'
     TuiSwitch,
     TuiTooltip,
     ...TuiHint,
-    TuiTagModule,
+    TuiChip,
     TuiButton,
     ...TuiExpand,
     TuiTextfieldControllerModule,

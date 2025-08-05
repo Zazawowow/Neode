@@ -50,7 +50,7 @@ type OnionForm = {
           'Add an onion address to anonymously expose this interface on the darknet. Onion addresses can only be reached over the Tor network.'
             | i18n
         }}
-        <a tuiLink docsLink href="/user-manual/connecting-remotely/tor.html">
+        <a tuiLink docsLink path="/user-manual/connecting-remotely/tor.html">
           {{ 'Learn More' | i18n }}
         </a>
       </ng-template>

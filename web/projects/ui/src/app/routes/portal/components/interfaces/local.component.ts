@@ -18,7 +18,7 @@ import { DocsLinkDirective, i18nPipe } from '@start9labs/shared'
           'Local addresses can only be accessed by devices connected to the same LAN as your server, either directly or using a VPN.'
             | i18n
         }}
-        <a tuiLink docsLink href="/user-manual/connecting-locally.html">
+        <a tuiLink docsLink path="/user-manual/connecting-locally.html">
           {{ 'Learn More' | i18n }}
         </a>
       </ng-template>

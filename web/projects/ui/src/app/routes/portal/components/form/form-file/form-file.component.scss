@@ -40,7 +40,8 @@ small {
   margin-left: auto;
 }
 
-tui-tag {
+tui-chip {
   z-index: 1;
   margin: -0.25rem -0.25rem -0.25rem auto;
+  pointer-events: auto;
 }

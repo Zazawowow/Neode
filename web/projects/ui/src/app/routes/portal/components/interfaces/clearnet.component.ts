@@ -28,14 +28,14 @@ import {
   FormComponent,
   FormContext,
 } from 'src/app/routes/portal/components/form.component'
-import { AcmePipe } from 'src/app/routes/portal/components/interfaces/acme.pipe'
+import { AuthorityNamePipe } from 'src/app/routes/portal/components/interfaces/acme.pipe'
 import { InterfaceComponent } from 'src/app/routes/portal/components/interfaces/interface.component'
 import { PlaceholderComponent } from 'src/app/routes/portal/components/placeholder.component'
 import { TableComponent } from 'src/app/routes/portal/components/table.component'
 import { ApiService } from 'src/app/services/api/embassy-api.service'
 import { FormDialogService } from 'src/app/services/form-dialog.service'
 import { DataModel } from 'src/app/services/patch-db/data-model'
-import { toAcmeName } from 'src/app/utils/acme'
+import { toAuthorityName } from 'src/app/utils/acme'
 import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
 import { InterfaceActionsComponent } from './actions.component'
 import { ClearnetAddress } from './interface.utils'
@@ -43,7 +43,7 @@ import { MaskPipe } from './mask.pipe'
 
 type ClearnetForm = {
   domain: string
-  acme: string
+  authority: string
 }
 
 @Component({
@@ -60,7 +60,7 @@ type ClearnetForm = {
         <a
           tuiLink
           docsLink
-          href="/user-manual/connecting-remotely/clearnet.html"
+          path="/user-manual/connecting-remotely/clearnet.html"
         >
           {{ 'Learn more' | i18n }}
         </a>
@@ -85,11 +85,15 @@ type ClearnetForm = {
           }}
         </tui-notification>
       }
-      <table [appTable]="['ACME', 'URL', null]">
+      <table [appTable]="['Certificate Authority', 'URL', null]">
         @for (address of clearnet(); track $index) {
           <tr>
             <td [style.width.rem]="12">
-              {{ interface.value().addSsl ? (address.acme | acme) : '-' }}
+              {{
+                interface.value().addSsl
+                  ? (address.authority | authorityName)
+                  : '-'
+              }}
             </td>
             <td [style.order]="-1">{{ address.url | mask }}</td>
             <td
@@ -154,7 +158,7 @@ type ClearnetForm = {
     PlaceholderComponent,
     TableComponent,
     MaskPipe,
-    AcmePipe,
+    AuthorityNamePipe,
     InterfaceActionsComponent,
     i18nPipe,
     DocsLinkDirective,
@@ -175,7 +179,7 @@ export class InterfaceClearnetComponent {
   readonly isRunning = input.required<boolean>()
   readonly isPublic = input.required<boolean>()
 
-  readonly acme = toSignal(
+  readonly authorityUrls = toSignal(
     inject<PatchDB<DataModel>>(PatchDB)
       .watch$('serverInfo', 'network', 'acme')
       .pipe(map(acme => Object.keys(acme))),
@@ -237,16 +241,16 @@ export class InterfaceClearnetComponent {
       default: null,
       patterns: [utils.Patterns.domain],
     })
-    const acme = ISB.Value.select({
-      name: 'ACME Provider',
+    const authority = ISB.Value.select({
+      name: 'Certificate Authority',
       description:
-        'Select which ACME provider to use for obtaining your SSL certificate. Add new ACME providers in the System tab. Optionally use your system Root CA. Note: only devices that have trusted your Root CA will be able to access the domain without security warnings.',
-      values: this.acme().reduce(
+        'Select which Certificate authority to use for obtaining your SSL certificate. Add new authority in the System tab. Optionally use your local= Root CA. Note: only devices that have trusted your Root CA will be able to access the domain without security warnings.',
+      values: this.authorityUrls().reduce<Record<string, string>>(
         (obj, url) => ({
           ...obj,
-          [url]: toAcmeName(url),
+          [url]: toAuthorityName(url),
         }),
-        { none: 'None (use system Root CA)' } as Record<string, string>,
+        { local: toAuthorityName(null) },
       ),
       default: '',
     })
@@ -256,7 +260,7 @@ export class InterfaceClearnetComponent {
       data: {
         spec: await configBuilderToSpec(
           ISB.InputSpec.of(
-            this.interface.value().addSsl ? { domain, acme } : { domain },
+            this.interface.value().addSsl ? { domain, authority } : { domain },
           ),
         ),
         buttons: [
@@ -272,11 +276,11 @@ export class InterfaceClearnetComponent {
   private async save(domainInfo: ClearnetForm): Promise<boolean> {
     const loader = this.loader.open('Saving').subscribe()
 
-    const { domain, acme } = domainInfo
+    const { domain, authority } = domainInfo
 
     const params = {
       domain,
-      acme: acme === 'none' ? null : acme,
+      acme: authority === 'local' ? null : authority,
       private: false,
     }
 

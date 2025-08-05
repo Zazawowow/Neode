@@ -12,7 +12,6 @@ import { TuiIcon } from '@taiga-ui/core'
 import { TuiCheckbox, TuiFade, TuiSkeleton } from '@taiga-ui/kit'
 import { TableComponent } from 'src/app/routes/portal/components/table.component'
 import { Session } from 'src/app/services/api/api.types'
-import { toAcmeName } from 'src/app/utils/acme'
 import { PlatformInfoPipe } from './platform-info.pipe'
 import { i18nPipe } from '@start9labs/shared'
 
@@ -182,6 +181,4 @@ export class SessionsTableComponent<T extends Session> implements OnChanges {
       this.selected.update(selected => [...selected, session])
     }
   }
-
-  protected readonly toAcmeName = toAcmeName
 }

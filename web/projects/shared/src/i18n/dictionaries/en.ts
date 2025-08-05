@@ -178,7 +178,6 @@ export const ENGLISH = {
   'Kernel space': 177,
   'Idle': 178, // a CPU metric
   'I/O wait': 179,
-  'ACME': 180,
   'Total': 181,
   'Used': 182,
   'Available': 183,
@@ -293,14 +292,12 @@ export const ENGLISH = {
   'Upload': 296,
   'Version 1 s9pk detected. This package format is deprecated. You can sideload a V1 s9pk via start-cli if necessary.': 297,
   'Invalid package file': 298,
-  'Add ACME providers in order to generate SSL (https) certificates for clearnet access.': 299,
+  'Adding a domain to StartOS means you can use it and its subdomains to host service interfaces on the public Internet.': 299,
   'View instructions': 300,
-  'Saved Providers': 301, // as in, ACME service provider, such as Let's Encrypt
-  'Add Provider': 302,
   'Contact': 303, //  as in, "contact us"
   'Edit': 304,
-  'Add ACME Provider': 305,
-  'Edit ACME Provider': 306,
+  'Add Certificate Authority': 305,
+  'Edit Contact Info': 306,
   'Contact Emails': 307,
   'Needed to obtain a certificate from a Certificate Authority': 308,
   'Toggle all': 309,
@@ -527,12 +524,20 @@ export const ENGLISH = {
   'StartOS package': 530, // as in, the URL of the source code for the StartOS package
   'Error initializing server': 531,
   'Finished': 532, // an in, complete
-  'Inbound Proxies': 533, // as in a service used to proxy internet traffic
-  'Inbound proxies provide remote access to your server and installed services.': 534,
-  'Saved Proxies': 535, // as in, a list of proxies already added to StartOS
-  'Add Proxy': 536, // as in, add a new proxy to StartOS
-  'Label': 537, // as in, a name given to something
-  'No proxies': 538,
-  'Update Label': 539,
-  'Rename': 540
+  'Gateways': 533, // as in, a device or software that connects two different networks
+  'Gateways connect your server to the Internet. They process outbound traffic, and under certain conditions, they also permit inbound traffic.': 534,
+  'Add Gateway': 535, // as in, add a new network gateway to StartOS
+  'Rename': 536,
+  'Access': 537, // as in, public or private access, almost "permission"
+  'Domains': 538, // as in, internet domains
+  'Certificate Authorities': 539,
+  'Domain': 540, // as in, an internat domain name
+  'Gateway': 541, // as in, a device or software that connects two different networks
+  'Default Certificate Authority': 542,
+  'Certificate Authority': 543,
+  'Edit Domain': 544,
+  'No domains': 545,
+  'Provider': 546,
+  'Show DNS': 547,
+  'Test DNS': 548,
 } as const

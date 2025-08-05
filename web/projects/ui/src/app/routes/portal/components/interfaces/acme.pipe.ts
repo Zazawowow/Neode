@@ -1,11 +1,11 @@
 import { Pipe, PipeTransform } from '@angular/core'
-import { toAcmeName } from 'src/app/utils/acme'
+import { toAuthorityName } from 'src/app/utils/acme'
 
 @Pipe({
-  name: 'acme',
+  name: 'authorityName',
 })
-export class AcmePipe implements PipeTransform {
+export class AuthorityNamePipe implements PipeTransform {
   transform(value: string | null = null): string {
-    return toAcmeName(value)
+    return toAuthorityName(value)
   }
 }

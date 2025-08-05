@@ -48,11 +48,6 @@ export default [
         loadComponent: () => import('./routes/startos-ui/startos-ui.component'),
       },
       {
-        path: 'acme',
-        title: titleResolver,
-        loadComponent: () => import('./routes/acme/acme.component'),
-      },
-      {
         path: 'wifi',
         title: titleResolver,
         loadComponent: () => import('./routes/wifi/wifi.component'),
@@ -73,17 +68,14 @@ export default [
         loadComponent: () => import('./routes/password/password.component'),
       },
       {
-        path: 'proxies',
-        loadComponent: () => import('./routes/proxies/proxies.component'),
+        path: 'gateways',
+        loadComponent: () => import('./routes/gateways/gateways.component'),
       },
-      // {
-      //   path: 'domains',
-      //   loadComponent: () => import('./routes/domains/domains.component')
-      // },
-      // {
-      //   path: 'router',
-      //   loadComponent: () => import('./routes/router/router.component')
-      // },
+      {
+        path: 'domains',
+        title: titleResolver,
+        loadComponent: () => import('./routes/domains/domains.component'),
+      },
     ],
   },
 ] satisfies Routes
