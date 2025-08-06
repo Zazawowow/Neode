@@ -1,6 +1,6 @@
 import { forwardRef, Provider } from '@angular/core'
-import { TUI_VALIDATION_ERRORS } from '@taiga-ui/kit'
 import { IST } from '@start9labs/start-sdk'
+import { TUI_FORMAT_ERROR, TUI_VALIDATION_ERRORS } from '@taiga-ui/kit'
 import { FormControlComponent } from './form-control.component'
 
 interface ValidatorsPatternError {
@@ -25,6 +25,7 @@ export const FORM_CONTROL_PROVIDERS: Provider[] = [
             ({ regex }) => String(regex) === String(requiredPattern),
           )?.description) ||
         'Invalid format',
+      [TUI_FORMAT_ERROR]: 'Invalid file format',
     }),
   },
 ]

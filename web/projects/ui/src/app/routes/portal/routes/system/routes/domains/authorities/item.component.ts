@@ -19,9 +19,7 @@ import { Authority, AuthorityService } from './authority.service'
     @if (authority(); as authority) {
       <td>{{ authority.name }}</td>
       <td>{{ authority.url || '-' }}</td>
-      <td class="hidden">
-        {{ authority.contact ? authority.contact.join(', ') : '-' }}
-      </td>
+      <td class="hidden">{{ authority.contact?.join(', ') || '-' }}</td>
       <td>
         <button
           tuiIconButton
@@ -61,6 +59,7 @@ import { Authority, AuthorityService } from './authority.service'
                 <a
                   tuiOption
                   new
+                  download
                   iconStart="@tui.download"
                   href="/static/local-root-ca.crt"
                 >

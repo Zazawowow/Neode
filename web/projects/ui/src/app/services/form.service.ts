@@ -8,6 +8,7 @@ import {
   Validators,
 } from '@angular/forms'
 import { IST, utils } from '@start9labs/start-sdk'
+import { tuiCreateFileFormatValidator } from '@taiga-ui/kit'
 import Mustache from 'mustache'
 
 @Injectable({
@@ -83,6 +84,7 @@ export class FormService {
     currentValue?: any,
   ): UntypedFormGroup | UntypedFormArray | UntypedFormControl {
     let value: any
+    console.log(spec)
     switch (spec.type) {
       case 'text':
         if (currentValue !== undefined) {
@@ -138,6 +140,8 @@ export class FormService {
       case 'multiselect':
         value = currentValue === undefined ? spec.default : currentValue
         return this.formBuilder.control(value, multiselectValidators(spec))
+      case 'file':
+        return this.formBuilder.control(null, fileValidators(spec))
       default:
         return this.formBuilder.control(null)
     }
@@ -233,6 +237,18 @@ function numberValidators(spec: IST.ValueSpecNumber): ValidatorFn[] {
 function multiselectValidators(spec: IST.ValueSpecMultiselect): ValidatorFn[] {
   const validators: ValidatorFn[] = []
   validators.push(listInRange(spec.minLength, spec.maxLength))
+  return validators
+}
+
+function fileValidators(spec: IST.ValueSpecFile): ValidatorFn[] {
+  const validators: ValidatorFn[] = [
+    tuiCreateFileFormatValidator(spec.extensions.join(',')),
+  ]
+
+  if (spec.required) {
+    validators.push(Validators.required)
+  }
+
   return validators
 }
 

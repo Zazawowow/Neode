@@ -17,9 +17,9 @@ import { knownAuthorities, toAuthorityName } from 'src/app/utils/acme'
 import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
 
 export type Authority = {
-  url: string | null
   name: string
-  contact: readonly string[] | null
+  url?: string | null
+  contact?: readonly string[] | null
 }
 
 export type RemoteAuthority = Authority & { url: string }
@@ -37,11 +37,6 @@ export class AuthorityService {
   readonly authorities = toSignal<Authority[]>(
     this.patch.watch$('serverInfo', 'network', 'acme').pipe(
       map(acme => [
-        {
-          url: null,
-          name: toAuthorityName(null),
-          contact: null,
-        },
         ...Object.keys(acme).map(url => ({
           url,
           name: toAuthorityName(url),

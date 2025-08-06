@@ -51,11 +51,8 @@ hr {
     var(--tui-background-base) 90%,
     transparent
   );
-  background-image: linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.1),
-      transparent
-    ),
+  background-image:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
   box-shadow:
     0 0.25rem 0.125rem rgba(0, 0, 0, 0.25),
@@ -97,11 +94,8 @@ hr {
   overflow: hidden;
   color: var(--tui-text-primary);
   background-color: color-mix(in hsl, var(--start9-base-1) 50%, transparent);
-  background-image: linear-gradient(
-      to bottom,
-      var(--tui-background-neutral-2),
-      transparent
-    ),
+  background-image:
+    linear-gradient(to bottom, var(--tui-background-neutral-2), transparent),
     linear-gradient(to bottom, var(--tui-background-neutral-2), transparent);
   background-size: 1px 100%;
   background-repeat: no-repeat;
@@ -293,8 +287,8 @@ hr {
 .g-buttons {
   display: flex;
   justify-content: flex-end;
-  gap: 16px;
-  margin-top: 24px;
+  gap: 1rem;
+  margin-top: 1.5rem;
 }
 
 .g-toggle {

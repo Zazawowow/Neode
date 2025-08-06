@@ -10,9 +10,7 @@ import { TableComponent } from 'src/app/routes/portal/components/table.component
   selector: 'dns',
   template: `
     <section class="g-card">
-      <header>
-        {{ $any('Using IP') | i18n }}
-      </header>
+      <header>{{ $any('Using IP') | i18n }}</header>
 
       @let subdomain = context.data.subdomain;
       @let wanIp = context.data.gateway.ipInfo?.wanIp || ('Error' | i18n);
@@ -26,9 +24,7 @@ import { TableComponent } from 'src/app/routes/portal/components/table.component
         </tr>
         <tr>
           <td>A</td>
-          <td>
-            {{ subdomain ? '*.' + subdomain : '*' }}
-          </td>
+          <td>{{ subdomain ? '*.' + subdomain : '*' }}</td>
           <td>{{ wanIp }}</td>
           <td></td>
         </tr>
@@ -37,9 +33,7 @@ import { TableComponent } from 'src/app/routes/portal/components/table.component
 
     @if (context.data.gateway.ipInfo?.deviceType !== 'wireguard') {
       <section class="g-card">
-        <header>
-          {{ $any('Using Dynamic DNS') | i18n }}
-        </header>
+        <header>{{ $any('Using Dynamic DNS') | i18n }}</header>
         <table [appTable]="['Type', $any('Host'), 'Value', 'Purpose']">
           <tr>
             <td>ALIAS</td>
@@ -57,9 +51,16 @@ import { TableComponent } from 'src/app/routes/portal/components/table.component
       </section>
     }
 
-    <button tuiButton size="l" (click)="testDns()">
-      {{ 'Test' | i18n }}
-    </button>
+    <footer class="g-buttons">
+      <button tuiButton size="l" (click)="testDns()">
+        {{ 'Test' | i18n }}
+      </button>
+    </footer>
+  `,
+  styles: `
+    section {
+      margin: 1.5rem 0;
+    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [TuiButton, i18nPipe, TableComponent],
