@@ -92,8 +92,9 @@ impl Public {
                         enabled: true,
                         ..Default::default()
                     },
-                    network_interfaces: OrdMap::new(),
+                    gateways: OrdMap::new(),
                     acme: BTreeMap::new(),
+                    domains: BTreeMap::new(),
                 },
                 status_info: ServerStatus {
                     backup_progress: None,
@@ -191,9 +192,12 @@ pub struct NetworkInfo {
     pub host: Host,
     #[ts(as = "BTreeMap::<GatewayId, NetworkInterfaceInfo>")]
     #[serde(default)]
-    pub network_interfaces: OrdMap<GatewayId, NetworkInterfaceInfo>,
+    pub gateways: OrdMap<GatewayId, NetworkInterfaceInfo>,
     #[serde(default)]
     pub acme: BTreeMap<AcmeProvider, AcmeSettings>,
+    #[serde(default)]
+    #[ts(as = "BTreeMap::<String, DomainSettings>")]
+    pub domains: BTreeMap<InternedString, DomainSettings>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, HasModel, TS)]
@@ -301,6 +305,14 @@ pub enum NetworkInterfaceType {
 #[ts(export)]
 pub struct AcmeSettings {
     pub contact: Vec<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize, HasModel, TS)]
+#[serde(rename_all = "camelCase")]
+#[model = "Model<Self>"]
+#[ts(export)]
+pub struct DomainSettings {
+    pub gateway: GatewayId,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize, HasModel, TS)]

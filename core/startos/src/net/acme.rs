@@ -174,7 +174,7 @@ impl<'a> async_acme::cache::AcmeCache for AcmeCertCache<'a> {
     }
 }
 
-pub fn acme<C: Context>() -> ParentHandler<C> {
+pub fn acme_api<C: Context>() -> ParentHandler<C> {
     ParentHandler::new()
         .subcommand(
             "init",

@@ -12,7 +12,7 @@ use tracing::instrument;
 use crate::context::config::ServerConfig;
 use crate::context::rpc::InitRpcContextPhases;
 use crate::context::{DiagnosticContext, InitContext, RpcContext};
-use crate::net::network_interface::SelfContainedNetworkInterfaceListener;
+use crate::net::gateway::SelfContainedNetworkInterfaceListener;
 use crate::net::web_server::{Acceptor, UpgradableListener, WebServer};
 use crate::shutdown::Shutdown;
 use crate::system::launch_metrics_task;

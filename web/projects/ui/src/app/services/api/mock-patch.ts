@@ -145,7 +145,7 @@ export const mockPatchData: DataModel = {
           ],
         },
       },
-      networkInterfaces: {
+      gateways: {
         eth0: {
           public: null,
           secure: null,

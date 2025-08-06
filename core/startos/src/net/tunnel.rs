@@ -53,7 +53,7 @@ pub async fn add_tunnel(
         .into_public()
         .into_server_info()
         .into_network()
-        .into_network_interfaces()
+        .into_gateways()
         .keys()?;
     let mut iface = GatewayId::from("wg0");
     for id in 1.. {
@@ -105,7 +105,7 @@ pub async fn remove_tunnel(
         .into_public()
         .into_server_info()
         .into_network()
-        .into_network_interfaces()
+        .into_gateways()
         .into_idx(&id)
         .and_then(|e| e.into_ip_info().transpose())
     else {

@@ -1,0 +1,108 @@
+use std::collections::BTreeSet;
+use std::sync::Arc;
+
+use exver::{PreReleaseSegment, VersionRange};
+use imbl_value::json;
+
+use super::v0_3_5::V0_3_0_COMPAT;
+use super::{v0_4_0_alpha_9, VersionT};
+use crate::prelude::*;
+
+lazy_static::lazy_static! {
+    static ref V0_4_0_alpha_10: exver::Version = exver::Version::new(
+        [0, 4, 0],
+        [PreReleaseSegment::String("alpha".into()), 10.into()]
+    );
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+pub struct Version;
+
+impl VersionT for Version {
+    type Previous = v0_4_0_alpha_9::Version;
+    type PreUpRes = ();
+
+    async fn pre_up(self) -> Result<Self::PreUpRes, Error> {
+        Ok(())
+    }
+    fn semver(self) -> exver::Version {
+        V0_4_0_alpha_10.clone()
+    }
+    fn compat(self) -> &'static VersionRange {
+        &V0_3_0_COMPAT
+    }
+    #[instrument]
+    fn up(self, db: &mut Value, _: Self::PreUpRes) -> Result<Value, Error> {
+        let default_gateway = db["public"]["serverInfo"]["network"]["networkInterfaces"]
+            .as_object()
+            .into_iter()
+            .flatten()
+            .find(|(_, i)| i["ipInfo"]["wanIp"].is_string())
+            .map(|(g, _)| g.clone());
+        let mut roots = BTreeSet::new();
+        for (_, package) in db["public"]["packageData"]
+            .as_object_mut()
+            .ok_or_else(|| {
+                Error::new(
+                    eyre!("expected public.packageData to be an object"),
+                    ErrorKind::Database,
+                )
+            })?
+            .iter_mut()
+        {
+            for (_, host) in package["hosts"]
+                .as_object_mut()
+                .ok_or_else(|| {
+                    Error::new(
+                        eyre!("expected public.packageData[id].hosts to be an object"),
+                        ErrorKind::Database,
+                    )
+                })?
+                .iter_mut()
+            {
+                if default_gateway.is_none() {
+                    host["domains"] = json!({});
+                    continue;
+                }
+                for (domain, info) in host["domains"]
+                    .as_object_mut()
+                    .ok_or_else(|| {
+                        Error::new(
+                            eyre!(
+                                "expected public.packageData[id].hosts[id].domains to be an object"
+                            ),
+                            ErrorKind::Database,
+                        )
+                    })?
+                    .iter_mut()
+                {
+                    let Some(info) = info.as_object_mut() else {
+                        continue;
+                    };
+                    let root = domain.clone();
+                    info.insert("root".into(), Value::String(Arc::new((&*root).to_owned())));
+                    roots.insert(root);
+                }
+            }
+        }
+        let network = db["public"]["serverInfo"]["network"]
+            .as_object_mut()
+            .ok_or_else(|| {
+                Error::new(
+                    eyre!("expected public.serverInfo.network to be an object"),
+                    ErrorKind::Database,
+                )
+            })?;
+        network["gateways"] = network["networkInterfaces"].clone();
+        if let Some(gateway) = default_gateway {
+            for root in roots {
+                network["domains"][&*root] = json!({ "gateway": gateway });
+            }
+        }
+
+        Ok(Value::Null)
+    }
+    fn down(self, _db: &mut Value) -> Result<(), Error> {
+        Ok(())
+    }
+}

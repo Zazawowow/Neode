@@ -14,7 +14,7 @@ use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::oneshot;
 
 use crate::context::{DiagnosticContext, InitContext, InstallContext, RpcContext, SetupContext};
-use crate::net::network_interface::{
+use crate::net::gateway::{
     lookup_info_by_addr, NetworkInterfaceListener, SelfContainedNetworkInterfaceListener,
 };
 use crate::net::static_server::{

@@ -32,7 +32,7 @@ use crate::context::{CliContext, RpcContext};
 use crate::db::model::public::{IpInfo, NetworkInterfaceInfo, NetworkInterfaceType};
 use crate::db::model::Database;
 use crate::net::forward::START9_BRIDGE_IFACE;
-use crate::net::network_interface::device::DeviceProxy;
+use crate::net::gateway::device::DeviceProxy;
 use crate::net::utils::ipv6_is_link_local;
 use crate::net::web_server::Accept;
 use crate::prelude::*;
@@ -43,7 +43,7 @@ use crate::util::serde::{display_serializable, HandlerExtSerde};
 use crate::util::sync::{SyncMutex, Watch};
 use crate::util::Invoke;
 
-pub fn network_interface_api<C: Context>() -> ParentHandler<C> {
+pub fn gateway_api<C: Context>() -> ParentHandler<C> {
     ParentHandler::new()
         .subcommand(
             "list",
@@ -88,7 +88,7 @@ pub fn network_interface_api<C: Context>() -> ParentHandler<C> {
 
                     Ok(())
                 })
-                .with_about("Show network interfaces StartOS can listen on")
+                .with_about("Show gateways StartOS can listen on")
                 .with_call_remote::<CliContext>(),
         )
         .subcommand(
@@ -96,26 +96,26 @@ pub fn network_interface_api<C: Context>() -> ParentHandler<C> {
             from_fn_async(set_public)
                 .with_metadata("sync_db", Value::Bool(true))
                 .no_display()
-                .with_about("Indicate whether this interface has inbound access from the WAN")
+                .with_about("Indicate whether this gateway has inbound access from the WAN")
                 .with_call_remote::<CliContext>(),
         ).subcommand(
-            "unset-inbound",
+            "unset-public",
             from_fn_async(unset_public)
                 .with_metadata("sync_db", Value::Bool(true))
                 .no_display()
-                .with_about("Allow this interface to infer whether it has inbound access from the WAN based on its IPv4 address")
+                .with_about("Allow this gateway to infer whether it has inbound access from the WAN based on its IPv4 address")
                 .with_call_remote::<CliContext>(),
         ).subcommand("forget",
             from_fn_async(forget_iface)
                 .with_metadata("sync_db", Value::Bool(true))
                 .no_display()
-                .with_about("Forget a disconnected interface")
+                .with_about("Forget a disconnected gateway")
                 .with_call_remote::<CliContext>()
         ).subcommand("set-name",
         from_fn_async(set_name)
             .with_metadata("sync_db", Value::Bool(true))
             .no_display()
-            .with_about("Rename an interface")
+            .with_about("Rename a gateway")
             .with_call_remote::<CliContext>()
     )
 }
@@ -814,7 +814,7 @@ impl NetworkInterfaceController {
             db.as_public_mut()
                 .as_server_info_mut()
                 .as_network_mut()
-                .as_network_interfaces_mut()
+                .as_gateways_mut()
                 .ser(info)
         })
         .await
@@ -881,7 +881,7 @@ impl NetworkInterfaceController {
                         .as_public()
                         .as_server_info()
                         .as_network()
-                        .as_network_interfaces()
+                        .as_gateways()
                         .de()
                     {
                         Ok(mut info) => {
@@ -940,7 +940,7 @@ impl NetworkInterfaceController {
         let mut sub = self
             .db
             .subscribe(
-                "/public/serverInfo/network/networkInterfaces"
+                "/public/serverInfo/network/gateways"
                     .parse::<JsonPointer<_, _>>()
                     .with_kind(ErrorKind::Database)?,
             )
@@ -973,7 +973,7 @@ impl NetworkInterfaceController {
         let mut sub = self
             .db
             .subscribe(
-                "/public/serverInfo/network/networkInterfaces"
+                "/public/serverInfo/network/gateways"
                     .parse::<JsonPointer<_, _>>()
                     .with_kind(ErrorKind::Database)?,
             )
@@ -1043,7 +1043,7 @@ impl NetworkInterfaceController {
         let (dump, mut sub) = self
             .db
             .dump_and_sub(
-                "/public/serverInfo/network/networkInterfaces"
+                "/public/serverInfo/network/gateways"
                     .parse::<JsonPointer<_, _>>()
                     .with_kind(ErrorKind::Database)?
                     .join_end(interface.as_str())

@@ -90,7 +90,7 @@ pub async fn get_ssl_certificate(
                         .as_public()
                         .as_server_info()
                         .as_network()
-                        .as_network_interfaces()
+                        .as_gateways()
                         .as_entries()?
                         .into_iter()
                         .flat_map(|(_, net)| net.as_ip_info().transpose_ref())

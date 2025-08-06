@@ -553,7 +553,7 @@ export class MockApiService extends ApiService {
     const patch: AddOperation<T.NetworkInterfaceInfo>[] = [
       {
         op: PatchOp.ADD,
-        path: `/serverInfo/network/networkInterfaces/${id}`,
+        path: `/serverInfo/network/gateways/${id}`,
         value: {
           public: params.public,
           secure: false,
@@ -579,7 +579,7 @@ export class MockApiService extends ApiService {
     const patch: ReplaceOperation<string>[] = [
       {
         op: PatchOp.REPLACE,
-        path: `/serverInfo/network/networkInterfaces/${params.id}/label`,
+        path: `/serverInfo/network/gateways/${params.id}/label`,
         value: params.name,
       },
     ]
@@ -593,7 +593,7 @@ export class MockApiService extends ApiService {
     const patch: RemoveOperation[] = [
       {
         op: PatchOp.REMOVE,
-        path: `/serverInfo/network/networkInterfaces/${params.id}`,
+        path: `/serverInfo/network/gateways/${params.id}`,
       },
     ]
     this.mockRevision(patch)

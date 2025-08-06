@@ -12,8 +12,9 @@ export class IpAddress {
         this.octets[octIdx++] = num & 255
         idx += 1
       }
-      if (idx < 7) {
-        idx = segs.length - 1
+      const lastSegIdx = segs.length - 1
+      if (idx < lastSegIdx) {
+        idx = lastSegIdx
         octIdx = 15
         while (segs[idx]) {
           const num = parseInt(segs[idx], 16)

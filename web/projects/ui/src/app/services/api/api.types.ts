@@ -269,7 +269,7 @@ export namespace RR {
   export type UpdateTunnelReq = {
     id: string
     name: string
-  } // net.netwok-interface.set-name
+  } // net.gateway.set-name
   export type UpdateTunnelRes = null
 
   export type RemoveTunnelReq = { id: string } // net.tunnel.remove

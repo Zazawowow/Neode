@@ -351,7 +351,7 @@ export class LiveApiService extends ApiService {
   }
 
   async updateTunnel(params: RR.UpdateTunnelReq): Promise<RR.UpdateTunnelRes> {
-    return this.rpcRequest({ method: 'net.netwok-interface.set-name', params })
+    return this.rpcRequest({ method: 'net.gateway.set-name', params })
   }
 
   async removeTunnel(params: RR.RemoveTunnelReq): Promise<RR.RemoveTunnelRes> {

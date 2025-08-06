@@ -150,7 +150,7 @@ pub fn main_api<C: Context>() -> ParentHandler<C> {
         )
         .subcommand(
             "net",
-            net::net::<C>().with_about("Network commands related to tor and dhcp"),
+            net::net_api::<C>().with_about("Network commands related to tor and dhcp"),
         )
         .subcommand(
             "auth",

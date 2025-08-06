@@ -53,7 +53,7 @@ impl Host {
                 self.domains
                     .iter()
                     .map(
-                        |(address, DomainConfig { public, acme })| HostAddress::Domain {
+                        |(address, DomainConfig { public, acme, .. })| HostAddress::Domain {
                             address: address.clone(),
                             public: *public,
                             acme: acme.clone(),

@@ -20,7 +20,7 @@ use crate::context::CliContext;
 use crate::middleware::auth::AuthContext;
 use crate::middleware::signature::SignatureAuthContext;
 use crate::net::forward::PortForwardController;
-use crate::net::network_interface::NetworkInterfaceWatcher;
+use crate::net::gateway::NetworkInterfaceWatcher;
 use crate::prelude::*;
 use crate::rpc_continuations::{OpenAuthedContinuations, RpcContinuations};
 use crate::tunnel::db::TunnelDatabase;

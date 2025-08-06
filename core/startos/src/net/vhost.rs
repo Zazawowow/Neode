@@ -36,7 +36,7 @@ use crate::context::{CliContext, RpcContext};
 use crate::db::model::public::NetworkInterfaceInfo;
 use crate::db::model::Database;
 use crate::net::acme::{AcmeCertCache, AcmeProvider};
-use crate::net::network_interface::{
+use crate::net::gateway::{
     Accepted, AnyFilter, DynInterfaceFilter, InterfaceFilter, NetworkInterfaceController,
     NetworkInterfaceListener,
 };

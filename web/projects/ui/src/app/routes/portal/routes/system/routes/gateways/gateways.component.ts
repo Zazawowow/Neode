@@ -84,7 +84,7 @@ export default class GatewaysComponent {
   private readonly formDialog = inject(FormDialogService)
 
   readonly gateways$ = inject<PatchDB<DataModel>>(PatchDB)
-    .watch$('serverInfo', 'network', 'networkInterfaces')
+    .watch$('serverInfo', 'network', 'gateways')
     .pipe(
       map(gateways =>
         Object.entries(gateways)

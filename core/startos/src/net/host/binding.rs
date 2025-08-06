@@ -13,7 +13,7 @@ use crate::context::{CliContext, RpcContext};
 use crate::db::model::public::NetworkInterfaceInfo;
 use crate::net::forward::AvailablePorts;
 use crate::net::host::HostApiKind;
-use crate::net::network_interface::InterfaceFilter;
+use crate::net::gateway::InterfaceFilter;
 use crate::net::vhost::AlpnInfo;
 use crate::prelude::*;
 use crate::util::serde::{display_serializable, HandlerExtSerde};

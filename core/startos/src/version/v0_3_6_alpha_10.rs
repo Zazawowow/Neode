@@ -72,8 +72,9 @@ impl VersionT for Version {
                         }
                         HostAddress::Domain { address } => {
                             domains.insert(
-                                address,
+                                address.clone(),
                                 DomainConfig {
+                                    root: address,
                                     public: true,
                                     acme: None,
                                 },

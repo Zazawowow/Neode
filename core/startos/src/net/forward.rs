@@ -12,7 +12,7 @@ use tokio::process::Command;
 use tokio::sync::mpsc;
 
 use crate::db::model::public::NetworkInterfaceInfo;
-use crate::net::network_interface::{DynInterfaceFilter, InterfaceFilter};
+use crate::net::gateway::{DynInterfaceFilter, InterfaceFilter};
 use crate::net::utils::ipv6_is_link_local;
 use crate::prelude::*;
 use crate::util::sync::Watch;

@@ -47,10 +47,8 @@ export class DomainService {
 
   readonly data = toSignal(
     this.patch.watch$('serverInfo', 'network').pipe(
-      map(({ networkInterfaces, domains, acme }) => ({
-        gateways: Object.entries(networkInterfaces).reduce<
-          Record<string, string>
-        >(
+      map(({ gateways, domains, acme }) => ({
+        gateways: Object.entries(gateways).reduce<Record<string, string>>(
           (obj, [id, n]) => ({
             ...obj,
             [id]: n.ipInfo?.name || '',
@@ -64,7 +62,7 @@ export class DomainService {
               subdomain: parse(fqdn).subdomain,
               gateway: {
                 id: gateway,
-                ipInfo: networkInterfaces[gateway]?.ipInfo || null,
+                ipInfo: gateways[gateway]?.ipInfo || null,
               },
               authority: {
                 url: acme,

@@ -14,7 +14,7 @@ keywords = [
 name = "start-os"
 readme = "README.md"
 repository = "https://github.com/Start9Labs/start-os"
-version = "0.4.0-alpha.9" # VERSION_BUMP
+version = "0.4.0-alpha.10" # VERSION_BUMP
 license = "MIT"
 
 [lib]
@@ -228,7 +228,8 @@ tracing-error = "0.2.0"
 tracing-futures = "0.2.5"
 tracing-journald = "0.3.0"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
-trust-dns-server = "0.23.1"
+trust-dns-server = "0.23.2"
+trust-dns-client = "0.23.2"
 ts-rs = { git = "https://github.com/dr-bonez/ts-rs.git", branch = "feature/top-level-as" } # "8.1.0"
 typed-builder = "0.21.0"
 unix-named-pipe = "0.2.0"

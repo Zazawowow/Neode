@@ -84,7 +84,7 @@ lazy_static! {
     static ref PROGRESS_REGEX: Regex = Regex::new("PROGRESS=([0-9]+)").unwrap();
 }
 
-pub fn tor<C: Context>() -> ParentHandler<C> {
+pub fn tor_api<C: Context>() -> ParentHandler<C> {
     ParentHandler::new()
         .subcommand(
             "list-services",

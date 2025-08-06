@@ -17,13 +17,13 @@ use crate::error::ErrorCollection;
 use crate::hostname::Hostname;
 use crate::net::dns::DnsController;
 use crate::net::forward::{PortForwardController, START9_BRIDGE_IFACE};
-use crate::net::host::address::HostAddress;
-use crate::net::host::binding::{AddSslOptions, BindId, BindOptions};
-use crate::net::host::{host_for, Host, Hosts};
-use crate::net::network_interface::{
+use crate::net::gateway::{
     AndFilter, DynInterfaceFilter, InterfaceFilter, LoopbackFilter, NetworkInterfaceController,
     SecureFilter,
 };
+use crate::net::host::address::HostAddress;
+use crate::net::host::binding::{AddSslOptions, BindId, BindOptions};
+use crate::net::host::{host_for, Host, Hosts};
 use crate::net::service_interface::{HostnameInfo, IpHostname, OnionHostname};
 use crate::net::tor::TorController;
 use crate::net::utils::ipv6_is_local;

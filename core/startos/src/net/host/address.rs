@@ -34,6 +34,8 @@ pub enum HostAddress {
 
 #[derive(Debug, Deserialize, Serialize, TS)]
 pub struct DomainConfig {
+    #[ts(type = "string")]
+    pub root: InternedString,
     pub public: bool,
     pub acme: Option<AcmeProvider>,
 }
@@ -177,7 +179,7 @@ pub struct AddDomainParams {
 pub async fn add_domain<Kind: HostApiKind>(
     ctx: RpcContext,
     AddDomainParams {
-        domain,
+        ref domain,
         private,
         acme,
     }: AddDomainParams,
@@ -185,24 +187,41 @@ pub async fn add_domain<Kind: HostApiKind>(
 ) -> Result<(), Error> {
     ctx.db
         .mutate(|db| {
+            let root = db
+                .as_public()
+                .as_server_info()
+                .as_network()
+                .as_domains()
+                .keys()?
+                .into_iter()
+                .find(|root| domain.ends_with(&**root))
+                .or_not_found(lazy_format!("root domain for {domain}"))?;
+
             if let Some(acme) = &acme {
-                if !db.as_public().as_server_info().as_network().as_acme().contains_key(&acme)? {
+                if !db
+                    .as_public()
+                    .as_server_info()
+                    .as_network()
+                    .as_acme()
+                    .contains_key(&acme)?
+                {
                     return Err(Error::new(eyre!("unknown acme provider {}, please run acme.init for this provider first", acme.0), ErrorKind::InvalidRequest));
                 }
             }
 
-            Kind::host_for(&inheritance, db)?
-                .as_domains_mut()
-                .insert(
-                    &domain,
-                    &DomainConfig {
-                        public: !private,
-                        acme,
-                    },
-                )?;
+
+            Kind::host_for(&inheritance, db)?.as_domains_mut().insert(
+                domain,
+                &DomainConfig {
+                    root,
+                    public: !private,
+                    acme,
+                },
+            )?;
             check_duplicates(db)
         })
-        .await.result?;
+        .await
+        .result?;
     Kind::sync_host(&ctx, inheritance).await?;
 
     Ok(())
