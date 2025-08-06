@@ -359,9 +359,9 @@ export abstract class ApiService {
     params: RR.GenerateTorKeyReq,
   ): Promise<RR.AddTorKeyRes>
 
-  abstract serverBindingSetPubic(
-    params: RR.ServerBindingSetPublicReq,
-  ): Promise<RR.BindingSetPublicRes>
+  abstract serverBindingToggleGateway(
+    params: RR.ServerBindingToggleGatewayReq,
+  ): Promise<RR.ServerBindingToggleGatewayRes>
 
   abstract serverAddOnion(params: RR.ServerAddOnionReq): Promise<RR.AddOnionRes>
 
@@ -377,9 +377,9 @@ export abstract class ApiService {
     params: RR.OsUiRemoveDomainReq,
   ): Promise<RR.OsUiRemoveDomainRes>
 
-  abstract pkgBindingSetPubic(
-    params: RR.PkgBindingSetPublicReq,
-  ): Promise<RR.BindingSetPublicRes>
+  abstract pkgBindingToggleGateway(
+    params: RR.PkgBindingToggleGatewayReq,
+  ): Promise<RR.PkgBindingToggleGatewayRes>
 
   abstract pkgAddOnion(params: RR.PkgAddOnionReq): Promise<RR.AddOnionRes>
 

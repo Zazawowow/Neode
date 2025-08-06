@@ -19,7 +19,6 @@ import { DomainService, MappedDomain } from './domain.service'
     @if (domain(); as domain) {
       <td>{{ domain.fqdn }}</td>
       <td [style.order]="-1">{{ domain.gateway.ipInfo?.name || '-' }}</td>
-      <td>{{ domain.authority.name }}</td>
       <td>
         <button
           tuiIconButton

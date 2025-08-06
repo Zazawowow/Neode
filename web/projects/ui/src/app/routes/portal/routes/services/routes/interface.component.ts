@@ -16,7 +16,6 @@ import { TuiHeader } from '@taiga-ui/layout'
 import { PatchDB } from 'patch-db-client'
 import { InterfaceComponent } from 'src/app/routes/portal/components/interfaces/interface.component'
 import { getAddresses } from 'src/app/routes/portal/components/interfaces/interface.utils'
-import { InterfaceStatusComponent } from 'src/app/routes/portal/components/interfaces/status.component'
 import { ConfigService } from 'src/app/services/config.service'
 import { DataModel } from 'src/app/services/patch-db/data-model'
 import { TitleDirective } from 'src/app/services/title.service'
@@ -28,10 +27,6 @@ import { TitleDirective } from 'src/app/services/title.service'
         {{ 'Back' | i18n }}
       </a>
       {{ interface()?.name }}
-      <interface-status
-        [style.margin-left.rem]="0.5"
-        [public]="!!interface()?.public"
-      />
     </ng-container>
     <tui-breadcrumbs size="l">
       <a *tuiItem tuiLink appearance="action-grayscale" routerLink="../..">
@@ -47,12 +42,11 @@ import { TitleDirective } from 'src/app/services/title.service'
             <tui-badge size="l" [appearance]="getAppearance(value.type)">
               {{ value.type }}
             </tui-badge>
-            <interface-status [public]="value.public" />
           </h3>
           <p tuiSubtitle>{{ value.description }}</p>
         </hgroup>
       </header>
-      <app-interface
+      <service-interface
         [packageId]="pkgId"
         [value]="value"
         [isRunning]="isRunning()"
@@ -86,7 +80,6 @@ import { TitleDirective } from 'src/app/services/title.service'
     TuiBreadcrumbs,
     TuiItem,
     TuiLink,
-    InterfaceStatusComponent,
     i18nPipe,
     TuiBadge,
     TuiHeader,
@@ -127,9 +120,10 @@ export default class ServiceInterfaceRoute {
 
     return {
       ...item,
-      addSsl: host?.bindings[port]?.options.addSsl,
-      public: !!host?.bindings[port]?.net.public,
       addresses: getAddresses(item, host, this.config),
+      gateways: [],
+      torDomains: [],
+      clearnetDomains: [],
     }
   })
 

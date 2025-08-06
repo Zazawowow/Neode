@@ -1,21 +1,11 @@
-import { T, utils } from '@start9labs/start-sdk'
+import { T } from '@start9labs/start-sdk'
 import { ConfigService } from 'src/app/services/config.service'
-
-export abstract class AddressesService {
-  abstract static: boolean
-  abstract add(): Promise<void>
-  abstract remove(): Promise<void>
-}
 
 export function getAddresses(
   serviceInterface: T.ServiceInterface,
   host: T.Host,
   config: ConfigService,
-): {
-  clearnet: ClearnetAddress[]
-  local: LocalAddress[]
-  tor: TorAddress[]
-} {
+): MappedServiceInterface['addresses'] {
   const addressInfo = serviceInterface.addressInfo
   const hostnames =
     host.hostnameInfo[addressInfo.internalPort]?.filter(
@@ -46,60 +36,75 @@ export function getAddresses(
     }
   }
 
-  const clearnet: ClearnetAddress[] = []
-  const local: LocalAddress[] = []
-  const tor: TorAddress[] = []
+  const common: Address[] = [
+    {
+      type: 'Local',
+      description: '',
+      gateway: 'Wire Conenction 1',
+      url: 'https://test.local:1234',
+    },
+    {
+      type: 'IPv4 (LAN)',
+      description: '',
+      gateway: 'Wire Connction 1',
+      url: 'https://192.168.1.10.local:1234',
+    },
+  ]
+  const uncommon: Address[] = [
+    {
+      type: 'IPv4 (WAN)',
+      description: '',
+      gateway: 'Wire Conenction 1',
+      url: 'https://72.72.72.72',
+    },
+  ]
 
-  hostnames.forEach(h => {
-    const addresses = utils.addressHostToUrl(addressInfo, h)
+  // hostnames.forEach(h => {
+  //   const addresses = utils.addressHostToUrl(addressInfo, h)
 
-    addresses.forEach(url => {
-      if (h.kind === 'onion') {
-        tor.push({
-          protocol: /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(url)
-            ? new URL(url).protocol.replace(':', '').toUpperCase()
-            : null,
-          url,
-        })
-      } else {
-        const hostnameKind = h.hostname.kind
+  //   addresses.forEach(url => {
+  //     if (h.kind === 'onion') {
+  //       tor.push({
+  //         protocol: /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(url)
+  //           ? new URL(url).protocol.replace(':', '').toUpperCase()
+  //           : null,
+  //         url,
+  //       })
+  //     } else {
+  //       const hostnameKind = h.hostname.kind
 
-        if (
-          h.public ||
-          (hostnameKind === 'domain' && host.domains[h.hostname.domain]?.public)
-        ) {
-          clearnet.push({
-            url,
-            disabled: !h.public,
-            isDomain: hostnameKind == 'domain',
-            authority:
-              hostnameKind == 'domain'
-                ? host.domains[h.hostname.domain]?.acme || null
-                : null,
-          })
-        } else {
-          local.push({
-            nid:
-              hostnameKind === 'local'
-                ? 'Local'
-                : `${h.gatewayId} (${hostnameKind})`,
-            url,
-          })
-        }
-      }
-    })
-  })
+  //       if (
+  //         h.public ||
+  //         (hostnameKind === 'domain' && host.domains[h.hostname.domain]?.public)
+  //       ) {
+  //         clearnet.push({
+  //           url,
+  //           disabled: !h.public,
+  //           isDomain: hostnameKind == 'domain',
+  //           authority:
+  //             hostnameKind == 'domain'
+  //               ? host.domains[h.hostname.domain]?.acme || null
+  //               : null,
+  //         })
+  //       } else {
+  //         local.push({
+  //           nid:
+  //             hostnameKind === 'local'
+  //               ? 'Local'
+  //               : `${h.gatewayId} (${hostnameKind})`,
+  //           url,
+  //         })
+  //       }
+  //     }
+  //   })
+  // })
 
   return {
-    clearnet: clearnet.filter(
+    common: common.filter(
       (value, index, self) =>
         index === self.findIndex(t => t.url === value.url),
     ),
-    local: local.filter(
-      (value, index, self) =>
-        index === self.findIndex(t => t.url === value.url),
-    ),
-    tor: tor.filter(
+    uncommon: uncommon.filter(
       (value, index, self) =>
         index === self.findIndex(t => t.url === value.url),
     ),
@@ -107,28 +112,28 @@ export function getAddresses(
 }
 
 export type MappedServiceInterface = T.ServiceInterface & {
-  addSsl?: T.AddSslOptions | null
-  public: boolean
+  gateways: {
+    id: string
+    name: string
+    enabled: boolean
+  }[]
+  torDomains: string[]
+  clearnetDomains: ClearnetDomain[]
   addresses: {
-    clearnet: ClearnetAddress[]
-    local: LocalAddress[]
-    tor: TorAddress[]
+    common: Address[]
+    uncommon: Address[]
   }
 }
 
-export type ClearnetAddress = {
-  url: string
+export type ClearnetDomain = {
+  fqdn: string
   authority: string | null
-  isDomain: boolean
-  disabled: boolean
+  public: boolean
 }
 
-export type LocalAddress = {
+export type Address = {
+  type: string
+  gateway: string
   url: string
-  nid: string
-}
-
-export type TorAddress = {
-  url: string
-  protocol: string | null
+  description: string
 }

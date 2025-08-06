@@ -14,7 +14,6 @@ import { FormDialogService } from 'src/app/services/form-dialog.service'
 import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
 import { PatchDB } from 'patch-db-client'
 import { DataModel } from 'src/app/services/patch-db/data-model'
-import { toAuthorityName } from 'src/app/utils/acme'
 import { parse } from 'tldts'
 import { RR } from 'src/app/services/api/api.types'
 import { DNS } from './dns.component'
@@ -28,10 +27,6 @@ export type MappedDomain = {
     id: string
     name: string | null
     ipInfo: T.IpInfo | null
-  }
-  authority: {
-    url: string | null
-    name: string | null
   }
 }
 
@@ -64,18 +59,7 @@ export class DomainService {
                 id: gateway,
                 ipInfo: gateways[gateway]?.ipInfo || null,
               },
-              authority: {
-                url: acme,
-                name: toAuthorityName(acme),
-              },
             }) as MappedDomain,
-        ),
-        authorities: Object.keys(acme).reduce<Record<string, string>>(
-          (obj, url) => ({
-            ...obj,
-            [url]: toAuthorityName(url),
-          }),
-          { local: toAuthorityName(null) },
         ),
       })),
     ),
@@ -91,7 +75,7 @@ export class DomainService {
         default: null,
         patterns: [utils.Patterns.domain],
       }),
-      ...this.gatewaysAndAuthorities(),
+      ...this.gatewaysSpec(),
     })
 
     this.formDialog.open(FormComponent, {
@@ -105,7 +89,6 @@ export class DomainService {
               this.save({
                 fqdn: input.fqdn,
                 gateway: input.gateway,
-                acme: input.authority === 'local' ? null : input.authority,
               }),
           },
         ],
@@ -115,7 +98,7 @@ export class DomainService {
 
   async edit(domain: MappedDomain) {
     const editSpec = ISB.InputSpec.of({
-      ...this.gatewaysAndAuthorities(),
+      ...this.gatewaysSpec(),
     })
 
     this.formDialog.open(FormComponent, {
@@ -129,13 +112,11 @@ export class DomainService {
               this.save({
                 fqdn: domain.fqdn,
                 gateway: input.gateway,
-                acme: input.authority === 'local' ? null : input.authority,
               }),
           },
         ],
         value: {
           gateway: domain.gateway.id,
-          authority: domain.authority.url || 'local',
         },
       },
     })
@@ -178,20 +159,12 @@ export class DomainService {
     }
   }
 
-  private gatewaysAndAuthorities() {
+  private gatewaysSpec() {
     return {
       gateway: ISB.Value.select({
         name: 'Gateway',
-        description:
-          'Select the public gateway for this domain. Whichever gateway you select is the IP address that will be exposed to the Internet.',
+        description: 'Select which gateway to use for this domain.',
         values: this.data()!.gateways,
-        default: '',
-      }),
-      authority: ISB.Value.select({
-        name: 'Default Certificate Authority',
-        description:
-          'Select the default certificate authority that will sign certificates for this domain. You can override this on a case-by-case basis.',
-        values: this.data()!.authorities,
         default: '',
       }),
     }

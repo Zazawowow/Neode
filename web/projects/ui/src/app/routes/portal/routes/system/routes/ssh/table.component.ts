@@ -47,7 +47,7 @@ import { SSHKey } from 'src/app/services/api/api.types'
       } @empty {
         @if (keys()) {
           <tr>
-            <td colspan="5">{{ 'No keys' | i18n }}</td>
+            <td colspan="5">{{ 'No SSH keys' | i18n }}</td>
           </tr>
         } @else {
           @for (i of ['', '']; track $index) {

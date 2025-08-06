@@ -369,7 +369,7 @@ export class LiveApiService extends ApiService {
   }
 
   async testDomain(params: RR.TestDomainReq): Promise<RR.TestDomainRes> {
-    return this.rpcRequest({ method: 'net.domain.test', params })
+    return this.rpcRequest({ method: 'net.domain.test-dns', params })
   }
 
   // wifi
@@ -638,11 +638,11 @@ export class LiveApiService extends ApiService {
     })
   }
 
-  async serverBindingSetPubic(
-    params: RR.ServerBindingSetPublicReq,
-  ): Promise<RR.BindingSetPublicRes> {
+  async serverBindingToggleGateway(
+    params: RR.ServerBindingToggleGatewayReq,
+  ): Promise<RR.ServerBindingToggleGatewayRes> {
     return this.rpcRequest({
-      method: 'server.host.binding.set-public',
+      method: 'server.host.binding.set-gateway-enabled',
       params,
     })
   }
@@ -681,11 +681,11 @@ export class LiveApiService extends ApiService {
     })
   }
 
-  async pkgBindingSetPubic(
-    params: RR.PkgBindingSetPublicReq,
-  ): Promise<RR.BindingSetPublicRes> {
+  async pkgBindingToggleGateway(
+    params: RR.PkgBindingToggleGatewayReq,
+  ): Promise<RR.PkgBindingToggleGatewayRes> {
     return this.rpcRequest({
-      method: 'package.host.binding.set-public',
+      method: 'package.host.binding.set-gateway-enabled',
       params,
     })
   }

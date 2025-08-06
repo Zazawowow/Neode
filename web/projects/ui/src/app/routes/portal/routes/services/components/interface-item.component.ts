@@ -7,7 +7,7 @@ import {
 } from '@angular/core'
 import { RouterLink } from '@angular/router'
 import { T } from '@start9labs/start-sdk'
-import { TuiButton, TuiIcon } from '@taiga-ui/core'
+import { TuiButton } from '@taiga-ui/core'
 import { TuiBadge } from '@taiga-ui/kit'
 import { ConfigService } from 'src/app/services/config.service'
 import { PackageDataEntry } from 'src/app/services/patch-db/data-model'
@@ -20,13 +20,6 @@ import { PackageDataEntry } from 'src/app/services/patch-db/data-model'
     </td>
     <td>
       <tui-badge size="m" [appearance]="appearance">{{ info.type }}</tui-badge>
-    </td>
-    <td [style.text-align]="'center'">
-      @if (info.public) {
-        <tui-icon class="g-positive" icon="@tui.globe" />
-      } @else {
-        <tui-icon class="g-negative" icon="@tui.lock" />
-      }
     </td>
     <td class="g-secondary" [style.grid-area]="'2 / span 4'">
       {{ info.description }}
@@ -86,7 +79,7 @@ import { PackageDataEntry } from 'src/app/services/patch-db/data-model'
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TuiButton, TuiBadge, TuiIcon, RouterLink],
+  imports: [TuiButton, TuiBadge, RouterLink],
 })
 export class ServiceInterfaceItemComponent {
   private readonly config = inject(ConfigService)
@@ -94,7 +87,6 @@ export class ServiceInterfaceItemComponent {
 
   @Input({ required: true })
   info!: T.ServiceInterface & {
-    public: boolean
     routerLink: string
   }
 

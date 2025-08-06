@@ -38,7 +38,7 @@ import {
   TuiButtonSelect,
   TuiDataListWrapper,
 } from '@taiga-ui/kit'
-import { TuiCell, tuiCellOptionsProvider, TuiHeader } from '@taiga-ui/layout'
+import { TuiCell, tuiCellOptionsProvider } from '@taiga-ui/layout'
 import { PolymorpheusComponent } from '@taiga-ui/polymorpheus'
 import { PatchDB } from 'patch-db-client'
 import { filter } from 'rxjs'
@@ -59,14 +59,6 @@ import { SystemWipeComponent } from './wipe.component'
       </a>
       {{ 'General Settings' | i18n }}
     </ng-container>
-    <header tuiHeader>
-      <hgroup tuiTitle>
-        <h3>{{ 'General Settings' | i18n }}</h3>
-        <p tuiSubtitle>
-          {{ 'Manage your overall setup and preferences' | i18n }}
-        </p>
-      </hgroup>
-    </header>
     @if (server(); as server) {
       <div tuiCell tuiAppearance="outline-grayscale">
         <tui-icon icon="@tui.zap" />
@@ -139,16 +131,6 @@ import { SystemWipeComponent } from './wipe.component'
         </button>
       </div>
       <div tuiCell tuiAppearance="outline-grayscale">
-        <tui-icon icon="@tui.award" />
-        <span tuiTitle>
-          <strong>{{ 'Root Certificate Authority' | i18n }}</strong>
-          <span tuiSubtitle>{{ 'Download your Root CA' | i18n }}</span>
-        </span>
-        <button tuiButton iconStart="@tui.download" (click)="downloadCA()">
-          {{ 'Download' | i18n }}
-        </button>
-      </div>
-      <div tuiCell tuiAppearance="outline-grayscale">
         <tui-icon icon="@tui.monitor" />
         <span tuiTitle>
           <strong>
@@ -205,8 +187,6 @@ import { SystemWipeComponent } from './wipe.component'
         src="assets/img/icons/snek.png"
       />
     }
-    <!-- hidden element for downloading cert -->
-    <a id="download-ca" href="/static/local-root-ca.crt"></a>
   `,
   styles: `
     :host {
@@ -239,7 +219,6 @@ import { SystemWipeComponent } from './wipe.component'
     RouterLink,
     i18nPipe,
     TuiTitle,
-    TuiHeader,
     TuiCell,
     TuiAppearance,
     TuiButton,
@@ -345,10 +324,6 @@ export default class SystemGeneralComponent {
       })
       .pipe(filter(Boolean))
       .subscribe(() => this.resetTor(this.wipe))
-  }
-
-  downloadCA() {
-    this.document.getElementById('download-ca')?.click()
   }
 
   async tryToggleKiosk() {

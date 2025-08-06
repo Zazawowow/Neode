@@ -15,7 +15,7 @@ import {
 } from '@taiga-ui/core'
 import { PolymorpheusComponent } from '@taiga-ui/polymorpheus'
 import { QRModal } from 'src/app/routes/portal/modals/qr.component'
-import { InterfaceComponent } from './interface.component'
+import { InterfaceComponent } from '../interface.component'
 
 @Component({
   selector: 'td[actions]',
@@ -114,7 +114,7 @@ import { InterfaceComponent } from './interface.component'
   providers: [tuiButtonOptionsProvider({ appearance: 'icon' })],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InterfaceActionsComponent {
+export class AddressActionsComponent {
   private readonly document = inject(DOCUMENT)
 
   readonly isMobile = inject(TUI_IS_MOBILE)

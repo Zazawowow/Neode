@@ -14,7 +14,6 @@ export const ENGLISH = {
   'Active Sessions': 12,
   'Change Password': 13,
   'General Settings': 14,
-  'Manage your overall setup and preferences': 15,
   'Browser tab title': 16,
   'Language': 17,
   'Disk Repair': 18,
@@ -90,8 +89,6 @@ export const ENGLISH = {
   'Actions': 88, // as in, actions available to the user
   'not recommended': 89,
   'Root CA Trusted!': 90,
-  'Add a clearnet address to expose this interface on the Internet. Clearnet addresses are fully public and not anonymous.': 91,
-  'Learn more': 92,
   'Make public': 93,
   'Make private': 94,
   'No public addresses': 95,
@@ -104,16 +101,12 @@ export const ENGLISH = {
   'Leave': 102,
   'Are you sure?': 103,
   'Select domain': 104,
-  'Local': 105,
-  'Local addresses can only be accessed by devices connected to the same LAN as your server, either directly or using a VPN.': 106,
-  'Learn More': 107,
   'Public': 108,
   'Private': 109,
-  'Add an onion address to anonymously expose this interface on the darknet. Onion addresses can only be reached over the Tor network.': 110,
-  'No onion addresses': 111,
-  'New onion address': 112,
+  'No Tor domains': 111,
+  'New Tor domain': 112,
   'Private Key (optional)': 113,
-  'Optionally provide a base64-encoded ed25519 private key for generating the Tor V3 (.onion) address. If not provided, a random key will be generated and used.': 114,
+  'Optionally provide a base64-encoded ed25519 private key for generating the Tor V3 (.onion) domain. If not provided, a random key will be generated.': 114,
   'Processing 10,000 logs': 115,
   'Loading older logs': 116,
   'Waiting for network connectivity': 117,
@@ -240,7 +233,7 @@ export const ENGLISH = {
   'Name': 240,
   'Status': 241,
   'Open': 242, // verb
-  'Interfaces': 243, // as in user interface or application program interface
+  'Service Interfaces': 243, // as in, a UI or API for an application
   'Hosting': 244,
   'Installing': 245,
   'See below': 246,
@@ -292,7 +285,6 @@ export const ENGLISH = {
   'Upload': 296,
   'Version 1 s9pk detected. This package format is deprecated. You can sideload a V1 s9pk via start-cli if necessary.': 297,
   'Invalid package file': 298,
-  'Adding a domain to StartOS means you can use it and its subdomains to host service interfaces on the public Internet.': 299,
   'View instructions': 300,
   'Contact': 303, //  as in, "contact us"
   'Edit': 304,
@@ -323,8 +315,6 @@ export const ENGLISH = {
   'Hostname': 329,
   'Path': 330, // as in, a URL path
   'URL': 331,
-  'Network Interface': 332,
-  'Protocol': 333, // as in, http protocol
   'Model': 334, // as in, a product model
   'User Agent': 335,
   'Platform': 336, // as in, OS platform, such as iOS, Android, Linux, etc
@@ -371,7 +361,6 @@ export const ENGLISH = {
   'StartOS backups detected': 377,
   'No StartOS backups detected': 378,
   'StartOS Version': 379,
-  'Connecting an external SMTP server allows StartOS and your installed services to send you emails.': 380,
   'SMTP Credentials': 381,
   'Send test email': 382,
   'Send': 383,
@@ -379,7 +368,6 @@ export const ENGLISH = {
   'A test email has been sent to': 385,
   'Check your spam folder and mark as not spam.': 386,
   'The web user interface for your StartOS server, accessible from any browser.': 387,
-  'Change your StartOS master password.': 388,
   'You will still need your current password to decrypt existing backups!': 389,
   'New passwords do not match': 390,
   'New password must be 12 characters or greater': 391,
@@ -389,7 +377,6 @@ export const ENGLISH = {
   'Current Password': 395,
   'New Password': 396,
   'Retype New Password': 397,
-  'A session is a device that is currently logged into StartOS. For best security, terminate sessions you do not recognize or no longer use.': 398,
   'Current session': 399,
   'Other sessions': 400,
   'Terminate selected': 401,
@@ -496,7 +483,6 @@ export const ENGLISH = {
   'sovereign computing': 502,
   'Customize the name appearing in your browser tab': 503,
   'Manage': 504, // as in, administer
-  'Are you sure you want to delete this address?': 505, // this address referes to a domain or URL
   '"Soft uninstall" will remove the service from StartOS but preserve its data.': 506,
   'No saved providers': 507,
   'Kiosk Mode': 508, // an OS mode that permits attaching a monitor to the computer
@@ -510,22 +496,20 @@ export const ENGLISH = {
   'Recommended': 516, // as in, we recommend this
   'Are you sure you want to dismiss this task?': 517,
   'Dismiss': 518, // as in, dismiss or delete a task
-  'To publish clearnet domains, you must click "Make Public", above.': 519,
   'Update available': 520,
   'To resolve the issue, refer to': 521,
   'SDK Version': 522,
   'Backup Report': 523,
   'Delete selected': 524,
-  'No keys': 525,
-  'Add SSH Public Key': 526,
-  'By default, you can SSH into your server from any device using your master password. Optionally add SSH public keys to grant specific devices access without needing to enter a password.': 527,
+  'No SSH keys': 525,
+  'Add SSH key': 526,
+  'SSH Keys': 527,
   'Source Code': 528,
   'Upstream service': 529, // as in, the URL of the source code for the original software
   'StartOS package': 530, // as in, the URL of the source code for the StartOS package
   'Error initializing server': 531,
   'Finished': 532, // an in, complete
   'Gateways': 533, // as in, a device or software that connects two different networks
-  'Gateways connect your server to the Internet. They process outbound traffic, and under certain conditions, they also permit inbound traffic.': 534,
   'Add gateway': 535, // as in, add a new network gateway to StartOS
   'Rename': 536,
   'Access': 537, // as in, public or private access, almost "permission"
@@ -533,10 +517,15 @@ export const ENGLISH = {
   'Certificate Authorities': 539,
   'Domain': 540, // as in, an internat domain name
   'Gateway': 541, // as in, a device or software that connects two different networks
-  'Default Certificate Authority': 542,
   'Certificate Authority': 543,
   'Edit domain': 544,
   'No domains': 545,
   'Provider': 546,
   'Manage DNS': 547,
+  'Clearnet Domains': 548,
+  'No clearnet domains': 549,
+  'Addresses': 550,
+  'Common': 551,
+  'Uncommon': 552,
+  'No addresses': 553,
 } as const

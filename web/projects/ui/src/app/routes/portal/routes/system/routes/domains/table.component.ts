@@ -9,9 +9,7 @@ import { DomainService } from './domain.service'
 @Component({
   selector: 'domains-table',
   template: `
-    <table
-      [appTable]="['Domain', 'Gateway', 'Default Certificate Authority', null]"
-    >
+    <table [appTable]="['Domain', 'Gateway', null]">
       @for (domain of domainService.data()?.domains; track $index) {
         <tr [domain]="domain"></tr>
       } @empty {

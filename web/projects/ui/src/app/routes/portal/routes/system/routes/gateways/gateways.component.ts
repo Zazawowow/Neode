@@ -15,7 +15,6 @@ import { ApiService } from 'src/app/services/api/embassy-api.service'
 import { GatewaysTableComponent } from './table.component'
 import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
 import { TitleDirective } from 'src/app/services/title.service'
-import { TuiHeader } from '@taiga-ui/layout'
 import { map } from 'rxjs'
 import { ISB } from '@start9labs/start-sdk'
 import { GatewayPlus } from './item.component'
@@ -28,30 +27,18 @@ import { GatewayPlus } from './item.component'
       </a>
       {{ 'Gateways' | i18n }}
     </ng-container>
-    <header tuiHeader>
-      <hgroup tuiTitle>
-        <h3>{{ 'Gateways' | i18n }}</h3>
-        <p tuiSubtitle>
-          {{
-            'Gateways connect your server to the Internet. They process outbound traffic, and under certain conditions, they also permit inbound traffic.'
-              | i18n
-          }}
-          <a
-            tuiLink
-            docsLink
-            path="/user-manual/gateways.html"
-            appearance="action-grayscale"
-            iconEnd="@tui.external-link"
-            [pseudo]="true"
-            [textContent]="'View instructions' | i18n"
-          ></a>
-        </p>
-      </hgroup>
-    </header>
 
     <section class="g-card">
       <header>
         {{ 'Gateways' | i18n }}
+        <a
+          tuiLink
+          docsLink
+          path="/user-manual/gateways.html"
+          appearance="action-grayscale"
+          iconEnd="@tui.external-link"
+          [pseudo]="true"
+        ></a>
         <button
           tuiButton
           size="xs"
@@ -70,7 +57,6 @@ import { GatewayPlus } from './item.component'
     CommonModule,
     TuiButton,
     GatewaysTableComponent,
-    TuiHeader,
     TitleDirective,
     i18nPipe,
     TuiLink,

@@ -72,6 +72,12 @@ export default [
         loadComponent: () => import('./routes/gateways/gateways.component'),
       },
       {
+        path: 'authorities',
+        title: titleResolver,
+        loadComponent: () =>
+          import('./routes/authorities/authorities.component'),
+      },
+      {
         path: 'domains',
         title: titleResolver,
         loadComponent: () => import('./routes/domains/domains.component'),

@@ -14,8 +14,7 @@ import {
   LoadingService,
 } from '@start9labs/shared'
 import { ISB } from '@start9labs/start-sdk'
-import { TuiButton, TuiLink, TuiTitle } from '@taiga-ui/core'
-import { TuiHeader } from '@taiga-ui/layout'
+import { TuiButton, TuiLink } from '@taiga-ui/core'
 import { filter, from, merge, Subject } from 'rxjs'
 import { FormComponent } from 'src/app/routes/portal/components/form.component'
 import { SSHKey } from 'src/app/services/api/api.types'
@@ -33,30 +32,18 @@ import { SSHTableComponent } from './table.component'
       </a>
       SSH
     </ng-container>
-    <header tuiHeader>
-      <hgroup tuiTitle>
-        <h3>SSH</h3>
-        <p tuiSubtitle>
-          {{
-            'By default, you can SSH into your server from any device using your master password. Optionally add SSH public keys to grant specific devices access without needing to enter a password.'
-              | i18n
-          }}
-          <a
-            tuiLink
-            docsLink
-            path="/user-manual/ssh.html"
-            appearance="action-grayscale"
-            iconEnd="@tui.external-link"
-            [pseudo]="true"
-            [textContent]="'View instructions' | i18n"
-          ></a>
-        </p>
-      </hgroup>
-    </header>
     @let keys = keys$ | async;
     <section class="g-card">
       <header>
-        Saved Keys
+        {{ 'SSH Keys' | i18n }}
+        <a
+          tuiLink
+          docsLink
+          path="/user-manual/ssh.html"
+          appearance="action-grayscale"
+          iconEnd="@tui.external-link"
+          [pseudo]="true"
+        ></a>
         <button
           tuiButton
           size="xs"
@@ -95,8 +82,6 @@ import { SSHTableComponent } from './table.component'
     SSHTableComponent,
     RouterLink,
     TitleDirective,
-    TuiHeader,
-    TuiTitle,
     TuiLink,
     i18nPipe,
     DocsLinkDirective,
@@ -118,7 +103,7 @@ export default class SystemSSHComponent {
 
   async add(all: readonly SSHKey[]) {
     this.formDialog.open(FormComponent, {
-      label: 'Add SSH Public Key',
+      label: 'Add SSH key',
       data: {
         spec: await configBuilderToSpec(SSHSpec),
         buttons: [

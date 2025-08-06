@@ -613,7 +613,6 @@ export class MockApiService extends ApiService {
         value: {
           [params.fqdn]: {
             gateway: params.gateway,
-            acme: params.acme,
           },
         },
       },
@@ -1369,16 +1368,16 @@ export class MockApiService extends ApiService {
     return 'abcdefghijklmnopqrstuv'
   }
 
-  async serverBindingSetPubic(
-    params: RR.PkgBindingSetPublicReq,
-  ): Promise<RR.BindingSetPublicRes> {
+  async serverBindingToggleGateway(
+    params: RR.ServerBindingToggleGatewayReq,
+  ): Promise<RR.ServerBindingToggleGatewayRes> {
     await pauseFor(2000)
 
     const patch = [
       {
         op: PatchOp.REPLACE,
-        path: `/serverInfo/host/bindings/${params.internalPort}/net/public`,
-        value: params.public,
+        path: `/serverInfo/network/host/bindings/${params.internalPort}/net/publicEnabled`,
+        value: params.enabled ? [params.gateway] : [],
       },
     ]
     this.mockRevision(patch)
@@ -1443,7 +1442,7 @@ export class MockApiService extends ApiService {
         op: PatchOp.ADD,
         path: `/serverInfo/host/domains`,
         value: {
-          [params.domain]: { public: !params.private, acme: params.acme },
+          [params.fqdn]: { public: !params.private, acme: params.acme },
         },
       },
       {
@@ -1455,7 +1454,7 @@ export class MockApiService extends ApiService {
           public: false,
           hostname: {
             kind: 'domain',
-            domain: params.domain,
+            domain: params.fqdn,
             subdomain: null,
             port: null,
             sslPort: 443,
@@ -1476,7 +1475,7 @@ export class MockApiService extends ApiService {
     const patch: RemoveOperation[] = [
       {
         op: PatchOp.REMOVE,
-        path: `/serverInfo/host/domains/${params.domain}`,
+        path: `/serverInfo/host/domains/${params.fqdn}`,
       },
       {
         op: PatchOp.REMOVE,
@@ -1488,16 +1487,16 @@ export class MockApiService extends ApiService {
     return null
   }
 
-  async pkgBindingSetPubic(
-    params: RR.PkgBindingSetPublicReq,
-  ): Promise<RR.BindingSetPublicRes> {
+  async pkgBindingToggleGateway(
+    params: RR.PkgBindingToggleGatewayReq,
+  ): Promise<RR.PkgBindingToggleGatewayRes> {
     await pauseFor(2000)
 
     const patch = [
       {
         op: PatchOp.REPLACE,
-        path: `/packageData/${params.package}/hosts/${params.host}/bindings/${params.internalPort}/net/public`,
-        value: params.public,
+        path: `/packageData/${params.package}/hosts/${params.host}/bindings/${params.internalPort}/net/privateDisabled`,
+        value: params.enabled ? [] : [params.gateway],
       },
     ]
     this.mockRevision(patch)
@@ -1560,7 +1559,7 @@ export class MockApiService extends ApiService {
         op: PatchOp.ADD,
         path: `/packageData/${params.package}/hosts/${params.host}/domains`,
         value: {
-          [params.domain]: { public: !params.private, acme: params.acme },
+          [params.fqdn]: { public: !params.private, acme: params.acme },
         },
       },
       {
@@ -1572,7 +1571,7 @@ export class MockApiService extends ApiService {
           public: false,
           hostname: {
             kind: 'domain',
-            domain: params.domain,
+            domain: params.fqdn,
             subdomain: null,
             port: null,
             sslPort: 443,
@@ -1593,7 +1592,7 @@ export class MockApiService extends ApiService {
     const patch: RemoveOperation[] = [
       {
         op: PatchOp.REMOVE,
-        path: `/packageData/${params.package}/hosts/${params.host}/domains/${params.domain}`,
+        path: `/packageData/${params.package}/hosts/${params.host}/domains/${params.fqdn}`,
       },
       {
         op: PatchOp.REMOVE,

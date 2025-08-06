@@ -3,8 +3,8 @@ import { RouterLink } from '@angular/router'
 import { DocsLinkDirective, i18nPipe } from '@start9labs/shared'
 import { TuiButton, TuiLink } from '@taiga-ui/core'
 import { TitleDirective } from 'src/app/services/title.service'
-import { DomainService } from './domain.service'
-import { DomainsTableComponent } from './table.component'
+import { AuthorityService } from './authority.service'
+import { AuthoritiesTableComponent } from './table.component'
 
 @Component({
   template: `
@@ -12,33 +12,32 @@ import { DomainsTableComponent } from './table.component'
       <a routerLink=".." tuiIconButton iconStart="@tui.arrow-left">
         {{ 'Back' | i18n }}
       </a>
-      {{ 'Domains' | i18n }}
+      {{ 'Certificate Authorities' | i18n }}
     </ng-container>
-
     <section class="g-card">
       <header>
-        {{ 'Domains' | i18n }}
+        {{ 'Certificate Authorities' | i18n }}
         <a
           tuiLink
           docsLink
-          path="/user-manual/domains.html"
+          path="/user-manual/authorities.html"
           appearance="action-grayscale"
           iconEnd="@tui.external-link"
           [pseudo]="true"
         ></a>
-        @if (domainService.data(); as value) {
+        @if (authorityService.authorities(); as authorities) {
           <button
             tuiButton
             size="xs"
             iconStart="@tui.plus"
             [style.margin-inline-start]="'auto'"
-            (click)="domainService.add()"
+            (click)="authorityService.add(authorities)"
           >
-            Add
+            {{ 'Add' | i18n }}
           </button>
         }
       </header>
-      <domains-table />
+      <authorities-table />
     </section>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -49,10 +48,10 @@ import { DomainsTableComponent } from './table.component'
     TitleDirective,
     i18nPipe,
     DocsLinkDirective,
-    DomainsTableComponent,
+    AuthoritiesTableComponent,
   ],
-  providers: [DomainService],
+  providers: [AuthorityService],
 })
-export default class SystemDomainsComponent {
-  protected readonly domainService = inject(DomainService)
+export default class SystemAuthoritiesComponent {
+  protected readonly authorityService = inject(AuthorityService)
 }

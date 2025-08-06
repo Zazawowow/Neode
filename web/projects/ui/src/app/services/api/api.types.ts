@@ -239,7 +239,6 @@ export namespace RR {
   export type AddDomainReq = {
     fqdn: string
     gateway: string
-    acme: string | null
   } // net.domain.add
   export type AddDomainRes = null
 
@@ -251,7 +250,7 @@ export namespace RR {
   export type TestDomainReq = {
     fqdn: string
     gateway: string
-  } // net.domain.test
+  } // net.domain.test-dns
   export type TestDomainRes = {
     root: boolean
     wildcard: boolean
@@ -293,12 +292,13 @@ export namespace RR {
   export type GenerateTorKeyReq = {} // net.tor.key.generate
   export type AddTorKeyRes = string // onion address without .onion suffix
 
-  export type ServerBindingSetPublicReq = {
-    // server.host.binding.set-public
-    internalPort: number
-    public: boolean | null // default true
+  export type ServerBindingToggleGatewayReq = {
+    // server.host.binding.set-gateway-enabled
+    gateway: T.GatewayId
+    internalPort: 80
+    enabled: boolean
   }
-  export type BindingSetPublicRes = null
+  export type ServerBindingToggleGatewayRes = null
 
   export type ServerAddOnionReq = {
     // server.host.address.onion.add
@@ -311,23 +311,25 @@ export namespace RR {
 
   export type OsUiAddDomainReq = {
     // server.host.address.domain.add
-    domain: string // FQDN
+    fqdn: string // FQDN
     private: boolean
-    acme: string | null // Url | null
+    acme: string | null // URL. null means local Root CA
   }
   export type OsUiAddDomainRes = null
 
   export type OsUiRemoveDomainReq = {
     // server.host.address.domain.remove
-    domain: string // FQDN
+    fqdn: string // FQDN
   }
   export type OsUiRemoveDomainRes = null
 
-  export type PkgBindingSetPublicReq = ServerBindingSetPublicReq & {
-    // package.host.binding.set-public
+  export type PkgBindingToggleGatewayReq = ServerBindingToggleGatewayReq & {
+    // package.host.binding.set-gateway-enabled
+    internalPort: number
     package: T.PackageId // string
     host: T.HostId // string
   }
+  export type PkgBindingToggleGatewayRes = null
 
   export type PkgAddOnionReq = ServerAddOnionReq & {
     // package.host.address.onion.add

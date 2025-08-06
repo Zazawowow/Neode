@@ -31,31 +31,21 @@ import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
       </a>
       {{ 'Email' | i18n }}
     </ng-container>
-    <header tuiHeader>
-      <hgroup tuiTitle>
-        <h3>{{ 'Email' | i18n }}</h3>
-        <p tuiSubtitle>
-          {{
-            'Connecting an external SMTP server allows StartOS and your installed services to send you emails.'
-              | i18n
-          }}
-          <a
-            tuiLink
-            docsLink
-            path="/user-manual/smtp.html"
-            appearance="action-grayscale"
-            iconEnd="@tui.external-link"
-            [pseudo]="true"
-            [textContent]="'View instructions' | i18n"
-          ></a>
-        </p>
-      </hgroup>
-    </header>
     @if (form$ | async; as form) {
       <form [formGroup]="form">
         <header tuiHeader="body-l">
           <h3 tuiTitle>
-            <b>{{ 'SMTP Credentials' | i18n }}</b>
+            <b>
+              {{ 'SMTP Credentials' | i18n }}
+              <a
+                tuiLink
+                docsLink
+                path="/user-manual/smtp.html"
+                appearance="action-grayscale"
+                iconEnd="@tui.external-link"
+                [pseudo]="true"
+              ></a>
+            </b>
           </h3>
         </header>
         @if (spec | async; as resolved) {

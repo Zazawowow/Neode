@@ -1,10 +1,8 @@
-import { i18nKey } from '@start9labs/shared'
-
 export const SYSTEM_MENU = [
   [
     {
-      icon: '@tui.settings',
-      item: 'General',
+      icon: '@tui.wrench',
+      item: 'General Settings',
       link: 'general',
     },
   ],
@@ -44,6 +42,11 @@ export const SYSTEM_MENU = [
       link: 'gateways',
     },
     {
+      icon: '@tui.award',
+      item: 'Certificate Authorities',
+      link: 'authorities',
+    },
+    {
       icon: '@tui.globe',
       item: 'Domains',
       link: 'domains',
@@ -57,7 +60,7 @@ export const SYSTEM_MENU = [
     },
     {
       icon: '@tui.terminal',
-      item: 'SSH' as i18nKey,
+      item: 'SSH Keys',
       link: 'ssh',
     },
     {

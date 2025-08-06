@@ -31,13 +31,10 @@ import { getServerInfo } from 'src/app/utils/get-server-info'
       <hgroup tuiTitle>
         <h3>{{ 'Change Password' | i18n }}</h3>
         <p tuiSubtitle>
-          {{ 'Change your StartOS master password.' | i18n }}
-          <strong>
-            {{
-              'You will still need your current password to decrypt existing backups!'
-                | i18n
-            }}
-          </strong>
+          {{
+            'You will still need your current password to decrypt existing backups!'
+              | i18n
+          }}
         </p>
       </hgroup>
     </header>

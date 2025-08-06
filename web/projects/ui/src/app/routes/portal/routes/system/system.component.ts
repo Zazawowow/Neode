@@ -34,7 +34,7 @@ import { map } from 'rxjs'
             <span tuiTitle>
               <span>
                 {{ page.item | i18n }}
-                @if (page.item === 'General' && badge()) {
+                @if (page.item === 'General Settings' && badge()) {
                   <tui-badge-notification>{{ badge() }}</tui-badge-notification>
                 }
               </span>
