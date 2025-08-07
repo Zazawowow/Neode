@@ -30,7 +30,7 @@ import { DomainService, MappedDomain } from './domain.service'
           [(tuiDropdownOpen)]="open"
         >
           {{ 'More' | i18n }}
-          <tui-data-list size="s" *tuiTextfieldDropdown>
+          <tui-data-list *tuiTextfieldDropdown>
             <tui-opt-group>
               <button
                 tuiOption
@@ -74,11 +74,6 @@ import { DomainService, MappedDomain } from './domain.service'
 
     :host-context(tui-root._mobile) {
       grid-template-columns: 1fr min-content;
-
-      td:first-child {
-        font: var(--tui-font-text-m);
-        font-weight: bold;
-      }
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

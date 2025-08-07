@@ -9,17 +9,14 @@ import { InterfaceAddressesComponent } from './addresses/addresses.component'
 @Component({
   selector: 'service-interface',
   template: `
-    <section class="g-card" [gateways]="value().gateways"></section>
-    <section class="g-card" [torDomains]="value().torDomains"></section>
-    <section
-      class="g-card"
-      [clearnetDomains]="value().clearnetDomains"
-    ></section>
-    <section
-      class="g-card"
-      [addresses]="value().addresses"
-      [isRunning]="true"
-    ></section>
+    <!-- @TODO Alex / Matt translation in all nested components -->
+    <div [style.display]="'grid'">
+      <section [gateways]="value().gateways"></section>
+      <section [torDomains]="value().torDomains"></section>
+      <section [clearnetDomains]="value().clearnetDomains"></section>
+    </div>
+    <hr [style.width.rem]="10" />
+    <section [addresses]="value().addresses" [isRunning]="true"></section>
   `,
   styles: `
     :host {
@@ -29,9 +26,13 @@ import { InterfaceAddressesComponent } from './addresses/addresses.component'
       color: var(--tui-text-secondary);
       font: var(--tui-font-text-l);
 
-      ::ng-deep td {
-        overflow-wrap: anywhere;
+      div {
+        gap: inherit;
       }
+    }
+
+    :host-context(tui-root._mobile) section {
+      grid-column: span 1;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

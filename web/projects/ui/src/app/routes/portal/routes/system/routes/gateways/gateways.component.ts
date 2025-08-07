@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common'
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core'
+import { RouterLink } from '@angular/router'
 import {
   DocsLinkDirective,
   ErrorService,
@@ -55,11 +56,12 @@ import { GatewayPlus } from './item.component'
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
+    RouterLink,
     TuiButton,
+    TuiLink,
     GatewaysTableComponent,
     TitleDirective,
     i18nPipe,
-    TuiLink,
     DocsLinkDirective,
   ],
 })

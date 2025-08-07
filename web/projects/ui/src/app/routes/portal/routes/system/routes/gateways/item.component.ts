@@ -59,7 +59,7 @@ export type GatewayPlus = T.NetworkInterfaceInfo & {
           [(tuiDropdownOpen)]="open"
         >
           {{ 'More' | i18n }}
-          <tui-data-list size="s" *tuiTextfieldDropdown>
+          <tui-data-list *tuiTextfieldDropdown>
             <tui-opt-group>
               <button tuiOption new iconStart="@tui.pencil" (click)="rename()">
                 {{ 'Rename' | i18n }}
@@ -92,11 +92,6 @@ export type GatewayPlus = T.NetworkInterfaceInfo & {
 
     :host-context(tui-root._mobile) {
       grid-template-columns: min-content 1fr min-content;
-
-      td:first-child {
-        font: var(--tui-font-text-m);
-        font-weight: bold;
-      }
 
       .type {
         order: -1;
