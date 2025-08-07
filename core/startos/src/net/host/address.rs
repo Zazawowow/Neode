@@ -194,7 +194,12 @@ pub async fn add_domain<Kind: HostApiKind>(
                 .as_domains()
                 .keys()?
                 .into_iter()
-                .find(|root| domain.ends_with(&**root))
+                .find(|root| {
+                    domain == root
+                        || domain
+                            .strip_suffix(&**root)
+                            .map_or(false, |d| d.ends_with("."))
+                })
                 .or_not_found(lazy_format!("root domain for {domain}"))?;
 
             if let Some(acme) = &acme {
@@ -208,7 +213,6 @@ pub async fn add_domain<Kind: HostApiKind>(
                     return Err(Error::new(eyre!("unknown acme provider {}, please run acme.init for this provider first", acme.0), ErrorKind::InvalidRequest));
                 }
             }
-
 
             Kind::host_for(&inheritance, db)?.as_domains_mut().insert(
                 domain,

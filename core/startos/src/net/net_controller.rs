@@ -385,8 +385,7 @@ impl NetServiceData {
                                     gateway_id: interface.clone(),
                                     public, // TODO: check if port forward is active
                                     hostname: IpHostname::Domain {
-                                        domain: address.clone(),
-                                        subdomain: None,
+                                        value: address.clone(),
                                         port: None,
                                         ssl_port: Some(443),
                                     },
@@ -396,8 +395,7 @@ impl NetServiceData {
                                     gateway_id: interface.clone(),
                                     public,
                                     hostname: IpHostname::Domain {
-                                        domain: address.clone(),
-                                        subdomain: None,
+                                        value: address.clone(),
                                         port: bind.net.assigned_port,
                                         ssl_port: bind.net.assigned_ssl_port,
                                     },

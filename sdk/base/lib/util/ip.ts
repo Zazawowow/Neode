@@ -73,3 +73,5 @@ export const PRIVATE_IPV4_RANGES = [
   new IpNet("172.16.0.0/12"),
   new IpNet("192.168.0.0/16"),
 ]
+
+export const IPV6_LINK_LOCAL = new IpNet("fe80::/10")

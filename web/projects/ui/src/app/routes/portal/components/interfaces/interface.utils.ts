@@ -7,12 +7,24 @@ type AddressWithInfo = {
   info: T.HostnameInfo
 }
 
-function filterTor(a: AddressWithInfo): a is (AddressWithInfo & { info: { kind: 'onion' } }) {
-  return a.info.kind === 'onion'
+function cmpWithRankedPredicates<T extends AddressWithInfo>(
+  a: T,
+  b: T,
+  preds: ((x: T) => boolean)[],
+): -1 | 0 | 1 {
+  for (const pred of preds) {
+    for (let [x, y, sign] of [[a, b, 1] as const, [b, a, -1] as const]) {
+      if (pred(x) && !pred(y)) return sign
+    }
+  }
+  return 0
 }
 
-function cmpTor(a: AddressWithInfo, b: AddressWithInfo): -1 | 0 | 1 {
-  if (!filterTor(a) || !filterTor(b)) return 0
+type TorAddress = AddressWithInfo & { info: { kind: 'onion' } }
+function filterTor(a: AddressWithInfo): a is TorAddress {
+  return a.info.kind === 'onion'
+}
+function cmpTor(a: TorAddress, b: TorAddress): -1 | 0 | 1 {
   for (let [x, y, sign] of [[a, b, 1] as const, [b, a, -1] as const]) {
     if (x.address.protocol === 'http:' && y.address.protocol === 'https:')
       return sign
@@ -20,17 +32,68 @@ function cmpTor(a: AddressWithInfo, b: AddressWithInfo): -1 | 0 | 1 {
   return 0
 }
 
-function filterLan(a: AddressWithInfo): a is (AddressWithInfo & { info: { kind: 'ip', public: false } }) {
+type LanAddress = AddressWithInfo & { info: { kind: 'ip'; public: false } }
+function filterLan(a: AddressWithInfo): a is LanAddress {
   return a.info.kind === 'ip' && !a.info.public
 }
+function cmpLan(host: T.Host, a: LanAddress, b: LanAddress): -1 | 0 | 1 {
+  return cmpWithRankedPredicates(a, b, [
+    x =>
+      x.info.hostname.kind === 'domain' &&
+      !host.domains[x.info.hostname.value]?.public, // private domain
+    x => x.info.hostname.kind === 'local', // .local
+    x => x.info.hostname.kind === 'ipv4', // ipv4
+  ])
+}
 
-function cmpLan(host: T.Host, a: AddressWithInfo, b: AddressWithInfo): -1 | 0 | 1 {
-  if (!filterLan(a) || !filterLan(b)) return 0
-  for (let [x, y, sign] of [[a, b, 1] as const, [b, a, -1] as const]) {
-    if (x.info.kind === 'domain' && host.domains.)
-      return sign
+type VpnAddress = AddressWithInfo & {
+  info: {
+    kind: 'ip'
+    public: false
+    hostname: { kind: 'ipv4' | 'ipv6' | 'domain' }
   }
-  return 0
+}
+function filterVpn(a: AddressWithInfo): a is VpnAddress {
+  return (
+    a.info.kind === 'ip' && !a.info.public && a.info.hostname.kind !== 'local'
+  )
+}
+function cmpVpn(host: T.Host, a: VpnAddress, b: VpnAddress): -1 | 0 | 1 {
+  return cmpWithRankedPredicates(a, b, [
+    x =>
+      x.info.hostname.kind === 'domain' &&
+      !host.domains[x.info.hostname.value]?.public, // private domain
+    x => x.info.hostname.kind === 'ipv4', // ipv4
+  ])
+}
+
+type ClearnetAddress = AddressWithInfo & {
+  info: {
+    kind: 'ip'
+    public: true
+    hostname: { kind: 'ipv4' | 'ipv6' | 'domain' }
+  }
+}
+function filterClearnet(a: AddressWithInfo): a is ClearnetAddress {
+  return a.info.kind === 'ip' && a.info.public
+}
+function cmpClearnet(
+  domains: Record<string, T.DomainSettings>,
+  host: T.Host,
+  a: ClearnetAddress,
+  b: ClearnetAddress,
+): -1 | 0 | 1 {
+  return cmpWithRankedPredicates(a, b, [
+    x =>
+      x.info.hostname.kind === 'domain' &&
+      x.info.gatewayId ===
+        domains[host.domains[x.info.hostname.value]?.root!]?.gateway, // public domain for this gateway
+    x => x.info.hostname.kind === 'ipv4', // ipv4
+  ])
+}
+
+function toDisplayAddress(a: AddressWithInfo): Address {
+  throw new Error('@TODO: MattHill')
 }
 
 @Injectable({
@@ -40,6 +103,7 @@ export class InterfaceService {
   private readonly config = inject(ConfigService)
 
   getAddresses(
+    serverDomains: Record<string, T.DomainSettings>,
     serviceInterface: T.ServiceInterface,
     host: T.Host,
   ): MappedServiceInterface['addresses'] {
@@ -52,56 +116,35 @@ export class InterfaceService {
 
     if (!hostnamesInfos.length) return addresses
 
-    hostnamesInfos.forEach(h => {
-      const addresses = utils.addressHostToUrl(serviceInterface.addressInfo, h)
+    const allAddressesWithInfo: AddressWithInfo[] = hostnamesInfos.flatMap(h =>
+      utils
+        .addressHostToUrl(serviceInterface.addressInfo, h)
+        .map(a => ({ address: new URL(a), info: h })),
+    )
 
-      addresses.forEach(url => {
-        if (h.kind === 'onion') {
-          tor.push({
-            protocol: /^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(url)
-              ? new URL(url).protocol.replace(':', '').toUpperCase()
-              : null,
-            url,
-          })
-        } else {
-          const hostnameKind = h.hostname.kind
+    const torAddrs = allAddressesWithInfo.filter(filterTor).sort(cmpTor)
+    const lanAddrs = allAddressesWithInfo
+      .filter(filterLan)
+      .sort((a, b) => cmpLan(host, a, b))
+    const vpnAddrs = allAddressesWithInfo
+      .filter(filterVpn)
+      .sort((a, b) => cmpVpn(host, a, b))
+    const clearnetAddrs = allAddressesWithInfo
+      .filter(filterClearnet)
+      .sort((a, b) => cmpClearnet(serverDomains, host, a, b))
 
-          if (
-            h.public ||
-            (hostnameKind === 'domain' &&
-              host.domains[h.hostname.domain]?.public)
-          ) {
-            clearnet.push({
-              url,
-              disabled: !h.public,
-              isDomain: hostnameKind == 'domain',
-              authority:
-                hostnameKind == 'domain'
-                  ? host.domains[h.hostname.domain]?.acme || null
-                  : null,
-            })
-          } else {
-            local.push({
-              nid:
-                hostnameKind === 'local'
-                  ? 'Local'
-                  : `${h.gatewayId} (${hostnameKind})`,
-              url,
-            })
-          }
-        }
-      })
-    })
+    let bestAddrs = [clearnetAddrs[0], lanAddrs[0], vpnAddrs[0], torAddrs[0]]
+      .filter(a => !!a)
+      .reduce((acc, x) => {
+        if (!acc.includes(x)) acc.push(x)
+        return acc
+      }, [] as AddressWithInfo[])
 
     return {
-      common: common.filter(
-        (value, index, self) =>
-          index === self.findIndex(t => t.url === value.url),
-      ),
-      uncommon: uncommon.filter(
-        (value, index, self) =>
-          index === self.findIndex(t => t.url === value.url),
-      ),
+      common: bestAddrs.map(toDisplayAddress),
+      uncommon: allAddressesWithInfo
+        .filter(a => !bestAddrs.includes(a))
+        .map(toDisplayAddress),
     }
   }
 
@@ -158,7 +201,7 @@ export class InterfaceService {
       .filter(h => h.kind === 'domain')
       .map(h => h as T.IpHostname & { kind: 'domain' })
       .map(h => ({
-        value: h.domain,
+        value: h.value,
         sslPort: h.sslPort,
         port: h.port,
       }))[0]
@@ -235,7 +278,7 @@ export class InterfaceService {
           !(
             h.kind === 'ip' &&
             ((h.hostname.kind === 'ipv6' &&
-              h.hostname.value.startsWith('fe80::')) ||
+              utils.IPV6_LINK_LOCAL.contains(h.hostname.value)) ||
               h.gatewayId === 'lo')
           ),
       ) || []
