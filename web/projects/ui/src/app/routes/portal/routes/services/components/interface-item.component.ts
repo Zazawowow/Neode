@@ -108,7 +108,9 @@ export class ServiceInterfaceItemComponent {
   }
 
   get href() {
-    return this.config.launchableAddress(this.info, this.pkg.hosts)
+    const host = this.pkg.hosts[this.info.addressInfo.hostId]
+    if (!host) return ''
+    return this.config.launchableAddress(this.info, host)
   }
 
   openUI() {

@@ -26,7 +26,7 @@ import { InterfaceGateway } from './interface.utils'
           [showIcons]="false"
           [ngModel]="gateway.enabled"
           (ngModelChange)="onToggle(gateway)"
-          [disabled]="osUi() && !gateway.public"
+          [disabled]="isOs() && !gateway.public"
         />
       </label>
     }
@@ -37,7 +37,7 @@ import { InterfaceGateway } from './interface.utils'
 })
 export class InterfaceGatewaysComponent {
   readonly gateways = input.required<InterfaceGateway[]>()
-  readonly osUi = input.required<boolean>()
+  readonly isOs = input.required<boolean>()
 
   async onToggle(gateway: InterfaceGateway) {}
 }

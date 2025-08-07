@@ -35,7 +35,7 @@ import { TitleDirective } from 'src/app/services/title.service'
       </hgroup>
     </header>
     @if (ui(); as ui) {
-      <service-interface [value]="ui" [isRunning]="true" [osUi]="true" />
+      <service-interface [value]="ui" [isRunning]="true" />
     }
   `,
   host: { class: 'g-subpage' },
@@ -90,6 +90,7 @@ export default class StartOsUiComponent {
             ],
             torDomains: [],
             clearnetDomains: [],
+            isOs: true,
           }
         }),
       ),

@@ -86,7 +86,9 @@ export class UILaunchComponent {
   }
 
   getHref(ui: T.ServiceInterface): string {
-    return this.config.launchableAddress(ui, this.pkg.hosts)
+    const host = this.pkg.hosts[ui.addressInfo.hostId]
+    if (!host) return ''
+    return this.config.launchableAddress(ui, host)
   }
 
   openUI(ui: T.ServiceInterface) {

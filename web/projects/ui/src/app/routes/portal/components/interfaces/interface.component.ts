@@ -11,7 +11,7 @@ import { InterfaceAddressesComponent } from './addresses/addresses.component'
   template: `
     <!-- @TODO Alex / Matt translation in all nested components -->
     <div [style.display]="'grid'">
-      <section [gateways]="value().gateways" [osUi]="osUi()"></section>
+      <section [gateways]="value().gateways" [isOs]="value().isOs"></section>
       <section [torDomains]="value().torDomains"></section>
       <section [clearnetDomains]="value().clearnetDomains"></section>
     </div>
@@ -48,5 +48,4 @@ export class InterfaceComponent {
   readonly packageId = input('')
   readonly value = input.required<MappedServiceInterface>()
   readonly isRunning = input.required<boolean>()
-  readonly osUi = input(false)
 }
