@@ -528,4 +528,5 @@ export const ENGLISH = {
   'Common': 551,
   'Uncommon': 552,
   'No addresses': 553,
+  'Change CA': 554,
 } as const

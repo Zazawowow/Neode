@@ -77,10 +77,24 @@ import { ClearnetDomain } from './interface.utils'
                     <button
                       tuiOption
                       new
-                      iconStart="@tui.pencil"
-                      (click)="edit(domain)"
+                      [iconStart]="
+                        domain.public ? '@tui.globe-lock' : '@tui.globe'
+                      "
+                      (click)="togglePrivate(domain)"
                     >
-                      {{ 'Edit' | i18n }}
+                      {{
+                        domain.public
+                          ? ('Make private' | i18n)
+                          : ('Make public' | i18n)
+                      }}
+                    </button>
+                    <button
+                      tuiOption
+                      new
+                      iconStart="@tui.award"
+                      (click)="changeCa(domain)"
+                    >
+                      {{ 'Change CA' | i18n }}
                     </button>
                   </tui-opt-group>
                   <tui-opt-group>
@@ -132,9 +146,15 @@ export class InterfaceClearnetDomainsComponent {
 
   open = false
 
-  async add() {}
+  // @TODO add, toggle, and change CA call same idempotent endpoint, either pkgAddDomain or osUiAddDomain
 
-  async edit(domain: ClearnetDomain) {}
+  async add() {
+    // @TODO baseDomain (select), subdomain (optional)(text), certificateAuthority (select), public/private (select)
+  }
+
+  async togglePrivate(domain: ClearnetDomain) {}
+
+  async changeCa(domain: ClearnetDomain) {}
 
   async remove(fqdn: string) {
     this.dialog
