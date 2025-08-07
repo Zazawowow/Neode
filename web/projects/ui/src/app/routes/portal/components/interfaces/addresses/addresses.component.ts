@@ -32,7 +32,7 @@ import { AddressActionsComponent } from './actions.component'
       } @empty {
         <tr>
           <td colspan="5">
-            <app-placeholder icon="@tui.app-window">
+            <app-placeholder icon="@tui.list-x">
               {{ 'No addresses' | i18n }}
             </app-placeholder>
           </td>
