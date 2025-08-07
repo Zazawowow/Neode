@@ -12,16 +12,17 @@ import {
   tuiButtonOptionsProvider,
   TuiDataList,
   TuiDropdown,
+  TuiTextfield,
 } from '@taiga-ui/core'
 import { PolymorpheusComponent } from '@taiga-ui/polymorpheus'
 import { QRModal } from 'src/app/routes/portal/modals/qr.component'
+
 import { InterfaceComponent } from '../interface.component'
 
 @Component({
   selector: 'td[actions]',
   template: `
     <div class="desktop">
-      <ng-content />
       @if (interface.value().type === 'ui') {
         <button
           tuiIconButton
@@ -52,46 +53,48 @@ import { InterfaceComponent } from '../interface.component'
     </div>
     <div class="mobile">
       <button
+        tuiDropdown
         tuiIconButton
+        appearance="flat-grayscale"
         iconStart="@tui.ellipsis-vertical"
-        tuiDropdownOpen
-        [tuiDropdown]="dropdown"
+        [tuiAppearanceState]="open ? 'hover' : null"
+        [(tuiDropdownOpen)]="open"
       >
         {{ 'Actions' | i18n }}
-        <ng-template #dropdown let-close>
-          <tui-data-list>
-            <tui-opt-group>
-              @if (interface.value().type === 'ui') {
-                <button
-                  tuiOption
-                  iconStart="@tui.external-link"
-                  [disabled]="disabled()"
-                  (click)="openUI()"
-                >
-                  {{ 'Open' | i18n }}
-                </button>
-              }
-              <button tuiOption iconStart="@tui.qr-code" (click)="showQR()">
-                {{ 'Show QR' | i18n }}
-              </button>
-              <button
-                tuiOption
-                iconStart="@tui.copy"
-                (click)="copyService.copy(href()); close()"
-              >
-                {{ 'Copy URL' | i18n }}
-              </button>
-            </tui-opt-group>
-            <tui-opt-group><ng-content select="[tuiOption]" /></tui-opt-group>
-          </tui-data-list>
-        </ng-template>
+        <tui-data-list *tuiTextfieldDropdown="let close">
+          <button tuiOption new iconStart="@tui.eye" (click)="instructions()">
+            {{ 'View instructions' | i18n }}
+          </button>
+          @if (interface.value().type === 'ui') {
+            <button
+              tuiOption
+              new
+              iconStart="@tui.external-link"
+              [disabled]="disabled()"
+              (click)="openUI()"
+            >
+              {{ 'Open' | i18n }}
+            </button>
+          }
+          <button tuiOption new iconStart="@tui.qr-code" (click)="showQR()">
+            {{ 'Show QR' | i18n }}
+          </button>
+          <button
+            tuiOption
+            new
+            iconStart="@tui.copy"
+            (click)="copyService.copy(href()); close()"
+          >
+            {{ 'Copy URL' | i18n }}
+          </button>
+        </tui-data-list>
       </button>
     </div>
   `,
   styles: `
     :host {
       text-align: right;
-      grid-area: 1 / 2 / 3 / 3;
+      grid-area: 1 / 2 / 4 / 3;
       place-content: center;
       white-space: nowrap;
     }
@@ -110,7 +113,7 @@ import { InterfaceComponent } from '../interface.component'
       }
     }
   `,
-  imports: [TuiButton, TuiDropdown, TuiDataList, i18nPipe],
+  imports: [TuiButton, TuiDropdown, TuiDataList, i18nPipe, TuiTextfield],
   providers: [tuiButtonOptionsProvider({ appearance: 'icon' })],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -125,6 +128,8 @@ export class AddressActionsComponent {
   readonly href = input.required<string>()
   readonly disabled = input.required<boolean>()
 
+  open = false
+
   showQR() {
     this.dialog
       .openComponent(new PolymorpheusComponent(QRModal), {
@@ -138,4 +143,6 @@ export class AddressActionsComponent {
   openUI() {
     this.document.defaultView?.open(this.href(), '_blank', 'noreferrer')
   }
+
+  instructions() {}
 }

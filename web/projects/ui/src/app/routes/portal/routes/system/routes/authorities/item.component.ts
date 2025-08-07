@@ -31,7 +31,7 @@ import { Authority, AuthorityService } from './authority.service'
           [(tuiDropdownOpen)]="open"
         >
           {{ 'More' | i18n }}
-          <tui-data-list size="s" *tuiTextfieldDropdown>
+          <tui-data-list *tuiTextfieldDropdown>
             @if (authority.url) {
               <tui-opt-group>
                 <button
@@ -81,11 +81,6 @@ import { Authority, AuthorityService } from './authority.service'
 
     :host-context(tui-root._mobile) {
       grid-template-columns: 1fr min-content;
-
-      td:first-child {
-        font: var(--tui-font-text-m);
-        font-weight: bold;
-      }
 
       .hidden {
         display: none;

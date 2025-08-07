@@ -12,18 +12,19 @@ import {
   LoadingService,
 } from '@start9labs/shared'
 import { ISB, utils } from '@start9labs/start-sdk'
-import { TuiAppearance, TuiButton, TuiLink } from '@taiga-ui/core'
+import { TuiButton, TuiTitle } from '@taiga-ui/core'
+import { TuiCell } from '@taiga-ui/layout'
 import { filter } from 'rxjs'
 import {
   FormComponent,
   FormContext,
 } from 'src/app/routes/portal/components/form.component'
-import { InterfaceComponent } from 'src/app/routes/portal/components/interfaces/interface.component'
 import { PlaceholderComponent } from 'src/app/routes/portal/components/placeholder.component'
-import { TableComponent } from 'src/app/routes/portal/components/table.component'
 import { ApiService } from 'src/app/services/api/embassy-api.service'
 import { FormDialogService } from 'src/app/services/form-dialog.service'
 import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
+
+import { InterfaceComponent } from './interface.component'
 
 type OnionForm = {
   key: string
@@ -33,16 +34,16 @@ type OnionForm = {
   selector: 'section[torDomains]',
   template: `
     <header>
-      <!-- @TODO translation -->
       Tor Domains
       <a
-        tuiLink
+        tuiIconButton
         docsLink
         path="/user-manual/connecting-remotely/tor.html"
-        appearance="action-grayscale"
-        iconEnd="@tui.external-link"
-        [pseudo]="true"
-      ></a>
+        appearance="icon"
+        iconStart="@tui.external-link"
+      >
+        {{ 'Documentation' | i18n }}
+      </a>
       <button
         tuiButton
         iconStart="@tui.plus"
@@ -52,35 +53,34 @@ type OnionForm = {
         {{ 'Add' | i18n }}
       </button>
     </header>
-    @if (torDomains().length) {
-      <table [appTable]="['Domain', null]">
-        @for (domain of torDomains(); track $index) {
-          <tr>
-            <td>{{ domain }}</td>
-            <td>
-              <button
-                tuiIconButton
-                iconStart="@tui.trash"
-                appearance="action-destructive"
-                (click)="remove(domain)"
-              >
-                {{ 'Delete' | i18n }}
-              </button>
-            </td>
-          </tr>
-        }
-      </table>
-    } @else {
-      <app-placeholder icon="@tui.app-window">
+    @for (domain of torDomains(); track $index) {
+      <div tuiCell="s">
+        <span tuiTitle>{{ domain }}</span>
+        <button
+          tuiIconButton
+          iconStart="@tui.trash"
+          appearance="action-destructive"
+          (click)="remove(domain)"
+        >
+          {{ 'Delete' | i18n }}
+        </button>
+      </div>
+    } @empty {
+      <app-placeholder icon="@tui.target">
         {{ 'No Tor domains' | i18n }}
       </app-placeholder>
     }
   `,
+  styles: `
+    :host {
+      grid-column: span 2;
+    }
+  `,
+  host: { class: 'g-card' },
   imports: [
+    TuiCell,
+    TuiTitle,
     TuiButton,
-    TuiLink,
-    TuiAppearance,
-    TableComponent,
     PlaceholderComponent,
     i18nPipe,
     DocsLinkDirective,
@@ -98,13 +98,13 @@ export class InterfaceTorDomainsComponent {
 
   readonly torDomains = input.required<readonly string[]>()
 
-  async remove(domain: string) {
+  async remove(onion: string) {
     this.dialog
       .openConfirm({ label: 'Are you sure?', size: 's' })
       .pipe(filter(Boolean))
       .subscribe(async () => {
         const loader = this.loader.open('Removing').subscribe()
-        const params = { onion: domain }
+        const params = { onion }
 
         try {
           if (this.interface.packageId()) {
