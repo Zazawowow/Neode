@@ -40,13 +40,13 @@ export function getAddresses(
     {
       type: 'Local',
       description: '',
-      gateway: 'Wire Conenction 1',
+      gateway: 'Wired Connection 1',
       url: 'https://test.local:1234',
     },
     {
       type: 'IPv4 (LAN)',
       description: '',
-      gateway: 'Wire Connction 1',
+      gateway: 'Wired Connection 1',
       url: 'https://192.168.1.10.local:1234',
     },
   ]
@@ -54,7 +54,7 @@ export function getAddresses(
     {
       type: 'IPv4 (WAN)',
       description: '',
-      gateway: 'Wire Conenction 1',
+      gateway: 'Wired Connection 1',
       url: 'https://72.72.72.72',
     },
   ]
@@ -112,17 +112,20 @@ export function getAddresses(
 }
 
 export type MappedServiceInterface = T.ServiceInterface & {
-  gateways: {
-    id: string
-    name: string
-    enabled: boolean
-  }[]
+  gateways: InterfaceGateway[]
   torDomains: string[]
   clearnetDomains: ClearnetDomain[]
   addresses: {
     common: Address[]
     uncommon: Address[]
   }
+}
+
+export type InterfaceGateway = {
+  id: string
+  name: string
+  enabled: boolean
+  public: boolean
 }
 
 export type ClearnetDomain = {

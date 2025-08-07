@@ -11,7 +11,7 @@ import {
   LoadingService,
 } from '@start9labs/shared'
 import { inputSpec, IST } from '@start9labs/start-sdk'
-import { TuiButton, TuiLink, TuiTitle } from '@taiga-ui/core'
+import { TuiButton, TuiTitle } from '@taiga-ui/core'
 import { TuiHeader } from '@taiga-ui/layout'
 import { TuiInputModule } from '@taiga-ui/legacy'
 import { PatchDB } from 'patch-db-client'
@@ -38,13 +38,15 @@ import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
             <b>
               {{ 'SMTP Credentials' | i18n }}
               <a
-                tuiLink
+                tuiIconButton
+                size="xs"
                 docsLink
                 path="/user-manual/smtp.html"
-                appearance="action-grayscale"
-                iconEnd="@tui.external-link"
-                [pseudo]="true"
-              ></a>
+                appearance="icon"
+                iconStart="@tui.external-link"
+              >
+                {{ 'Documentation' | i18n }}
+              </a>
             </b>
           </h3>
         </header>
@@ -124,7 +126,6 @@ import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
     TuiInputModule,
     TuiHeader,
     TuiTitle,
-    TuiLink,
     RouterLink,
     TitleDirective,
     i18nPipe,

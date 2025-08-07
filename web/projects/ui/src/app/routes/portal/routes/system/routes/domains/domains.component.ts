@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core'
 import { RouterLink } from '@angular/router'
 import { DocsLinkDirective, i18nPipe } from '@start9labs/shared'
-import { TuiButton, TuiLink } from '@taiga-ui/core'
+import { TuiButton } from '@taiga-ui/core'
 import { TitleDirective } from 'src/app/services/title.service'
 import { DomainService } from './domain.service'
 import { DomainsTableComponent } from './table.component'
@@ -19,13 +19,15 @@ import { DomainsTableComponent } from './table.component'
       <header>
         {{ 'Domains' | i18n }}
         <a
-          tuiLink
+          tuiIconButton
+          size="xs"
           docsLink
           path="/user-manual/domains.html"
-          appearance="action-grayscale"
-          iconEnd="@tui.external-link"
-          [pseudo]="true"
-        ></a>
+          appearance="icon"
+          iconStart="@tui.external-link"
+        >
+          {{ 'Documentation' | i18n }}
+        </a>
         @if (domainService.data(); as value) {
           <button
             tuiButton
@@ -44,7 +46,6 @@ import { DomainsTableComponent } from './table.component'
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TuiButton,
-    TuiLink,
     RouterLink,
     TitleDirective,
     i18nPipe,

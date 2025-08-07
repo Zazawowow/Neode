@@ -31,22 +31,22 @@ export type GatewayPlus = T.NetworkInterfaceInfo & {
 }
 
 @Component({
-  selector: 'tr[proxy]',
+  selector: 'tr[gateway]',
   template: `
-    @if (proxy(); as proxy) {
-      <td [style.grid-column]="'span 2'">{{ proxy.ipInfo.name }}</td>
-      <td class="type">{{ proxy.ipInfo.deviceType || '-' }}</td>
+    @if (gateway(); as gateway) {
+      <td [style.grid-column]="'span 2'">{{ gateway.ipInfo.name }}</td>
+      <td class="type">{{ gateway.ipInfo.deviceType || '-' }}</td>
       <td [style.order]="-2">
-        {{ proxy.public ? ('Public' | i18n) : ('Private' | i18n) }}
+        {{ gateway.public ? ('Public' | i18n) : ('Private' | i18n) }}
       </td>
-      <td class="lan">{{ proxy.ipv4.join(', ') }}</td>
+      <td class="lan">{{ gateway.ipv4.join(', ') }}</td>
       <td
         class="wan"
         [style.color]="
-          proxy.ipInfo.wanIp ? 'var(--tui-text-warning)' : undefined
+          gateway.ipInfo.wanIp ? 'var(--tui-text-warning)' : undefined
         "
       >
-        {{ proxy.ipInfo.wanIp || ('Error' | i18n) }}
+        {{ gateway.ipInfo.wanIp || ('Error' | i18n) }}
       </td>
       <td>
         <button
@@ -65,7 +65,7 @@ export type GatewayPlus = T.NetworkInterfaceInfo & {
                 {{ 'Rename' | i18n }}
               </button>
             </tui-opt-group>
-            @if (proxy.ipInfo.deviceType === 'wireguard') {
+            @if (gateway.ipInfo.deviceType === 'wireguard') {
               <tui-opt-group>
                 <button
                   tuiOption
@@ -137,7 +137,7 @@ export class GatewaysItemComponent {
   private readonly api = inject(ApiService)
   private readonly formDialog = inject(FormDialogService)
 
-  readonly proxy = input.required<GatewayPlus>()
+  readonly gateway = input.required<GatewayPlus>()
 
   open = false
 
@@ -149,7 +149,7 @@ export class GatewaysItemComponent {
         const loader = this.loader.open('Deleting').subscribe()
 
         try {
-          await this.api.removeTunnel({ id: this.proxy().id })
+          await this.api.removeTunnel({ id: this.gateway().id })
         } catch (e: any) {
           this.errorService.handleError(e)
         } finally {
@@ -159,7 +159,7 @@ export class GatewaysItemComponent {
   }
 
   async rename() {
-    const { ipInfo, id } = this.proxy()
+    const { ipInfo, id } = this.gateway()
     const renameSpec = ISB.InputSpec.of({
       label: ISB.Value.text({
         name: 'Label',

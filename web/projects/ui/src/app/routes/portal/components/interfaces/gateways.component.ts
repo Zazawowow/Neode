@@ -1,11 +1,16 @@
 import { CommonModule } from '@angular/common'
-import { ChangeDetectionStrategy, Component, input } from '@angular/core'
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  input,
+} from '@angular/core'
 import { TuiTitle } from '@taiga-ui/core'
 import { TuiSwitch } from '@taiga-ui/kit'
 import { FormsModule } from '@angular/forms'
 import { i18nPipe } from '@start9labs/shared'
 import { TuiCell } from '@taiga-ui/layout'
-import { PlaceholderComponent } from 'src/app/routes/portal/components/placeholder.component'
+import { InterfaceGateway } from './interface.utils'
 
 @Component({
   selector: 'section[gateways]',
@@ -21,28 +26,18 @@ import { PlaceholderComponent } from 'src/app/routes/portal/components/placehold
           [showIcons]="false"
           [ngModel]="gateway.enabled"
           (ngModelChange)="onToggle(gateway)"
+          [disabled]="osUi() && !gateway.public"
         />
       </label>
-    } @empty {
-      <app-placeholder icon="@tui.door-closed-locked">
-        No gateways
-      </app-placeholder>
     }
   `,
   host: { class: 'g-card' },
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    CommonModule,
-    FormsModule,
-    TuiSwitch,
-    i18nPipe,
-    TuiCell,
-    TuiTitle,
-    PlaceholderComponent,
-  ],
+  imports: [CommonModule, FormsModule, TuiSwitch, i18nPipe, TuiCell, TuiTitle],
 })
 export class InterfaceGatewaysComponent {
-  readonly gateways = input.required<any>()
+  readonly gateways = input.required<InterfaceGateway[]>()
+  readonly osUi = input.required<boolean>()
 
-  async onToggle(event: any) {}
+  async onToggle(gateway: InterfaceGateway) {}
 }

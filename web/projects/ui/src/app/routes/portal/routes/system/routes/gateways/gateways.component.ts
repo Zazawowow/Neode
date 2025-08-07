@@ -7,7 +7,7 @@ import {
   i18nPipe,
   LoadingService,
 } from '@start9labs/shared'
-import { TuiButton, TuiLink } from '@taiga-ui/core'
+import { TuiButton } from '@taiga-ui/core'
 import { PatchDB } from 'patch-db-client'
 import { FormComponent } from 'src/app/routes/portal/components/form.component'
 import { DataModel } from 'src/app/services/patch-db/data-model'
@@ -33,13 +33,15 @@ import { GatewayPlus } from './item.component'
       <header>
         {{ 'Gateways' | i18n }}
         <a
-          tuiLink
+          tuiIconButton
+          size="xs"
           docsLink
           path="/user-manual/gateways.html"
-          appearance="action-grayscale"
-          iconEnd="@tui.external-link"
-          [pseudo]="true"
-        ></a>
+          appearance="icon"
+          iconStart="@tui.external-link"
+        >
+          {{ 'Documentation' | i18n }}
+        </a>
         <button
           tuiButton
           size="xs"
@@ -58,7 +60,6 @@ import { GatewayPlus } from './item.component'
     CommonModule,
     RouterLink,
     TuiButton,
-    TuiLink,
     GatewaysTableComponent,
     TitleDirective,
     i18nPipe,

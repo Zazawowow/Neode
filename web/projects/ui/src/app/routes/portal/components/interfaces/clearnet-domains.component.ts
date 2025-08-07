@@ -36,7 +36,7 @@ import { ClearnetDomain } from './interface.utils'
       } @empty {
         <tr>
           <td colspan="4">
-            <app-placeholder icon="@tui.app-window">
+            <app-placeholder icon="@tui.globe">
               {{ 'No clearnet domains' | i18n }}
             </app-placeholder>
           </td>

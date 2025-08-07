@@ -14,7 +14,7 @@ import {
   LoadingService,
 } from '@start9labs/shared'
 import { ISB } from '@start9labs/start-sdk'
-import { TuiButton, TuiLink } from '@taiga-ui/core'
+import { TuiButton } from '@taiga-ui/core'
 import { filter, from, merge, Subject } from 'rxjs'
 import { FormComponent } from 'src/app/routes/portal/components/form.component'
 import { SSHKey } from 'src/app/services/api/api.types'
@@ -37,13 +37,15 @@ import { SSHTableComponent } from './table.component'
       <header>
         {{ 'SSH Keys' | i18n }}
         <a
-          tuiLink
+          tuiIconButton
+          size="xs"
           docsLink
           path="/user-manual/ssh.html"
-          appearance="action-grayscale"
-          iconEnd="@tui.external-link"
-          [pseudo]="true"
-        ></a>
+          appearance="icon"
+          iconStart="@tui.external-link"
+        >
+          {{ 'Documentation' | i18n }}
+        </a>
         <button
           tuiButton
           size="xs"
@@ -82,7 +84,6 @@ import { SSHTableComponent } from './table.component'
     SSHTableComponent,
     RouterLink,
     TitleDirective,
-    TuiLink,
     i18nPipe,
     DocsLinkDirective,
   ],
