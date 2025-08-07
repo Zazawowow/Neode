@@ -43,6 +43,8 @@ function cmpLan(host: T.Host, a: LanAddress, b: LanAddress): -1 | 0 | 1 {
       !host.domains[x.info.hostname.value]?.public, // private domain
     x => x.info.hostname.kind === 'local', // .local
     x => x.info.hostname.kind === 'ipv4', // ipv4
+    x => x.info.hostname.kind === 'ipv6', // ipv6
+    // remainder: public domains accessible privately
   ])
 }
 
@@ -64,6 +66,8 @@ function cmpVpn(host: T.Host, a: VpnAddress, b: VpnAddress): -1 | 0 | 1 {
       x.info.hostname.kind === 'domain' &&
       !host.domains[x.info.hostname.value]?.public, // private domain
     x => x.info.hostname.kind === 'ipv4', // ipv4
+    x => x.info.hostname.kind === 'ipv6', // ipv6
+    // remainder: public domains accessible privately
   ])
 }
 
@@ -89,6 +93,8 @@ function cmpClearnet(
       x.info.gatewayId ===
         domains[host.domains[x.info.hostname.value]?.root!]?.gateway, // public domain for this gateway
     x => x.info.hostname.kind === 'ipv4', // ipv4
+    x => x.info.hostname.kind === 'ipv6', // ipv6
+    // remainder: private domains / domains public on other gateways
   ])
 }
 
