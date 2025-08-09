@@ -169,7 +169,7 @@ function toDisplayAddress(
         access = 'public'
         bullets = [
           'Can be used for clearnet access',
-          'Not recommended in most cases',
+          'Not recommended in most cases. Clearnet domains are preferred',
           rootCaRequired,
         ]
         if (!gateway.public) {
