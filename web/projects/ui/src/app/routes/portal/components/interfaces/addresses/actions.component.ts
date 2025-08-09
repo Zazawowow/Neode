@@ -3,7 +3,6 @@ import {
   Component,
   inject,
   input,
-  DOCUMENT,
 } from '@angular/core'
 import { CopyService, DialogService, i18nPipe } from '@start9labs/shared'
 import { TUI_IS_MOBILE } from '@taiga-ui/cdk'
@@ -23,16 +22,17 @@ import { InterfaceComponent } from '../interface.component'
   selector: 'td[actions]',
   template: `
     <div class="desktop">
-      @if (interface.value().type === 'ui') {
-        <button
+      @if (interface.value()?.type === 'ui') {
+        <a
           tuiIconButton
           appearance="flat-grayscale"
           iconStart="@tui.external-link"
-          [disabled]="disabled()"
-          (click)="openUI()"
+          target="_blank"
+          rel="noopener noreferrer"
+          [href]="href()"
         >
           {{ 'Open' | i18n }}
-        </button>
+        </a>
       }
       <button
         tuiIconButton
@@ -65,16 +65,17 @@ import { InterfaceComponent } from '../interface.component'
           <button tuiOption new iconStart="@tui.eye" (click)="instructions()">
             {{ 'View instructions' | i18n }}
           </button>
-          @if (interface.value().type === 'ui') {
-            <button
+          @if (interface.value()?.type === 'ui') {
+            <a
               tuiOption
               new
               iconStart="@tui.external-link"
-              [disabled]="disabled()"
-              (click)="openUI()"
+              target="_blank"
+              rel="noopener noreferrer"
+              [href]="href()"
             >
               {{ 'Open' | i18n }}
-            </button>
+            </a>
           }
           <button tuiOption new iconStart="@tui.qr-code" (click)="showQR()">
             {{ 'Show QR' | i18n }}
@@ -118,8 +119,6 @@ import { InterfaceComponent } from '../interface.component'
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AddressActionsComponent {
-  private readonly document = inject(DOCUMENT)
-
   readonly isMobile = inject(TUI_IS_MOBILE)
   readonly dialog = inject(DialogService)
   readonly copyService = inject(CopyService)
@@ -138,10 +137,6 @@ export class AddressActionsComponent {
         data: this.href(),
       })
       .subscribe()
-  }
-
-  openUI() {
-    this.document.defaultView?.open(this.href(), '_blank', 'noreferrer')
   }
 
   instructions() {}

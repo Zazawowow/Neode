@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core'
 import { DocsLinkDirective, i18nPipe } from '@start9labs/shared'
 import { TuiButton } from '@taiga-ui/core'
+import { TuiSkeleton } from '@taiga-ui/kit'
 import { PlaceholderComponent } from 'src/app/routes/portal/components/placeholder.component'
 import { TableComponent } from 'src/app/routes/portal/components/table.component'
 
@@ -34,13 +35,23 @@ import { ClearnetDomain } from './interface.service'
       @for (domain of clearnetDomains(); track $index) {
         <tr [domain]="domain"></tr>
       } @empty {
-        <tr>
-          <td colspan="4">
-            <app-placeholder icon="@tui.globe">
-              {{ 'No clearnet domains' | i18n }}
-            </app-placeholder>
-          </td>
-        </tr>
+        @if (clearnetDomains()) {
+          <tr>
+            <td colspan="4">
+              <app-placeholder icon="@tui.globe">
+                {{ 'No clearnet domains' | i18n }}
+              </app-placeholder>
+            </td>
+          </tr>
+        } @else {
+          @for (_ of [0, 1]; track $index) {
+            <tr>
+              <td colspan="4">
+                <div [tuiSkeleton]="true">{{ 'Loading' | i18n }}</div>
+              </td>
+            </tr>
+          }
+        }
       }
     </table>
   `,
@@ -57,11 +68,14 @@ import { ClearnetDomain } from './interface.service'
     i18nPipe,
     DocsLinkDirective,
     DomainComponent,
+    TuiSkeleton,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class InterfaceClearnetDomainsComponent {
-  readonly clearnetDomains = input.required<readonly ClearnetDomain[]>()
+  readonly clearnetDomains = input.required<
+    readonly ClearnetDomain[] | undefined
+  >()
 
   open = false
 

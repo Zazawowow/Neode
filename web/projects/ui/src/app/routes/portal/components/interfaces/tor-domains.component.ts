@@ -13,6 +13,7 @@ import {
 } from '@start9labs/shared'
 import { ISB, utils } from '@start9labs/start-sdk'
 import { TuiButton, TuiTitle } from '@taiga-ui/core'
+import { TuiSkeleton } from '@taiga-ui/kit'
 import { TuiCell } from '@taiga-ui/layout'
 import { filter } from 'rxjs'
 import {
@@ -66,9 +67,17 @@ type OnionForm = {
         </button>
       </div>
     } @empty {
-      <app-placeholder icon="@tui.target">
-        {{ 'No Tor domains' | i18n }}
-      </app-placeholder>
+      @if (torDomains()) {
+        <app-placeholder icon="@tui.target">
+          {{ 'No Tor domains' | i18n }}
+        </app-placeholder>
+      } @else {
+        @for (_ of [0, 1]; track $index) {
+          <label tuiCell="s">
+            <span tuiTitle [tuiSkeleton]="true">{{ 'Loading' | i18n }}</span>
+          </label>
+        }
+      }
     }
   `,
   styles: `
@@ -84,6 +93,7 @@ type OnionForm = {
     PlaceholderComponent,
     i18nPipe,
     DocsLinkDirective,
+    TuiSkeleton,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -96,7 +106,7 @@ export class InterfaceTorDomainsComponent {
   private readonly interface = inject(InterfaceComponent)
   private readonly i18n = inject(i18nPipe)
 
-  readonly torDomains = input.required<readonly string[]>()
+  readonly torDomains = input.required<readonly string[] | undefined>()
 
   async remove(onion: string) {
     this.dialog
@@ -111,7 +121,7 @@ export class InterfaceTorDomainsComponent {
             await this.api.pkgRemoveOnion({
               ...params,
               package: this.interface.packageId(),
-              host: this.interface.value().addressInfo.hostId,
+              host: this.interface.value()?.addressInfo.hostId || '',
             })
           } else {
             await this.api.serverRemoveOnion(params)
@@ -166,7 +176,7 @@ export class InterfaceTorDomainsComponent {
         await this.api.pkgAddOnion({
           onion,
           package: this.interface.packageId(),
-          host: this.interface.value().addressInfo.hostId,
+          host: this.interface.value()?.addressInfo.hostId || '',
         })
       } else {
         await this.api.serverAddOnion({ onion })

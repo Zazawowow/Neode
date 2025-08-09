@@ -37,9 +37,7 @@ import { TitleDirective } from 'src/app/services/title.service'
         <p tuiSubtitle>{{ iface.description }}</p>
       </hgroup>
     </header>
-    @if (ui(); as ui) {
-      <service-interface [value]="ui" [isRunning]="true" />
-    }
+    <service-interface [value]="ui()" [isRunning]="true" />
   `,
   host: { class: 'g-subpage' },
   changeDetection: ChangeDetectionStrategy.OnPush,

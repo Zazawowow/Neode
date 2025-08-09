@@ -13,7 +13,7 @@ import { AddressActionsComponent } from './actions.component'
   selector: 'tr[address]',
   template: `
     @if (address(); as address) {
-      <td>
+      <td [style.width.rem]="3">
         <button
           tuiIconButton
           appearance="flat-grayscale"
@@ -23,14 +23,25 @@ import { AddressActionsComponent } from './actions.component'
           {{ 'View instructions' | i18n }}
         </button>
       </td>
-      <td>{{ address.type }}</td>
-      <td [style.order]="-1">{{ address.gatewayName || '-' }}</td>
+      <td [style.width.rem]="6">{{ address.type }}</td>
+      <td [style.width.rem]="10" [style.order]="-1">
+        {{ address.gatewayName || '-' }}
+      </td>
       <td>{{ address.url }}</td>
-      <td actions [disabled]="!isRunning()" [href]="address.url"></td>
+      <td
+        actions
+        [disabled]="!isRunning()"
+        [href]="address.url"
+        [style.width.rem]="7"
+      ></td>
     }
   `,
   styles: `
     :host-context(tui-root._mobile) {
+      td {
+        width: auto !important;
+      }
+
       td:first-child {
         display: none;
       }

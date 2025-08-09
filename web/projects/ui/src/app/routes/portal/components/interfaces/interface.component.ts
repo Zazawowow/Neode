@@ -11,12 +11,15 @@ import { InterfaceAddressesComponent } from './addresses/addresses.component'
   template: `
     <!-- @TODO Alex / Matt translation in all nested components -->
     <div [style.display]="'grid'">
-      <section [gateways]="value().gateways" [isOs]="value().isOs"></section>
-      <section [torDomains]="value().torDomains"></section>
-      <section [clearnetDomains]="value().clearnetDomains"></section>
+      <section
+        [gateways]="value()?.gateways"
+        [isOs]="!!value()?.isOs"
+      ></section>
+      <section [torDomains]="value()?.torDomains"></section>
+      <section [clearnetDomains]="value()?.clearnetDomains"></section>
     </div>
     <hr [style.width.rem]="10" />
-    <section [addresses]="value().addresses" [isRunning]="true"></section>
+    <section [addresses]="value()?.addresses" [isRunning]="true"></section>
   `,
   styles: `
     :host {
@@ -28,6 +31,12 @@ import { InterfaceAddressesComponent } from './addresses/addresses.component'
 
       div {
         gap: inherit;
+      }
+
+      ::ng-deep [tuiSkeleton] {
+        width: 100%;
+        height: 1rem;
+        border-radius: var(--tui-radius-s);
       }
     }
 
@@ -46,6 +55,6 @@ import { InterfaceAddressesComponent } from './addresses/addresses.component'
 })
 export class InterfaceComponent {
   readonly packageId = input('')
-  readonly value = input.required<MappedServiceInterface>()
+  readonly value = input.required<MappedServiceInterface | undefined>()
   readonly isRunning = input.required<boolean>()
 }

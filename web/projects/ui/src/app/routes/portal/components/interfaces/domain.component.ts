@@ -143,7 +143,7 @@ export class DomainComponent {
             await this.api.pkgRemoveDomain({
               ...params,
               package: this.interface.packageId(),
-              host: this.interface.value().addressInfo.hostId,
+              host: this.interface.value()?.addressInfo.hostId || '',
             })
           } else {
             await this.api.osUiRemoveDomain(params)

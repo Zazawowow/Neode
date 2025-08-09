@@ -101,10 +101,6 @@ import { map } from 'rxjs'
         }
       }
 
-      hr {
-        background: var(--tui-border-normal);
-      }
-
       ::ng-deep hgroup h3 {
         display: none;
       }
