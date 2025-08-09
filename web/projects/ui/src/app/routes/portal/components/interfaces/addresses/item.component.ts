@@ -18,9 +18,9 @@ import { AddressActionsComponent } from './actions.component'
           tuiIconButton
           appearance="flat-grayscale"
           iconStart="@tui.eye"
-          (click)="instructions(address.bullets)"
+          (click)="viewDetails(address.bullets)"
         >
-          {{ 'View instructions' | i18n }}
+          {{ 'Address details' | i18n }}
         </button>
       </td>
       <td [style.width.rem]="6">{{ address.type }}</td>
@@ -33,6 +33,7 @@ import { AddressActionsComponent } from './actions.component'
         [disabled]="!isRunning()"
         [href]="address.url"
         [style.width.rem]="7"
+        (onDetails)="viewDetails(address.bullets)"
       ></td>
     }
   `,
@@ -61,7 +62,7 @@ export class InterfaceAddressItemComponent {
   readonly isRunning = input.required<boolean>()
   readonly dialog = inject(DialogService)
 
-  instructions(bullets: string[]) {
+  viewDetails(bullets: string[]) {
     this.dialog
       .openAlert(
         `<ul>${bullets.map(b => `<li>${b}</li>`).join('')}</ul>` as i18nKey,

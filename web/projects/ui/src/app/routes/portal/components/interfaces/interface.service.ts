@@ -3,7 +3,7 @@ import { T, utils } from '@start9labs/start-sdk'
 import { ConfigService } from 'src/app/services/config.service'
 import { toAuthorityName } from 'src/app/utils/acme'
 import { GatewayPlus } from 'src/app/services/gateway.service'
-import { i18nKey } from '@start9labs/shared'
+import { DialogService, i18nKey } from '@start9labs/shared'
 
 type AddressWithInfo = {
   url: URL

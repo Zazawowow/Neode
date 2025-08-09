@@ -530,4 +530,5 @@ export default {
   552: '',
   553: '',
   554: '',
+  555: '',
 } satisfies i18n

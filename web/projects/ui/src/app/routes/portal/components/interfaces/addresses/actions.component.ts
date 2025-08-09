@@ -3,6 +3,7 @@ import {
   Component,
   inject,
   input,
+  output,
 } from '@angular/core'
 import { CopyService, DialogService, i18nPipe } from '@start9labs/shared'
 import { TUI_IS_MOBILE } from '@taiga-ui/cdk'
@@ -17,6 +18,7 @@ import { PolymorpheusComponent } from '@taiga-ui/polymorpheus'
 import { QRModal } from 'src/app/routes/portal/modals/qr.component'
 
 import { InterfaceComponent } from '../interface.component'
+import { InterfaceService } from '../interface.service'
 
 @Component({
   selector: 'td[actions]',
@@ -62,8 +64,8 @@ import { InterfaceComponent } from '../interface.component'
       >
         {{ 'Actions' | i18n }}
         <tui-data-list *tuiTextfieldDropdown="let close">
-          <button tuiOption new iconStart="@tui.eye" (click)="instructions()">
-            {{ 'View instructions' | i18n }}
+          <button tuiOption new iconStart="@tui.eye" (click)="onDetails.emit()">
+            {{ 'Address details' | i18n }}
           </button>
           @if (interface.value()?.type === 'ui') {
             <a
@@ -127,6 +129,8 @@ export class AddressActionsComponent {
   readonly href = input.required<string>()
   readonly disabled = input.required<boolean>()
 
+  readonly onDetails = output<void>()
+
   open = false
 
   showQR() {
@@ -138,6 +142,4 @@ export class AddressActionsComponent {
       })
       .subscribe()
   }
-
-  instructions() {}
 }
