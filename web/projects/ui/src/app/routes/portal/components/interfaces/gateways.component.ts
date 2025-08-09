@@ -1,16 +1,11 @@
 import { CommonModule } from '@angular/common'
-import {
-  ChangeDetectionStrategy,
-  Component,
-  computed,
-  input,
-} from '@angular/core'
+import { ChangeDetectionStrategy, Component, input } from '@angular/core'
 import { TuiTitle } from '@taiga-ui/core'
 import { TuiSwitch } from '@taiga-ui/kit'
 import { FormsModule } from '@angular/forms'
 import { i18nPipe } from '@start9labs/shared'
 import { TuiCell } from '@taiga-ui/layout'
-import { InterfaceGateway } from './interface.utils'
+import { InterfaceGateway } from './interface.service'
 
 @Component({
   selector: 'section[gateways]',
@@ -18,7 +13,7 @@ import { InterfaceGateway } from './interface.utils'
     <header>{{ 'Gateways' | i18n }}</header>
     @for (gateway of gateways(); track $index) {
       <label tuiCell="s">
-        <span tuiTitle>{{ gateway.name }}</span>
+        <span tuiTitle>{{ gateway.ipInfo.name }}</span>
         <input
           type="checkbox"
           tuiSwitch

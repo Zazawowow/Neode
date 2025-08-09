@@ -11,6 +11,7 @@ import { TuiButton } from '@taiga-ui/core'
 import { TuiBadge } from '@taiga-ui/kit'
 import { ConfigService } from 'src/app/services/config.service'
 import { PackageDataEntry } from 'src/app/services/patch-db/data-model'
+import { InterfaceService } from '../../../components/interfaces/interface.service'
 
 @Component({
   selector: 'tr[serviceInterface]',
@@ -82,7 +83,7 @@ import { PackageDataEntry } from 'src/app/services/patch-db/data-model'
   imports: [TuiButton, TuiBadge, RouterLink],
 })
 export class ServiceInterfaceItemComponent {
-  private readonly config = inject(ConfigService)
+  private readonly interfaceService = inject(InterfaceService)
   private readonly document = inject(DOCUMENT)
 
   @Input({ required: true })
@@ -110,7 +111,7 @@ export class ServiceInterfaceItemComponent {
   get href() {
     const host = this.pkg.hosts[this.info.addressInfo.hostId]
     if (!host) return ''
-    return this.config.launchableAddress(this.info, host)
+    return this.interfaceService.launchableAddress(this.info, host)
   }
 
   openUI() {

@@ -1,9 +1,12 @@
 import { inject, Injectable } from '@angular/core'
 import { T, utils } from '@start9labs/start-sdk'
 import { ConfigService } from 'src/app/services/config.service'
+import { toAuthorityName } from 'src/app/utils/acme'
+import { GatewayPlus } from 'src/app/services/gateway.service'
+import { i18nKey } from '@start9labs/shared'
 
 type AddressWithInfo = {
-  address: URL
+  url: URL
   info: T.HostnameInfo
 }
 
@@ -14,7 +17,7 @@ function cmpWithRankedPredicates<T extends AddressWithInfo>(
 ): -1 | 0 | 1 {
   for (const pred of preds) {
     for (let [x, y, sign] of [[a, b, 1] as const, [b, a, -1] as const]) {
-      if (pred(x) && !pred(y)) return sign
+      if (pred(y) && !pred(x)) return sign
     }
   }
   return 0
@@ -26,8 +29,7 @@ function filterTor(a: AddressWithInfo): a is TorAddress {
 }
 function cmpTor(a: TorAddress, b: TorAddress): -1 | 0 | 1 {
   for (let [x, y, sign] of [[a, b, 1] as const, [b, a, -1] as const]) {
-    if (x.address.protocol === 'http:' && y.address.protocol === 'https:')
-      return sign
+    if (y.url.protocol === 'http:' && x.url.protocol === 'https:') return sign
   }
   return 0
 }
@@ -98,8 +100,161 @@ function cmpClearnet(
   ])
 }
 
-function toDisplayAddress(a: AddressWithInfo): Address {
-  throw new Error('@TODO: MattHill')
+// @TODO translations
+function toDisplayAddress(
+  { info, url }: AddressWithInfo,
+  gateways: GatewayPlus[],
+  domains: Record<string, T.DomainConfig>,
+): DisplayAddress {
+  let access: DisplayAddress['access']
+  let gatewayName: DisplayAddress['gatewayName']
+  let type: DisplayAddress['type']
+  let bullets: any[]
+  // let bullets: DisplayAddress['bullets']
+
+  const rootCaRequired = `Requires trusting your server's Root CA`
+
+  // ** Tor **
+  if (info.kind === 'onion') {
+    access = null
+    gatewayName = null
+    type = 'Tor'
+    bullets = [
+      'Connections can be slow or unreliable at times',
+      'Public if you share the address publicly, otherwise private',
+      'Requires using a Tor-enabled device or browser',
+    ]
+    // Tor (HTTPS)
+    if (url.protocol.startsWith('https')) {
+      type = `${type} (HTTPS)`
+      bullets = [
+        'Only useful for clients that enforce HTTPS',
+        rootCaRequired,
+        ...bullets,
+      ]
+      // Tor (HTTP)
+    } else {
+      bullets.unshift('Ideal for anonymous, remote connectivity')
+      type = `${type} (HTTP)`
+    }
+    // ** Not Tor **
+  } else {
+    const port = info.hostname.sslPort || info.hostname.port
+    const gateway = gateways.find(g => g.id === info.gatewayId)!
+    gatewayName = gateway.ipInfo.name
+
+    const gatewayIpv4 = gateway.ipInfo.subnets[0]
+    const isWireguard = gateway.ipInfo.deviceType === 'wireguard'
+
+    const localIdeal = 'Ideal for local access'
+    const lanRequired =
+      'Requires being connected to the same Local Area Network (LAN) as your server, either physically or via VPN'
+    const staticRequired = `Requires setting a static IP address for ${gatewayIpv4} in your gateway`
+    const vpnAccess = 'Ideal for VPN access via your'
+
+    // * Local *
+    if (info.hostname.kind === 'local') {
+      type = 'Local'
+      access = 'private'
+      bullets = [
+        localIdeal,
+        'Not recommended for VPN access. VPNs do not support ".local" domains without extra configuration',
+        lanRequired,
+        rootCaRequired,
+      ]
+      // * IPv4 *
+    } else if (info.hostname.kind === 'ipv4') {
+      type = 'IPv4'
+      if (info.public) {
+        access = 'public'
+        bullets = [
+          'Can be used for clearnet access',
+          'Not recommended in most cases',
+          rootCaRequired,
+        ]
+        if (!gateway.public) {
+          bullets.push(
+            `Requires creating a port forwarding rule in gateway "${gatewayName}": ${port} -> ${info.hostname.value}:${port}`,
+          )
+        }
+      } else {
+        access = 'private'
+        if (isWireguard) {
+          bullets = [`${vpnAccess} StartTunnel (or similar)`, rootCaRequired]
+        } else {
+          bullets = [
+            localIdeal,
+            `${vpnAccess} router's Wireguard server`,
+            lanRequired,
+            rootCaRequired,
+            staticRequired,
+          ]
+        }
+      }
+      // * IPv6 *
+    } else if (info.hostname.kind === 'ipv6') {
+      type = 'IPv6'
+      access = 'private'
+      bullets = ['Can be used for local access', lanRequired, rootCaRequired]
+      // * Domain *
+    } else {
+      type = 'Domain'
+      const domain = domains[info.hostname.value]!
+      if (info.public) {
+        access = 'public'
+        bullets = [
+          `Requires creating DNS records for "${domains[info.hostname.value]?.root}", as shown in System -> Domains`,
+          `Requires creating a port forwarding rule in gateway "${gatewayName}": ${port} -> ${info.hostname.value}:${port === 443 ? 5443 : port}`,
+        ]
+        if (domain.acme) {
+          bullets.unshift('Ideal for public access via the Internet')
+        } else {
+          bullets = [
+            'Can be used for personal access via the public Internet. VPN is more secure',
+            rootCaRequired,
+            ...bullets,
+          ]
+        }
+      } else {
+        access = 'private'
+        const ipPortBad = 'when using IP addresses and ports is undesirable'
+        const customDnsRequired = `Requires creating custom DNS records for ${info.hostname.value} that resolve to ${gatewayIpv4}`
+        if (isWireguard) {
+          bullets = [
+            `${vpnAccess} StartTunnel (or similar) ${ipPortBad}`,
+            customDnsRequired,
+          ]
+        } else {
+          bullets = [
+            `${localIdeal} ${ipPortBad}`,
+            `${vpnAccess} router's Wireguard server ${ipPortBad}`,
+            customDnsRequired,
+            lanRequired,
+            staticRequired,
+          ]
+        }
+        if (domain.acme) {
+          bullets.push(rootCaRequired)
+        }
+      }
+    }
+  }
+
+  return {
+    url: url.href,
+    access,
+    gatewayName,
+    type,
+    bullets,
+  }
+}
+
+export function getClearnetDomains(host: T.Host): ClearnetDomain[] {
+  return Object.entries(host.domains).map(([fqdn, info]) => ({
+    fqdn,
+    authority: toAuthorityName(info.acme),
+    public: info.public,
+  }))
 }
 
 @Injectable({
@@ -109,9 +264,10 @@ export class InterfaceService {
   private readonly config = inject(ConfigService)
 
   getAddresses(
-    serverDomains: Record<string, T.DomainSettings>,
     serviceInterface: T.ServiceInterface,
     host: T.Host,
+    serverDomains: Record<string, T.DomainSettings>,
+    gateways: GatewayPlus[],
   ): MappedServiceInterface['addresses'] {
     const hostnamesInfos = this.hostnameInfo(serviceInterface, host)
 
@@ -125,7 +281,7 @@ export class InterfaceService {
     const allAddressesWithInfo: AddressWithInfo[] = hostnamesInfos.flatMap(h =>
       utils
         .addressHostToUrl(serviceInterface.addressInfo, h)
-        .map(a => ({ address: new URL(a), info: h })),
+        .map(a => ({ url: new URL(a), info: h })),
     )
 
     const torAddrs = allAddressesWithInfo.filter(filterTor).sort(cmpTor)
@@ -147,10 +303,10 @@ export class InterfaceService {
       }, [] as AddressWithInfo[])
 
     return {
-      common: bestAddrs.map(toDisplayAddress),
+      common: bestAddrs.map(a => toDisplayAddress(a, gateways, host.domains)),
       uncommon: allAddressesWithInfo
         .filter(a => !bestAddrs.includes(a))
-        .map(toDisplayAddress),
+        .map(a => toDisplayAddress(a, gateways, host.domains)),
     }
   }
 
@@ -297,18 +453,24 @@ export type MappedServiceInterface = T.ServiceInterface & {
   torDomains: string[]
   clearnetDomains: ClearnetDomain[]
   addresses: {
-    common: Address[]
-    uncommon: Address[]
+    common: DisplayAddress[]
+    uncommon: DisplayAddress[]
   }
   isOs: boolean
 }
 
-export type InterfaceGateway = {
-  id: string
-  name: string
+export type InterfaceGateway = GatewayPlus & {
   enabled: boolean
-  public: boolean
 }
+
+// export type InterfaceGateway = {
+//   id: string
+//   name: string
+//   enabled: boolean
+//   public: boolean
+//   type: T.NetworkInterfaceType
+//   lanIpv4: string | null
+// }
 
 export type ClearnetDomain = {
   fqdn: string
@@ -316,9 +478,10 @@ export type ClearnetDomain = {
   public: boolean
 }
 
-export type Address = {
+export type DisplayAddress = {
   type: string
-  gateway: string
+  access: 'public' | 'private' | null
+  gatewayName: string | null
   url: string
-  description: string
+  bullets: i18nKey[]
 }

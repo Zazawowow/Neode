@@ -10,7 +10,7 @@ import {
   i18nPipe,
   LoadingService,
 } from '@start9labs/shared'
-import { ISB, T } from '@start9labs/start-sdk'
+import { ISB } from '@start9labs/start-sdk'
 import {
   TuiButton,
   TuiDataList,
@@ -23,12 +23,7 @@ import { FormComponent } from 'src/app/routes/portal/components/form.component'
 import { ApiService } from 'src/app/services/api/embassy-api.service'
 import { FormDialogService } from 'src/app/services/form-dialog.service'
 import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
-
-export type GatewayPlus = T.NetworkInterfaceInfo & {
-  id: string
-  ipInfo: T.IpInfo
-  ipv4: string[]
-}
+import { GatewayPlus } from 'src/app/services/gateway.service'
 
 @Component({
   selector: 'tr[gateway]',

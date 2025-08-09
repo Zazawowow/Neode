@@ -5,7 +5,7 @@ import { PlaceholderComponent } from 'src/app/routes/portal/components/placehold
 import { TableComponent } from 'src/app/routes/portal/components/table.component'
 
 import { DomainComponent } from './domain.component'
-import { ClearnetDomain } from './interface.utils'
+import { ClearnetDomain } from './interface.service'
 
 @Component({
   selector: 'section[clearnetDomains]',

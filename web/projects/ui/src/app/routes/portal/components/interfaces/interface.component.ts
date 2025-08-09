@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core'
 import { tuiButtonOptionsProvider } from '@taiga-ui/core'
-import { MappedServiceInterface } from './interface.utils'
+import { MappedServiceInterface } from './interface.service'
 import { InterfaceGatewaysComponent } from './gateways.component'
 import { InterfaceTorDomainsComponent } from './tor-domains.component'
 import { InterfaceClearnetDomainsComponent } from './clearnet-domains.component'

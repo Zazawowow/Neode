@@ -1,11 +1,12 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core'
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core'
 import { i18nPipe } from '@start9labs/shared'
 import { TuiSkeleton } from '@taiga-ui/kit'
 import { TableComponent } from 'src/app/routes/portal/components/table.component'
-import { GatewaysItemComponent, GatewayPlus } from './item.component'
+import { GatewaysItemComponent } from './item.component'
+import { GatewayService } from 'src/app/services/gateway.service'
 
 @Component({
-  selector: '[gateways]',
+  selector: 'gateways-table',
   template: `
     <table
       [appTable]="[
@@ -17,7 +18,7 @@ import { GatewaysItemComponent, GatewayPlus } from './item.component'
         null,
       ]"
     >
-      @for (gateway of gateways(); track $index) {
+      @for (gateway of gatewayService.gateways(); track $index) {
         <tr [gateway]="gateway"></tr>
       } @empty {
         <tr>
@@ -29,8 +30,9 @@ import { GatewaysItemComponent, GatewayPlus } from './item.component'
     </table>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [GatewayService],
   imports: [TuiSkeleton, i18nPipe, TableComponent, GatewaysItemComponent],
 })
-export class GatewaysTableComponent<T extends GatewayPlus> {
-  readonly gateways = input<readonly T[] | null>(null)
+export class GatewaysTableComponent {
+  protected readonly gatewayService = inject(GatewayService)
 }

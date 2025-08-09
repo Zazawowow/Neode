@@ -15,9 +15,13 @@ import { TuiBadge, TuiBreadcrumbs } from '@taiga-ui/kit'
 import { TuiHeader } from '@taiga-ui/layout'
 import { PatchDB } from 'patch-db-client'
 import { InterfaceComponent } from 'src/app/routes/portal/components/interfaces/interface.component'
-import { ConfigService } from 'src/app/services/config.service'
 import { DataModel } from 'src/app/services/patch-db/data-model'
 import { TitleDirective } from 'src/app/services/title.service'
+import {
+  getClearnetDomains,
+  InterfaceService,
+} from '../../../components/interfaces/interface.service'
+import { GatewayService } from 'src/app/services/gateway.service'
 
 @Component({
   template: `
@@ -25,15 +29,15 @@ import { TitleDirective } from 'src/app/services/title.service'
       <a routerLink="../.." tuiIconButton iconStart="@tui.arrow-left">
         {{ 'Back' | i18n }}
       </a>
-      {{ interface()?.name }}
+      {{ serviceInterface()?.name }}
     </ng-container>
     <tui-breadcrumbs size="l">
       <a *tuiItem tuiLink appearance="action-grayscale" routerLink="../..">
         {{ 'Dashboard' | i18n }}
       </a>
-      <span *tuiItem class="g-primary">{{ interface()?.name }}</span>
+      <span *tuiItem class="g-primary">{{ serviceInterface()?.name }}</span>
     </tui-breadcrumbs>
-    @if (interface(); as value) {
+    @if (serviceInterface(); as value) {
       <header tuiHeader [style.margin-bottom.rem]="1">
         <hgroup tuiTitle>
           <h3>
@@ -71,6 +75,7 @@ import { TitleDirective } from 'src/app/services/title.service'
   `,
   host: { class: 'g-subpage' },
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [GatewayService],
   imports: [
     InterfaceComponent,
     RouterLink,
@@ -86,43 +91,59 @@ import { TitleDirective } from 'src/app/services/title.service'
   ],
 })
 export default class ServiceInterfaceRoute {
-  private readonly config = inject(ConfigService)
+  private readonly interfaceService = inject(InterfaceService)
+  private readonly gatewayService = inject(GatewayService)
+  private readonly patch = inject<PatchDB<DataModel>>(PatchDB)
 
   readonly pkgId = getPkgId()
   readonly interfaceId = input('')
 
-  readonly pkg = toSignal(
-    inject<PatchDB<DataModel>>(PatchDB).watch$('packageData', this.pkgId),
+  readonly pkg = toSignal(this.patch.watch$('packageData', this.pkgId))
+
+  readonly domains = toSignal(
+    this.patch.watch$('serverInfo', 'network', 'domains'),
   )
 
   readonly isRunning = computed(() => {
     return this.pkg()?.status.main === 'running'
   })
 
-  readonly interface = computed(() => {
+  readonly serviceInterface = computed(() => {
     const pkg = this.pkg()
     const id = this.interfaceId()
+    const domains = this.domains()
 
-    if (!pkg || !id) {
+    if (!pkg || !id || !domains) {
       return
     }
 
     const { serviceInterfaces, hosts } = pkg
-    const item = serviceInterfaces[this.interfaceId()]
-    const key = item?.addressInfo.hostId || ''
+    const iFace = serviceInterfaces[this.interfaceId()]
+    const key = iFace?.addressInfo.hostId || ''
     const host = hosts[key]
-    const port = item?.addressInfo.internalPort
+    const port = iFace?.addressInfo.internalPort
 
-    if (!host || !item || !port) {
+    if (!host || !iFace || !port) {
       return
     }
 
+    const gateways = this.gatewayService.gateways() || []
+
     return {
-      ...item,
-      addresses: this.config.getAddresses(item, host),
-      gateways: [],
-      torDomains: [],
-      clearnetDomains: [],
+      ...iFace,
+      addresses: this.interfaceService.getAddresses(
+        iFace,
+        host,
+        domains,
+        gateways,
+      ),
+      gateways:
+        gateways.map(g => ({
+          enabled: true,
+          ...g,
+        })) || [],
+      torDomains: host.onions.map(o => `${o}.onion`),
+      clearnetDomains: getClearnetDomains(host),
       isOs: false,
     }
   })

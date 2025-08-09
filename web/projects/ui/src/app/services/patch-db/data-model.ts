@@ -4,16 +4,6 @@ import { T } from '@start9labs/start-sdk'
 export type DataModel = T.Public & {
   ui: UIData
   packageData: AllPackageData
-  serverInfo: T.ServerInfo & {
-    network: T.NetworkInfo & {
-      domains: {
-        [fqdn: string]: {
-          gateway: string
-          acme: string | null
-        }
-      }
-    }
-  }
 }
 
 export type UIData = {

@@ -42,7 +42,7 @@ export class DomainService {
 
   readonly data = toSignal(
     this.patch.watch$('serverInfo', 'network').pipe(
-      map(({ gateways, domains, acme }) => ({
+      map(({ gateways, domains }) => ({
         gateways: Object.entries(gateways).reduce<Record<string, string>>(
           (obj, [id, n]) => ({
             ...obj,
@@ -51,7 +51,7 @@ export class DomainService {
           {},
         ),
         domains: Object.entries(domains).map(
-          ([fqdn, { gateway, acme }]) =>
+          ([fqdn, { gateway }]) =>
             ({
               fqdn,
               subdomain: parse(fqdn).subdomain,

@@ -20,7 +20,7 @@ import { TuiBadge } from '@taiga-ui/kit'
 import { filter } from 'rxjs'
 import { ApiService } from 'src/app/services/api/embassy-api.service'
 import { InterfaceComponent } from './interface.component'
-import { ClearnetDomain } from './interface.utils'
+import { ClearnetDomain } from './interface.service'
 
 @Component({
   selector: 'tr[domain]',

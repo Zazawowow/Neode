@@ -13,8 +13,11 @@ import { TuiHeader } from '@taiga-ui/layout'
 import { PatchDB } from 'patch-db-client'
 import { map } from 'rxjs'
 import { InterfaceComponent } from 'src/app/routes/portal/components/interfaces/interface.component'
-import { getAddresses } from 'src/app/routes/portal/components/interfaces/interface.utils'
-import { ConfigService } from 'src/app/services/config.service'
+import {
+  getClearnetDomains,
+  InterfaceService,
+} from 'src/app/routes/portal/components/interfaces/interface.service'
+import { GatewayService } from 'src/app/services/gateway.service'
 import { DataModel } from 'src/app/services/patch-db/data-model'
 import { TitleDirective } from 'src/app/services/title.service'
 
@@ -40,6 +43,7 @@ import { TitleDirective } from 'src/app/services/title.service'
   `,
   host: { class: 'g-subpage' },
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [GatewayService],
   imports: [
     InterfaceComponent,
     RouterLink,
@@ -51,7 +55,8 @@ import { TitleDirective } from 'src/app/services/title.service'
   ],
 })
 export default class StartOsUiComponent {
-  private readonly config = inject(ConfigService)
+  private readonly interfaceService = inject(InterfaceService)
+  private readonly gatewayService = inject(GatewayService)
   private readonly i18n = inject(i18nPipe)
 
   readonly iface: T.ServiceInterface = {
@@ -72,27 +77,31 @@ export default class StartOsUiComponent {
     },
   }
 
-  readonly ui = toSignal(
-    inject<PatchDB<DataModel>>(PatchDB)
-      .watch$('serverInfo', 'network', 'host')
-      .pipe(
-        map(host => {
-          return {
-            ...this.iface,
-            addresses: getAddresses(this.iface, host, this.config),
-            gateways: [
-              {
-                id: 'eth0',
-                name: 'Wired Connection 1',
-                public: false,
-                enabled: true,
-              },
-            ],
-            torDomains: [],
-            clearnetDomains: [],
-            isOs: true,
-          }
-        }),
-      ),
+  readonly network = toSignal(
+    inject<PatchDB<DataModel>>(PatchDB).watch$('serverInfo', 'network'),
   )
+
+  readonly ui = computed(() => {
+    const network = this.network()
+    const gateways = this.gatewayService.gateways()
+
+    if (!network || !gateways) return
+
+    return {
+      ...this.iface,
+      addresses: this.interfaceService.getAddresses(
+        this.iface,
+        network.host,
+        network.domains,
+        gateways,
+      ),
+      gateways: gateways.map(g => ({
+        enabled: true,
+        ...g,
+      })),
+      torDomains: network.host.onions.map(o => `${o}.onion`),
+      clearnetDomains: getClearnetDomains(network.host),
+      isOs: true,
+    }
+  })
 }

@@ -8,17 +8,13 @@ import {
   LoadingService,
 } from '@start9labs/shared'
 import { TuiButton } from '@taiga-ui/core'
-import { PatchDB } from 'patch-db-client'
 import { FormComponent } from 'src/app/routes/portal/components/form.component'
-import { DataModel } from 'src/app/services/patch-db/data-model'
 import { FormDialogService } from 'src/app/services/form-dialog.service'
 import { ApiService } from 'src/app/services/api/embassy-api.service'
 import { GatewaysTableComponent } from './table.component'
 import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
 import { TitleDirective } from 'src/app/services/title.service'
-import { map } from 'rxjs'
 import { ISB } from '@start9labs/start-sdk'
-import { GatewayPlus } from './item.component'
 
 @Component({
   template: `
@@ -52,7 +48,7 @@ import { GatewayPlus } from './item.component'
           Add
         </button>
       </header>
-      <div [gateways]="gateways$ | async"></div>
+      <gateways-table />
     </section>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -71,25 +67,6 @@ export default class GatewaysComponent {
   private readonly errorService = inject(ErrorService)
   private readonly api = inject(ApiService)
   private readonly formDialog = inject(FormDialogService)
-
-  readonly gateways$ = inject<PatchDB<DataModel>>(PatchDB)
-    .watch$('serverInfo', 'network', 'gateways')
-    .pipe(
-      map(gateways =>
-        Object.entries(gateways)
-          .filter(([_, val]) => !!val.ipInfo)
-          .map(
-            ([id, val]) =>
-              ({
-                ...val,
-                id,
-                ipv4: val.ipInfo?.subnets
-                  .filter(s => !s.includes('::'))
-                  .map(s => s.split('/')[0]),
-              }) as GatewayPlus,
-          ),
-      ),
-    )
 
   async add() {
     this.formDialog.open(FormComponent, {
