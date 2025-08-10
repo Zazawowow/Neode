@@ -94,7 +94,7 @@ pub fn cli(args: impl IntoIterator<Item = OsString>) {
 
     if let Err(e) = CliApp::new(
         |cfg: ClientConfig| Ok(CliContext::init(cfg.load()?)?),
-        crate::tunnel::tunnel_api(),
+        crate::tunnel::api::tunnel_api(),
     )
     .run(args)
     {

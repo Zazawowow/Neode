@@ -1238,14 +1238,14 @@ async function updateConfig(
         const url: string =
           filled === null || filled.addressInfo === null
             ? ""
-            : catchFn(() =>
-                utils.hostnameInfoToAddress(
-                  specValue.target === "lan-address"
+            : catchFn(
+                () =>
+                  (specValue.target === "lan-address"
                     ? filled.addressInfo!.localHostnames[0] ||
-                        filled.addressInfo!.onionHostnames[0]
+                      filled.addressInfo!.onionHostnames[0]
                     : filled.addressInfo!.onionHostnames[0] ||
-                        filled.addressInfo!.localHostnames[0],
-                ),
+                      filled.addressInfo!.localHostnames[0]
+                  ).hostname.value,
               ) || ""
         mutConfigValue[key] = url
       }

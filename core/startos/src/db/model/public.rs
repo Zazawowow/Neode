@@ -250,7 +250,7 @@ impl NetworkInterfaceInfo {
                 if !ip4s.is_empty() {
                     return ip4s.iter().all(|ip4| {
                         ip4.is_loopback()
-                    || (ip4.is_private() && !ip4.octets().starts_with(&[10, 59])) // reserving 10.59 for public wireguard configurations
+                    // || (ip4.is_private() && !ip4.octets().starts_with(&[10, 59])) // reserving 10.59 for public wireguard configurations
                     || ip4.is_link_local()
                     });
                 }

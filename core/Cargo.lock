@@ -3137,16 +3137,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "iprange"
-version = "0.6.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "37209be0ad225457e63814401415e748e2453a5297f9b637338f5fb8afa4ec00"
-dependencies = [
- "ipnet",
- "serde",
-]
-
-[[package]]
 name = "iri-string"
 version = "0.7.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6136,7 +6126,6 @@ dependencies = [
  "indicatif",
  "integer-encoding",
  "ipnet",
- "iprange",
  "isocountry",
  "itertools 0.14.0",
  "jaq-core",

@@ -5,7 +5,7 @@ use std::path::Path;
 #[cfg(feature = "cli-container")]
 pub mod container_cli;
 pub mod deprecated;
-#[cfg(feature = "registry")]
+#[cfg(any(feature = "registry", feature = "cli-registry"))]
 pub mod registry;
 #[cfg(feature = "cli")]
 pub mod start_cli;
@@ -13,7 +13,7 @@ pub mod start_cli;
 pub mod start_init;
 #[cfg(feature = "startd")]
 pub mod startd;
-#[cfg(feature = "tunnel")]
+#[cfg(any(feature = "tunnel", feature = "cli-tunnel"))]
 pub mod tunnel;
 
 fn select_executable(name: &str) -> Option<fn(VecDeque<OsString>)> {

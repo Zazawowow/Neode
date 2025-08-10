@@ -1,33 +1,23 @@
-use std::collections::{BTreeMap, HashSet};
-use std::net::{Ipv4Addr, SocketAddr};
-
 use axum::Router;
 use futures::future::ready;
-use rpc_toolkit::{Context, HandlerExt, ParentHandler, Server};
-use serde::{Deserialize, Serialize};
+use rpc_toolkit::{from_fn_async, Context, HandlerExt, ParentHandler, Server};
 
-use crate::auth::Sessions;
+use crate::context::CliContext;
 use crate::middleware::auth::Auth;
 use crate::middleware::cors::Cors;
 use crate::net::static_server::{bad_request, not_found, server_error};
 use crate::net::web_server::{Accept, WebServer};
 use crate::prelude::*;
 use crate::rpc_continuations::Guid;
-use crate::sign::AnyVerifyingKey;
 use crate::tunnel::context::TunnelContext;
 
+pub mod api;
 pub mod context;
 pub mod db;
-pub mod init;
+pub mod forward;
+pub mod wg;
 
 pub const TUNNEL_DEFAULT_PORT: u16 = 5960;
-
-pub fn tunnel_api<C: Context>() -> ParentHandler<C> {
-    ParentHandler::new().subcommand(
-        "db",
-        db::db_api::<C>().with_about("Commands to interact with the db i.e. dump and apply"),
-    )
-}
 
 pub fn tunnel_router(ctx: TunnelContext) -> Router {
     use axum::extract as x;
@@ -36,7 +26,7 @@ pub fn tunnel_router(ctx: TunnelContext) -> Router {
         .route("/rpc/{*path}", {
             let ctx = ctx.clone();
             any(
-                Server::new(move || ready(Ok(ctx.clone())), tunnel_api())
+                Server::new(move || ready(Ok(ctx.clone())), api::tunnel_api())
                     .middleware(Cors::new())
                     .middleware(Auth::new())
             )
