@@ -18,7 +18,7 @@ import { DomainService, MappedDomain } from './domain.service'
   template: `
     @if (domain(); as domain) {
       <td>{{ domain.fqdn }}</td>
-      <td [style.order]="-1">{{ domain.gateway.ipInfo?.name || '-' }}</td>
+      <td>{{ domain.gateway.ipInfo?.name || '-' }}</td>
       <td>
         <button
           tuiIconButton
@@ -35,18 +35,18 @@ import { DomainService, MappedDomain } from './domain.service'
               <button
                 tuiOption
                 new
-                iconStart="@tui.pencil"
-                (click)="domainService.edit(domain)"
+                iconStart="@tui.eye"
+                (click)="domainService.showDns(domain)"
               >
-                {{ 'Edit' | i18n }}
+                {{ 'View DNS' | i18n }}
               </button>
               <button
                 tuiOption
                 new
-                iconStart="@tui.eye"
-                (click)="domainService.showDns(domain)"
+                iconStart="@tui.pencil"
+                (click)="domainService.edit(domain)"
               >
-                {{ 'Manage DNS' | i18n }}
+                {{ 'Edit' | i18n }}
               </button>
             </tui-opt-group>
             <tui-opt-group>

@@ -3,7 +3,7 @@ import { T, utils } from '@start9labs/start-sdk'
 import { ConfigService } from 'src/app/services/config.service'
 import { toAuthorityName } from 'src/app/utils/acme'
 import { GatewayPlus } from 'src/app/services/gateway.service'
-import { DialogService, i18nKey } from '@start9labs/shared'
+import { i18nKey } from '@start9labs/shared'
 
 type AddressWithInfo = {
   url: URL
@@ -134,7 +134,9 @@ function toDisplayAddress(
       ]
       // Tor (HTTP)
     } else {
-      bullets.unshift('Ideal for anonymous, remote connectivity')
+      bullets.unshift(
+        'Ideal for anonymous, censorship-resistant hosting and remote access',
+      )
       type = `${type} (HTTP)`
     }
     // ** Not Tor **
@@ -143,7 +145,7 @@ function toDisplayAddress(
     const gateway = gateways.find(g => g.id === info.gatewayId)!
     gatewayName = gateway.ipInfo.name
 
-    const gatewayIpv4 = gateway.ipInfo.subnets[0]
+    const gatewayIpv4 = gateway.ipv4[0]
     const isWireguard = gateway.ipInfo.deviceType === 'wireguard'
 
     const localIdeal = 'Ideal for local access'
@@ -158,7 +160,7 @@ function toDisplayAddress(
       access = 'private'
       bullets = [
         localIdeal,
-        'Not recommended for VPN access. VPNs do not support ".local" domains without extra configuration',
+        'Not recommended for VPN access. VPNs do not support ".local" domains without advanced configuration',
         lanRequired,
         rootCaRequired,
       ]
@@ -174,7 +176,7 @@ function toDisplayAddress(
         ]
         if (!gateway.public) {
           bullets.push(
-            `Requires creating a port forwarding rule in gateway "${gatewayName}": ${port} -> ${info.hostname.value}:${port}`,
+            `Requires port forwarding in gateway "${gatewayName}": ${port} -> ${info.hostname.value}:${port}`,
           )
         }
       } else {
@@ -203,8 +205,8 @@ function toDisplayAddress(
       if (info.public) {
         access = 'public'
         bullets = [
-          `Requires creating DNS records for "${domains[info.hostname.value]?.root}", as shown in System -> Domains`,
-          `Requires creating a port forwarding rule in gateway "${gatewayName}": ${port} -> ${info.hostname.value}:${port === 443 ? 5443 : port}`,
+          `Requires DNS record(s) for ${domains[info.hostname.value]?.root}, as shown in System -> Domains`,
+          `Requires port forwarding in gateway "${gatewayName}": ${port} -> ${info.hostname.value}:${port === 443 ? 5443 : port}`,
         ]
         if (domain.acme) {
           bullets.unshift('Ideal for public access via the Internet')
@@ -218,7 +220,7 @@ function toDisplayAddress(
       } else {
         access = 'private'
         const ipPortBad = 'when using IP addresses and ports is undesirable'
-        const customDnsRequired = `Requires creating custom DNS records for ${info.hostname.value} that resolve to ${gatewayIpv4}`
+        const customDnsRequired = `Requires DNS record for ${info.hostname.value} that resolve to ${gatewayIpv4}`
         if (isWireguard) {
           bullets = [
             `${vpnAccess} StartTunnel (or similar) ${ipPortBad}`,
@@ -463,18 +465,9 @@ export type InterfaceGateway = GatewayPlus & {
   enabled: boolean
 }
 
-// export type InterfaceGateway = {
-//   id: string
-//   name: string
-//   enabled: boolean
-//   public: boolean
-//   type: T.NetworkInterfaceType
-//   lanIpv4: string | null
-// }
-
 export type ClearnetDomain = {
   fqdn: string
-  authority: string | null
+  authority: string
   public: boolean
 }
 

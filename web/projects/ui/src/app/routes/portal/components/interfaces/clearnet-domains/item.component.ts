@@ -19,66 +19,33 @@ import {
 import { TuiBadge } from '@taiga-ui/kit'
 import { filter } from 'rxjs'
 import { ApiService } from 'src/app/services/api/embassy-api.service'
-import { InterfaceComponent } from './interface.component'
-import { ClearnetDomain } from './interface.service'
+import { InterfaceComponent } from '../interface.component'
+import { ClearnetDomain } from '../interface.service'
 
 @Component({
   selector: 'tr[domain]',
   template: `
     <td>{{ domain().fqdn }}</td>
-    <td>{{ domain().authority || '-' }}</td>
+    <td>{{ domain().authority }}</td>
     <td>
       @if (domain().public) {
         <tui-badge size="s" appearance="primary-success">
-          {{ 'Public' | i18n }}
+          {{ 'public' | i18n }}
         </tui-badge>
       } @else {
         <tui-badge size="s" appearance="primary-destructive">
-          {{ 'Private' | i18n }}
+          {{ 'private' | i18n }}
         </tui-badge>
       }
     </td>
     <td>
       <button
         tuiIconButton
-        tuiDropdown
-        size="s"
-        appearance="flat-grayscale"
-        iconStart="@tui.ellipsis-vertical"
-        [tuiAppearanceState]="open ? 'hover' : null"
-        [(tuiDropdownOpen)]="open"
+        iconStart="@tui.trash"
+        appearance="action-destructive"
+        (click)="remove()"
       >
-        {{ 'More' | i18n }}
-        <tui-data-list *tuiTextfieldDropdown>
-          <tui-opt-group>
-            <button
-              tuiOption
-              new
-              [iconStart]="domain().public ? '@tui.eye-off' : '@tui.eye'"
-              (click)="toggle()"
-            >
-              @if (domain().public) {
-                {{ 'Make private' | i18n }}
-              } @else {
-                {{ 'Make public' | i18n }}
-              }
-            </button>
-            <button tuiOption new iconStart="@tui.pencil" (click)="edit()">
-              {{ 'Edit' | i18n }}
-            </button>
-          </tui-opt-group>
-          <tui-opt-group>
-            <button
-              tuiOption
-              new
-              iconStart="@tui.trash"
-              class="g-negative"
-              (click)="remove()"
-            >
-              {{ 'Delete' | i18n }}
-            </button>
-          </tui-opt-group>
-        </tui-data-list>
+        {{ 'Delete' | i18n }}
       </button>
     </td>
   `,
@@ -115,7 +82,7 @@ import { ClearnetDomain } from './interface.service'
     TuiBadge,
   ],
 })
-export class DomainComponent {
+export class InterfaceClearnetDomainsItemComponent {
   private readonly dialog = inject(DialogService)
   private readonly loader = inject(LoadingService)
   private readonly errorService = inject(ErrorService)
@@ -123,12 +90,6 @@ export class DomainComponent {
   private readonly interface = inject(InterfaceComponent)
 
   readonly domain = input.required<ClearnetDomain>()
-
-  open = false
-
-  toggle() {}
-
-  edit() {}
 
   remove() {
     this.dialog

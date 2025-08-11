@@ -43,6 +43,11 @@ import { DomainsTableComponent } from './table.component'
       <domains-table />
     </section>
   `,
+  styles: `
+    :host {
+      max-width: 50rem;
+    }
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TuiButton,

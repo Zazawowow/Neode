@@ -14,7 +14,7 @@ import { DomainService } from './domain.service'
         <tr [domain]="domain"></tr>
       } @empty {
         <tr>
-          <td [attr.colspan]="4">
+          <td [attr.colspan]="3">
             @if (domainService.data()?.domains) {
               <app-placeholder icon="@tui.globe">
                 {{ 'No domains' | i18n }}

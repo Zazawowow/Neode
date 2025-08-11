@@ -16,9 +16,7 @@ import {
 } from '@taiga-ui/core'
 import { PolymorpheusComponent } from '@taiga-ui/polymorpheus'
 import { QRModal } from 'src/app/routes/portal/modals/qr.component'
-
 import { InterfaceComponent } from '../interface.component'
-import { InterfaceService } from '../interface.service'
 
 @Component({
   selector: 'td[actions]',

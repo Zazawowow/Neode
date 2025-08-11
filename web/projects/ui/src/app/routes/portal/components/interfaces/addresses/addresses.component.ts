@@ -12,7 +12,7 @@ import { InterfaceAddressItemComponent } from './item.component'
   selector: 'section[addresses]',
   template: `
     <header>{{ 'Addresses' | i18n }}</header>
-    <table [appTable]="[null, 'Type', 'Gateway', 'URL', null]">
+    <table [appTable]="[null, 'Type', 'Access', 'Gateway', 'URL', null]">
       @for (address of addresses()?.common; track $index) {
         <tr [address]="address" [isRunning]="isRunning()"></tr>
       } @empty {
@@ -27,7 +27,7 @@ import { InterfaceAddressItemComponent } from './item.component'
         } @else {
           @for (_ of [0, 1]; track $index) {
             <tr>
-              <td colspan="5">
+              <td colspan="6">
                 <div [tuiSkeleton]="true">{{ 'Loading' | i18n }}</div>
               </td>
             </tr>

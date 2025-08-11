@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core'
 import {
   DialogService,
   ErrorService,
+  i18nKey,
   i18nPipe,
   LoadingService,
 } from '@start9labs/shared'
@@ -14,7 +15,6 @@ import { FormDialogService } from 'src/app/services/form-dialog.service'
 import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
 import { PatchDB } from 'patch-db-client'
 import { DataModel } from 'src/app/services/patch-db/data-model'
-import { parse } from 'tldts'
 import { RR } from 'src/app/services/api/api.types'
 import { DNS } from './dns.component'
 
@@ -22,11 +22,17 @@ import { DNS } from './dns.component'
 
 export type MappedDomain = {
   fqdn: string
-  subdomain: string | null
   gateway: {
     id: string
     name: string | null
     ipInfo: T.IpInfo | null
+  }
+}
+
+type GatewayWithId = T.NetworkInterfaceInfo & {
+  id: string
+  ipInfo: T.IpInfo & {
+    wanIp: string
   }
 }
 
@@ -43,18 +49,13 @@ export class DomainService {
   readonly data = toSignal(
     this.patch.watch$('serverInfo', 'network').pipe(
       map(({ gateways, domains }) => ({
-        gateways: Object.entries(gateways).reduce<Record<string, string>>(
-          (obj, [id, n]) => ({
-            ...obj,
-            [id]: n.ipInfo?.name || '',
-          }),
-          {},
-        ),
+        gateways: Object.entries(gateways)
+          .filter(([_, g]) => g.ipInfo && g.ipInfo.wanIp)
+          .map(([id, g]) => ({ id, ...g })) as GatewayWithId[],
         domains: Object.entries(domains).map(
           ([fqdn, { gateway }]) =>
             ({
               fqdn,
-              subdomain: parse(fqdn).subdomain,
               gateway: {
                 id: gateway,
                 ipInfo: gateways[gateway]?.ipInfo || null,
@@ -70,7 +71,7 @@ export class DomainService {
       fqdn: ISB.Value.text({
         name: 'Domain',
         description:
-          'Enter a domain/subdomain. For example, if you control domain.com, you could enter domain.com or subdomain.domain.com or another.subdomain.domain.com. In any case, the domain you enter and all possible subdomains of the domain will be available for assignment in StartOS',
+          'Enter a fully qualified domain name. For example, if you control domain.com, you could enter domain.com or subdomain.domain.com or another.subdomain.domain.com. In any case, the domain you enter and all possible subdomains of the domain will be available for assignment in StartOS',
         required: true,
         default: null,
         patterns: [utils.Patterns.domain],
@@ -141,7 +142,7 @@ export class DomainService {
 
   showDns(domain: MappedDomain) {
     this.dialog
-      .openComponent(DNS, { label: 'Manage DNS', data: domain })
+      .openComponent(DNS, { label: 'DNS Records' as i18nKey, data: domain })
       .subscribe()
   }
 
@@ -160,13 +161,24 @@ export class DomainService {
   }
 
   private gatewaysSpec() {
+    const gateways = this.data()?.gateways || []
+
     return {
-      gateway: ISB.Value.select({
+      gateway: ISB.Value.dynamicSelect(() => ({
         name: 'Gateway',
-        description: 'Select which gateway to use for this domain.',
-        values: this.data()!.gateways,
+        description: 'Select a gateway to use for this domain.',
+        values: gateways.reduce<Record<string, string>>(
+          (obj, gateway) => ({
+            ...obj,
+            [gateway.id]: gateway.ipInfo!.name,
+          }),
+          {},
+        ),
         default: '',
-      }),
+        disabled: gateways
+          .filter(g => g.ipInfo.wanIp.split('.').at(-1) === '100')
+          .map(g => g.id),
+      })),
     }
   }
 }

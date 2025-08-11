@@ -57,10 +57,7 @@ import { MarketplacePkgSideload, validateS9pk } from './sideload.utils'
               <p>{{ 'Upload .s9pk package file' | i18n }}</p>
               @if (isTor) {
                 <p class="g-warning">
-                  {{
-                    'Warning: package upload will be slow over Tor. Switch to local for a better experience.'
-                      | i18n
-                  }}
+                  {{ 'Warning: package upload will be slow over Tor.' | i18n }}
                 </p>
               }
               <button tuiButton>{{ 'Upload' | i18n }}</button>

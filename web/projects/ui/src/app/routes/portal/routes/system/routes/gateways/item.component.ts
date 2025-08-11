@@ -30,9 +30,14 @@ import { GatewayPlus } from 'src/app/services/gateway.service'
   template: `
     @if (gateway(); as gateway) {
       <td [style.grid-column]="'span 2'">{{ gateway.ipInfo.name }}</td>
-      <td class="type">{{ gateway.ipInfo.deviceType || '-' }}</td>
-      <td [style.order]="-2">
-        {{ gateway.public ? ('Public' | i18n) : ('Private' | i18n) }}
+      <td class="type">
+        @if (gateway.ipInfo.deviceType; as type) {
+          {{ type }} ({{
+            gateway.public ? ('public' | i18n) : ('private' | i18n)
+          }})
+        } @else {
+          -
+        }
       </td>
       <td class="lan">{{ gateway.ipv4.join(', ') }}</td>
       <td
@@ -89,15 +94,8 @@ import { GatewayPlus } from 'src/app/services/gateway.service'
       grid-template-columns: min-content 1fr min-content;
 
       .type {
+        grid-column: span 2;
         order: -1;
-
-        &::before {
-          content: '\\00A0(';
-        }
-
-        &::after {
-          content: ')';
-        }
       }
 
       .lan,
