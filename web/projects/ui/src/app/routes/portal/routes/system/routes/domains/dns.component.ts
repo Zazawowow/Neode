@@ -1,22 +1,29 @@
+import { NgTemplateOutlet } from '@angular/common'
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
   inject,
+  signal,
 } from '@angular/core'
+import { FormsModule } from '@angular/forms'
 import {
   DialogService,
   ErrorService,
   i18nKey,
   i18nPipe,
-  LoadingService,
 } from '@start9labs/shared'
-import { TuiButton, TuiDialogContext } from '@taiga-ui/core'
-import { ApiService } from 'src/app/services/api/embassy-api.service'
-import { MappedDomain } from './domain.service'
+import { TuiButton, TuiDialogContext, TuiIcon } from '@taiga-ui/core'
+import {
+  TuiButtonLoading,
+  TuiSwitch,
+  tuiSwitchOptionsProvider,
+} from '@taiga-ui/kit'
 import { injectContext, PolymorpheusComponent } from '@taiga-ui/polymorpheus'
 import { TableComponent } from 'src/app/routes/portal/components/table.component'
+import { ApiService } from 'src/app/services/api/embassy-api.service'
 import { parse } from 'tldts'
+import { MappedDomain } from './domain.service'
 
 // @TODO translations
 
@@ -25,72 +32,152 @@ import { parse } from 'tldts'
   template: `
     @let wanIp = context.data.gateway.ipInfo?.wanIp || ('Error' | i18n);
 
-    <table [appTable]="[$any('Record'), $any('Host'), 'Value', 'Purpose']">
-      <tr>
-        <td>A</td>
-        <td>{{ subdomain() || '@' }}</td>
-        <td>{{ wanIp }}</td>
-        <td></td>
-      </tr>
-      <tr>
-        <td>A</td>
-        <td>{{ subdomain() ? '*.' + subdomain() : '*' }}</td>
-        <td>{{ wanIp }}</td>
-        <td></td>
-      </tr>
+    @if (context.data.gateway.ipInfo?.deviceType !== 'wireguard') {
+      <label>
+        IP
+        <input type="checkbox" tuiSwitch [(ngModel)]="mode" />
+        Dynamic DNS
+      </label>
+    }
 
-      <!-- <tr>
-        <td>ALIAS</td>
-        <td>{{ subdomain() || '@' }}</td>
-        <td>[DDNS Address]</td>
-        <td></td>
-      </tr>
-      <tr>
-        <td>ALIAS</td>
-        <td>{{ subdomain() ? '*.' + subdomain() : '*' }}</td>
-        <td>[DDNS Address]</td>
-        <td></td>
-      </tr> -->
+    <table [appTable]="[$any('Record'), $any('Host'), 'Value', 'Purpose']">
+      @if (mode) {
+        <tr>
+          <td>
+            @if (root() !== undefined; as $implicit) {
+              <ng-container
+                [ngTemplateOutlet]="test"
+                [ngTemplateOutletContext]="{ $implicit }"
+              />
+            }
+            ALIAS
+          </td>
+          <td>{{ subdomain() || '@' }}</td>
+          <td>[DDNS Address]</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>
+            @if (wildcard() !== undefined; as $implicit) {
+              <ng-container
+                [ngTemplateOutlet]="test"
+                [ngTemplateOutletContext]="{ $implicit }"
+              />
+            }
+            ALIAS
+          </td>
+          <td>{{ subdomain() ? '*.' + subdomain() : '*' }}</td>
+          <td>[DDNS Address]</td>
+          <td></td>
+        </tr>
+      } @else {
+        <tr>
+          <td>
+            @if (root() !== undefined; as $implicit) {
+              <ng-container
+                [ngTemplateOutlet]="test"
+                [ngTemplateOutletContext]="{ $implicit }"
+              />
+            }
+            A
+          </td>
+          <td>{{ subdomain() || '@' }}</td>
+          <td>{{ wanIp }}</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>
+            @if (wildcard() !== undefined; as $implicit) {
+              <ng-container
+                [ngTemplateOutlet]="test"
+                [ngTemplateOutletContext]="{ $implicit }"
+              />
+            }
+            A
+          </td>
+          <td>{{ subdomain() ? '*.' + subdomain() : '*' }}</td>
+          <td>{{ wanIp }}</td>
+          <td></td>
+        </tr>
+      }
     </table>
 
+    <ng-template #test let-result>
+      @if (result) {
+        <tui-icon class="g-positive" icon="@tui.check" />
+      } @else {
+        <tui-icon class="g-negative" icon="@tui.x" />
+      }
+    </ng-template>
+
     <footer class="g-buttons">
-      <button tuiButton size="l" (click)="testDns()">
+      <button tuiButton [loading]="loading()" (click)="testDns()">
         {{ 'Test' | i18n }}
       </button>
     </footer>
   `,
   styles: `
-    section {
-      margin: 1.5rem 0;
+    label {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      margin: 1rem 0;
+    }
+
+    tui-icon {
+      font-size: 1rem;
+      vertical-align: text-bottom;
     }
   `,
+  providers: [
+    tuiSwitchOptionsProvider({
+      appearance: () => 'primary',
+      icon: () => '',
+    }),
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TuiButton, i18nPipe, TableComponent],
+  imports: [
+    TuiButton,
+    i18nPipe,
+    TableComponent,
+    TuiSwitch,
+    FormsModule,
+    TuiButtonLoading,
+    NgTemplateOutlet,
+    TuiIcon,
+  ],
 })
 export class DnsComponent {
-  private readonly loader = inject(LoadingService)
   private readonly errorService = inject(ErrorService)
   private readonly api = inject(ApiService)
   private readonly dialog = inject(DialogService)
 
+  mode = false
+
   readonly context = injectContext<TuiDialogContext<void, MappedDomain>>()
 
   readonly subdomain = computed(() => parse(this.context.data.fqdn).subdomain)
+  readonly loading = signal(false)
+  readonly root = signal<boolean | undefined>(undefined)
+  readonly wildcard = signal<boolean | undefined>(undefined)
 
   async testDns() {
-    const loader = this.loader.open().subscribe()
+    this.loading.set(true)
 
     try {
-      await this.api.testDomain({
-        fqdn: this.context.data.fqdn,
-        gateway: this.context.data.gateway.id,
-      })
-      return true
+      await this.api
+        .testDomain({
+          fqdn: this.context.data.fqdn,
+          gateway: this.context.data.gateway.id,
+        })
+        .then(({ root, wildcard }) => {
+          this.root.set(root)
+          this.wildcard.set(wildcard)
+        })
     } catch (e: any) {
       this.errorService.handleError(e)
-      return false
     } finally {
-      loader.unsubscribe()
+      this.loading.set(false)
     }
   }
 
@@ -100,9 +187,7 @@ export class DnsComponent {
       : `This DNS record routes subdomains of ${this.context.data.fqdn} to your server.`
 
     this.dialog
-      .openAlert(message as i18nKey, {
-        label: 'Purpose' as i18nKey,
-      })
+      .openAlert(message as i18nKey, { label: 'Purpose' as i18nKey })
       .subscribe()
   }
 }
