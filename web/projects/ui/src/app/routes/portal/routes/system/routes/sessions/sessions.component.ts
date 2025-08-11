@@ -44,6 +44,11 @@ import { SessionsTableComponent } from './table.component'
       <div #table [sessions]="others"></div>
     </section>
   `,
+  styles: `
+    :host {
+      max-width: 80rem;
+    }
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,

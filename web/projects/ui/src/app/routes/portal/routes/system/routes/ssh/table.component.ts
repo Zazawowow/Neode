@@ -72,6 +72,10 @@ import { SSHKey } from 'src/app/services/api/api.types'
       }
     }
 
+    .date {
+      width: 12rem;
+    }
+
     input {
       position: absolute;
       top: 50%;

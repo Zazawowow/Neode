@@ -51,6 +51,11 @@ import { ISB } from '@start9labs/start-sdk'
       <gateways-table />
     </section>
   `,
+  styles: `
+    :host {
+      max-width: 64rem;
+    }
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,

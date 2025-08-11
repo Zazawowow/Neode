@@ -70,6 +70,10 @@ import { SSHTableComponent } from './table.component'
     </section>
   `,
   styles: `
+    :host {
+      max-width: 70rem;
+    }
+
     :host-context(tui-root._mobile) {
       [tuiButton] {
         font-size: 0;

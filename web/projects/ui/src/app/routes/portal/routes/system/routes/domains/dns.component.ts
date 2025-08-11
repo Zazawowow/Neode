@@ -7,12 +7,7 @@ import {
   signal,
 } from '@angular/core'
 import { FormsModule } from '@angular/forms'
-import {
-  DialogService,
-  ErrorService,
-  i18nKey,
-  i18nPipe,
-} from '@start9labs/shared'
+import { ErrorService, i18nKey, i18nPipe } from '@start9labs/shared'
 import { TuiButton, TuiDialogContext, TuiIcon } from '@taiga-ui/core'
 import {
   TuiButtonLoading,
@@ -35,13 +30,18 @@ import { MappedDomain } from './domain.service'
     @if (context.data.gateway.ipInfo?.deviceType !== 'wireguard') {
       <label>
         IP
-        <input type="checkbox" tuiSwitch [(ngModel)]="mode" />
+        <input
+          type="checkbox"
+          tuiSwitch
+          [(ngModel)]="ddns"
+          (ngModelChange)="reset()"
+        />
         Dynamic DNS
       </label>
     }
 
-    <table [appTable]="[$any('Record'), $any('Host'), 'Value', 'Purpose']">
-      @if (mode) {
+    <table [appTable]="['Type', $any('Host'), 'Value', 'Purpose']">
+      @if (ddns) {
         <tr>
           <td>
             @if (root() !== undefined; as $implicit) {
@@ -54,7 +54,7 @@ import { MappedDomain } from './domain.service'
           </td>
           <td>{{ subdomain() || '@' }}</td>
           <td>[DDNS Address]</td>
-          <td></td>
+          <td>{{ purpose().root }}</td>
         </tr>
         <tr>
           <td>
@@ -68,7 +68,7 @@ import { MappedDomain } from './domain.service'
           </td>
           <td>{{ subdomain() ? '*.' + subdomain() : '*' }}</td>
           <td>[DDNS Address]</td>
-          <td></td>
+          <td>{{ purpose().wildcard }}</td>
         </tr>
       } @else {
         <tr>
@@ -83,7 +83,7 @@ import { MappedDomain } from './domain.service'
           </td>
           <td>{{ subdomain() || '@' }}</td>
           <td>{{ wanIp }}</td>
-          <td></td>
+          <td>{{ purpose().root }}</td>
         </tr>
         <tr>
           <td>
@@ -97,7 +97,7 @@ import { MappedDomain } from './domain.service'
           </td>
           <td>{{ subdomain() ? '*.' + subdomain() : '*' }}</td>
           <td>{{ wanIp }}</td>
-          <td></td>
+          <td>{{ purpose().wildcard }}</td>
         </tr>
       }
     </table>
@@ -150,9 +150,8 @@ import { MappedDomain } from './domain.service'
 export class DnsComponent {
   private readonly errorService = inject(ErrorService)
   private readonly api = inject(ApiService)
-  private readonly dialog = inject(DialogService)
 
-  mode = false
+  ddns = false
 
   readonly context = injectContext<TuiDialogContext<void, MappedDomain>>()
 
@@ -161,7 +160,13 @@ export class DnsComponent {
   readonly root = signal<boolean | undefined>(undefined)
   readonly wildcard = signal<boolean | undefined>(undefined)
 
+  readonly purpose = computed(() => ({
+    root: this.context.data.fqdn,
+    wildcard: `subdomains of ${this.context.data.fqdn}`,
+  }))
+
   async testDns() {
+    this.reset()
     this.loading.set(true)
 
     try {
@@ -181,14 +186,9 @@ export class DnsComponent {
     }
   }
 
-  description(subdomain: boolean) {
-    const message = subdomain
-      ? `This DNS record routes ${this.context.data.fqdn} (no subdomain) to your server.`
-      : `This DNS record routes subdomains of ${this.context.data.fqdn} to your server.`
-
-    this.dialog
-      .openAlert(message as i18nKey, { label: 'Purpose' as i18nKey })
-      .subscribe()
+  reset() {
+    this.root.set(undefined)
+    this.wildcard.set(undefined)
   }
 }
 

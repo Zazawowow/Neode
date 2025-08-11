@@ -142,7 +142,11 @@ export class DomainService {
 
   showDns(domain: MappedDomain) {
     this.dialog
-      .openComponent(DNS, { label: 'DNS Records' as i18nKey, data: domain })
+      .openComponent(DNS, {
+        label: 'DNS Records' as i18nKey,
+        size: 'l',
+        data: domain,
+      })
       .subscribe()
   }
 

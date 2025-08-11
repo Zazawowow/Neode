@@ -12,12 +12,12 @@ import { DomainsTableComponent } from './table.component'
       <a routerLink=".." tuiIconButton iconStart="@tui.arrow-left">
         {{ 'Back' | i18n }}
       </a>
-      {{ 'Domains' | i18n }}
+      {{ 'Public Domains' | i18n }}
     </ng-container>
 
     <section class="g-card">
       <header>
-        {{ 'Domains' | i18n }}
+        {{ 'Public Domains' | i18n }}
         <a
           tuiIconButton
           size="xs"
@@ -45,7 +45,7 @@ import { DomainsTableComponent } from './table.component'
   `,
   styles: `
     :host {
-      max-width: 50rem;
+      max-width: 48rem;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

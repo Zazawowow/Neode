@@ -508,13 +508,13 @@ export const ENGLISH = {
   'Add gateway': 535, // as in, add a new network gateway to StartOS
   'Rename': 536,
   'Access': 537, // as in, public or private access, almost "permission"
-  'Domains': 538, // as in, internet domains
+  'Public Domains': 538, // as in, internet domains
   'Certificate Authorities': 539,
   'Domain': 540, // as in, an internat domain name
   'Gateway': 541, // as in, a device or software that connects two different networks
   'Certificate Authority': 543,
   'Edit domain': 544,
-  'No domains': 545,
+  'No public domains': 545,
   'Provider': 546,
   'View DNS': 547,
   'Clearnet Domains': 548,

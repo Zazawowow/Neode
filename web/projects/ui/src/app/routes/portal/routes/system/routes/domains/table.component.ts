@@ -17,7 +17,7 @@ import { DomainService } from './domain.service'
           <td [attr.colspan]="3">
             @if (domainService.data()?.domains) {
               <app-placeholder icon="@tui.globe">
-                {{ 'No domains' | i18n }}
+                {{ 'No public domains' | i18n }}
               </app-placeholder>
             } @else {
               <div [tuiSkeleton]="true">{{ 'Loading' | i18n }}</div>

@@ -48,7 +48,7 @@ export const SYSTEM_MENU = [
     },
     {
       icon: '@tui.globe',
-      item: 'Domains',
+      item: 'Public Domains',
       link: 'domains',
     },
   ],

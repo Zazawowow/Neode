@@ -29,7 +29,9 @@ import { GatewayPlus } from 'src/app/services/gateway.service'
   selector: 'tr[gateway]',
   template: `
     @if (gateway(); as gateway) {
-      <td [style.grid-column]="'span 2'">{{ gateway.ipInfo.name }}</td>
+      <td class="name">
+        {{ gateway.ipInfo.name }}
+      </td>
       <td class="type">
         @if (gateway.ipInfo.deviceType; as type) {
           {{ type }} ({{
@@ -90,8 +92,20 @@ import { GatewayPlus } from 'src/app/services/gateway.service'
       text-align: right;
     }
 
+    .name {
+      width: 14rem;
+    }
+
+    .type {
+      width: 14rem;
+    }
+
     :host-context(tui-root._mobile) {
       grid-template-columns: min-content 1fr min-content;
+
+      .name {
+        grid-column: span 2;
+      }
 
       .type {
         grid-column: span 2;

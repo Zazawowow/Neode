@@ -42,6 +42,11 @@ import { AuthoritiesTableComponent } from './table.component'
       <authorities-table />
     </section>
   `,
+  styles: `
+    :host {
+      max-width: 64rem;
+    }
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TuiButton,
