@@ -4,7 +4,7 @@ use models::PackageId;
 
 use crate::context::RpcContext;
 use crate::prelude::*;
-use crate::volume::data_dir;
+use crate::volume::PKG_VOLUME_DIR;
 use crate::{DATA_DIR, PACKAGE_DATA};
 
 pub async fn cleanup(ctx: &RpcContext, id: &PackageId, soft: bool) -> Result<(), Error> {
@@ -45,7 +45,9 @@ pub async fn cleanup(ctx: &RpcContext, id: &PackageId, soft: bool) -> Result<(),
         {
             let state = pde.state_info.expect_removing()?;
             if !soft {
-                let path = Path::new(DATA_DIR).join(&state.manifest.id);
+                let path = Path::new(DATA_DIR)
+                    .join(PKG_VOLUME_DIR)
+                    .join(&state.manifest.id);
                 if tokio::fs::metadata(&path).await.is_ok() {
                     tokio::fs::remove_dir_all(&path).await?;
                 }
