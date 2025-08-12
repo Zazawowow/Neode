@@ -46,11 +46,6 @@ export const SYSTEM_MENU = [
       item: 'Certificate Authorities',
       link: 'authorities',
     },
-    {
-      icon: '@tui.globe',
-      item: 'Public Domains',
-      link: 'domains',
-    },
   ],
   [
     {

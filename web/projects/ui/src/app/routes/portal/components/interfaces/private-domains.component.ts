@@ -24,22 +24,20 @@ import { PlaceholderComponent } from 'src/app/routes/portal/components/placehold
 import { ApiService } from 'src/app/services/api/embassy-api.service'
 import { FormDialogService } from 'src/app/services/form-dialog.service'
 import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
-
 import { InterfaceComponent } from './interface.component'
 
-type OnionForm = {
-  key: string
-}
+// @TODO translations
 
 @Component({
-  selector: 'section[torDomains]',
+  selector: 'section[privateDomains]',
   template: `
     <header>
-      Tor Domains
+      {{ 'Private Domains' | i18n }}
       <a
         tuiIconButton
         docsLink
-        path="/user-manual/connecting-remotely/tor.html"
+        path="/user-manual/connecting-locally.html"
+        fragment="private-domains"
         appearance="icon"
         iconStart="@tui.external-link"
       >
@@ -54,7 +52,7 @@ type OnionForm = {
         {{ 'Add' | i18n }}
       </button>
     </header>
-    @for (domain of torDomains(); track $index) {
+    @for (domain of privateDomains(); track $index) {
       <div tuiCell="s">
         <span tuiTitle>{{ domain }}</span>
         <button
@@ -67,9 +65,9 @@ type OnionForm = {
         </button>
       </div>
     } @empty {
-      @if (torDomains()) {
-        <app-placeholder icon="@tui.target">
-          {{ 'No Tor domains' | i18n }}
+      @if (privateDomains()) {
+        <app-placeholder icon="@tui.globe-lock">
+          {{ 'No private domains' | i18n }}
         </app-placeholder>
       } @else {
         @for (_ of [0, 1]; track $index) {
@@ -97,7 +95,7 @@ type OnionForm = {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class InterfaceTorDomainsComponent {
+export class InterfacePrivateDomainsComponent {
   private readonly dialog = inject(DialogService)
   private readonly formDialog = inject(FormDialogService)
   private readonly loader = inject(LoadingService)
@@ -106,25 +104,50 @@ export class InterfaceTorDomainsComponent {
   private readonly interface = inject(InterfaceComponent)
   private readonly i18n = inject(i18nPipe)
 
-  readonly torDomains = input.required<readonly string[] | undefined>()
+  readonly privateDomains = input.required<readonly string[] | undefined>()
 
-  async remove(onion: string) {
+  async add() {
+    this.formDialog.open<FormContext<{ fqdn: string }>>(FormComponent, {
+      label: 'New private domain',
+      data: {
+        spec: await configBuilderToSpec(
+          ISB.InputSpec.of({
+            fqdn: ISB.Value.text({
+              name: 'Domain',
+              description:
+                'Enter a fully qualified domain name. Since the domain is for private use, it can be any domain you want, even one you do not control.',
+              required: true,
+              default: null,
+              patterns: [utils.Patterns.domain],
+            }),
+          }),
+        ),
+        buttons: [
+          {
+            text: this.i18n.transform('Save')!,
+            handler: async value => this.save(value.fqdn),
+          },
+        ],
+      },
+    })
+  }
+
+  async remove(fqdn: string) {
     this.dialog
       .openConfirm({ label: 'Are you sure?', size: 's' })
       .pipe(filter(Boolean))
       .subscribe(async () => {
         const loader = this.loader.open('Removing').subscribe()
-        const params = { onion }
 
         try {
           if (this.interface.packageId()) {
-            await this.api.pkgRemoveOnion({
-              ...params,
+            await this.api.pkgRemovePrivateDomain({
+              fqdn,
               package: this.interface.packageId(),
               host: this.interface.value()?.addressInfo.hostId || '',
             })
           } else {
-            await this.api.serverRemoveOnion(params)
+            await this.api.osUiRemovePrivateDomain({ fqdn })
           }
           return true
         } catch (e: any) {
@@ -136,50 +159,18 @@ export class InterfaceTorDomainsComponent {
       })
   }
 
-  async add() {
-    this.formDialog.open<FormContext<OnionForm>>(FormComponent, {
-      label: 'New Tor domain',
-      data: {
-        spec: await configBuilderToSpec(
-          ISB.InputSpec.of({
-            key: ISB.Value.text({
-              name: this.i18n.transform('Private Key (optional)')!,
-              description: this.i18n.transform(
-                'Optionally provide a base64-encoded ed25519 private key for generating the Tor V3 (.onion) domain. If not provided, a random key will be generated.',
-              ),
-              required: false,
-              default: null,
-              patterns: [utils.Patterns.base64],
-            }),
-          }),
-        ),
-        buttons: [
-          {
-            text: this.i18n.transform('Save')!,
-            handler: async value => this.save(value.key),
-          },
-        ],
-      },
-    })
-  }
-
-  private async save(key?: string): Promise<boolean> {
+  private async save(fqdn: string): Promise<boolean> {
     const loader = this.loader.open('Saving').subscribe()
 
     try {
-      let onion = key
-        ? await this.api.addTorKey({ key })
-        : await this.api.generateTorKey({})
-      onion = `${onion}.onion`
-
       if (this.interface.packageId) {
-        await this.api.pkgAddOnion({
-          onion,
+        await this.api.pkgAddPrivateDomain({
+          fqdn,
           package: this.interface.packageId(),
           host: this.interface.value()?.addressInfo.hostId || '',
         })
       } else {
-        await this.api.serverAddOnion({ onion })
+        await this.api.osUiAddPrivateDomain({ fqdn })
       }
       return true
     } catch (e: any) {

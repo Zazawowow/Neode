@@ -122,9 +122,9 @@ export abstract class ApiService {
 
   abstract toggleKiosk(enable: boolean): Promise<null>
 
-  abstract resetTor(params: RR.ResetTorReq): Promise<RR.ResetTorRes>
+  abstract testDns(params: RR.TestDnsReq): Promise<RR.TestDnsRes>
 
-  // @TODO 041
+  abstract resetTor(params: RR.ResetTorReq): Promise<RR.ResetTorRes>
 
   // smtp
 
@@ -182,17 +182,7 @@ export abstract class ApiService {
 
   abstract removeTunnel(params: RR.RemoveTunnelReq): Promise<RR.RemoveTunnelRes>
 
-  // @TODO 041
-
   // ** domains **
-
-  // @TODO 041
-
-  abstract addDomain(params: RR.AddDomainReq): Promise<RR.AddDomainRes>
-
-  abstract removeDomain(params: RR.RemoveDomainReq): Promise<RR.RemoveDomainRes>
-
-  abstract testDomain(params: RR.TestDomainReq): Promise<RR.TestDomainRes>
 
   // wifi
 
@@ -369,13 +359,21 @@ export abstract class ApiService {
     params: RR.ServerRemoveOnionReq,
   ): Promise<RR.RemoveOnionRes>
 
-  abstract osUiAddDomain(
-    params: RR.OsUiAddDomainReq,
-  ): Promise<RR.OsUiAddDomainRes>
+  abstract osUiAddPublicDomain(
+    params: RR.OsUiAddPublicDomainReq,
+  ): Promise<RR.OsUiAddPublicDomainRes>
 
-  abstract osUiRemoveDomain(
-    params: RR.OsUiRemoveDomainReq,
-  ): Promise<RR.OsUiRemoveDomainRes>
+  abstract osUiRemovePublicDomain(
+    params: RR.OsUiRemovePublicDomainReq,
+  ): Promise<RR.OsUiRemovePublicDomainRes>
+
+  abstract osUiAddPrivateDomain(
+    params: RR.OsUiAddPrivateDomainReq,
+  ): Promise<RR.OsUiAddPrivateDomainRes>
+
+  abstract osUiRemovePrivateDomain(
+    params: RR.OsUiRemovePrivateDomainReq,
+  ): Promise<RR.OsUiRemovePrivateDomainRes>
 
   abstract pkgBindingToggleGateway(
     params: RR.PkgBindingToggleGatewayReq,
@@ -387,9 +385,19 @@ export abstract class ApiService {
     params: RR.PkgRemoveOnionReq,
   ): Promise<RR.RemoveOnionRes>
 
-  abstract pkgAddDomain(params: RR.PkgAddDomainReq): Promise<RR.PkgAddDomainRes>
+  abstract pkgAddPublicDomain(
+    params: RR.PkgAddPublicDomainReq,
+  ): Promise<RR.PkgAddPublicDomainRes>
 
-  abstract pkgRemoveDomain(
-    params: RR.PkgRemoveDomainReq,
-  ): Promise<RR.PkgRemoveDomainRes>
+  abstract pkgRemovePublicDomain(
+    params: RR.PkgRemovePublicDomainReq,
+  ): Promise<RR.PkgRemovePublicDomainRes>
+
+  abstract pkgAddPrivateDomain(
+    params: RR.PkgAddPrivateDomainReq,
+  ): Promise<RR.PkgAddPrivateDomainRes>
+
+  abstract pkgRemovePrivateDomain(
+    params: RR.PkgRemovePrivateDomainReq,
+  ): Promise<RR.PkgRemovePrivateDomainRes>
 }

@@ -8,7 +8,7 @@ import { toSignal } from '@angular/core/rxjs-interop'
 export type GatewayPlus = T.NetworkInterfaceInfo & {
   id: string
   ipInfo: T.IpInfo
-  ipv4: string[]
+  lanIpv4: string[]
 }
 
 @Injectable()
@@ -25,7 +25,7 @@ export class GatewayService {
                 ({
                   ...val,
                   id,
-                  ipv4: val.ipInfo?.subnets
+                  lanIpv4: val.ipInfo?.subnets
                     .filter(s => !s.includes('::'))
                     .map(s => s.split('/')[0]),
                 }) as GatewayPlus,

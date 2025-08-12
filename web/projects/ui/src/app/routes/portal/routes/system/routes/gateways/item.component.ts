@@ -41,7 +41,7 @@ import { GatewayPlus } from 'src/app/services/gateway.service'
           -
         }
       </td>
-      <td class="lan">{{ gateway.ipv4.join(', ') }}</td>
+      <td class="lan">{{ gateway.lanIpv4.join(', ') }}</td>
       <td
         class="wan"
         [style.color]="

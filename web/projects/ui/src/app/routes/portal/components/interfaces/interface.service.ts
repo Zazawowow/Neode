@@ -3,6 +3,7 @@ import { T, utils } from '@start9labs/start-sdk'
 import { ConfigService } from 'src/app/services/config.service'
 import { toAuthorityName } from 'src/app/utils/acme'
 import { GatewayPlus } from 'src/app/services/gateway.service'
+import { PublicDomain } from './public-domains/pd.service'
 import { i18nKey } from '@start9labs/shared'
 
 type AddressWithInfo = {
@@ -104,7 +105,8 @@ function cmpClearnet(
 function toDisplayAddress(
   { info, url }: AddressWithInfo,
   gateways: GatewayPlus[],
-  domains: Record<string, T.DomainConfig>,
+  publicDomains: Record<string, T.DomainConfig>,
+  privateDomains: string[],
 ): DisplayAddress {
   let access: DisplayAddress['access']
   let gatewayName: DisplayAddress['gatewayName']
@@ -145,13 +147,13 @@ function toDisplayAddress(
     const gateway = gateways.find(g => g.id === info.gatewayId)!
     gatewayName = gateway.ipInfo.name
 
-    const gatewayIpv4 = gateway.ipv4[0]
+    const gatewayLanIpv4 = gateway.lanIpv4[0]
     const isWireguard = gateway.ipInfo.deviceType === 'wireguard'
 
     const localIdeal = 'Ideal for local access'
     const lanRequired =
       'Requires being connected to the same Local Area Network (LAN) as your server, either physically or via VPN'
-    const staticRequired = `Requires setting a static IP address for ${gatewayIpv4} in your gateway`
+    const staticRequired = `Requires setting a static IP address for ${gatewayLanIpv4} in your gateway`
     const vpnAccess = 'Ideal for VPN access via your'
 
     // * Local *
@@ -201,18 +203,17 @@ function toDisplayAddress(
       // * Domain *
     } else {
       type = 'Domain'
-      const domain = domains[info.hostname.value]!
       if (info.public) {
         access = 'public'
         bullets = [
-          `Requires DNS record(s) for ${domains[info.hostname.value]?.root}, as shown in System -> Domains`,
+          `Requires a DNS record for ${info.hostname.value} that resolves to ${gateway.ipInfo.wanIp}`,
           `Requires port forwarding in gateway "${gatewayName}": ${port} -> ${info.hostname.value}:${port === 443 ? 5443 : port}`,
         ]
-        if (domain.acme) {
+        if (publicDomains[info.hostname.value]!) {
           bullets.unshift('Ideal for public access via the Internet')
         } else {
           bullets = [
-            'Can be used for personal access via the public Internet. VPN is more secure',
+            'Can be used for personal access via the public Internet. VPN is more private and secure',
             rootCaRequired,
             ...bullets,
           ]
@@ -220,23 +221,22 @@ function toDisplayAddress(
       } else {
         access = 'private'
         const ipPortBad = 'when using IP addresses and ports is undesirable'
-        const customDnsRequired = `Requires DNS record for ${info.hostname.value} that resolve to ${gatewayIpv4}`
+        const customDnsRequired = `Requires a DNS record for ${info.hostname.value} that resolves to ${gatewayLanIpv4}`
         if (isWireguard) {
           bullets = [
             `${vpnAccess} StartTunnel (or similar) ${ipPortBad}`,
             customDnsRequired,
+            rootCaRequired,
           ]
         } else {
           bullets = [
             `${localIdeal} ${ipPortBad}`,
             `${vpnAccess} router's Wireguard server ${ipPortBad}`,
             customDnsRequired,
+            rootCaRequired,
             lanRequired,
             staticRequired,
           ]
-        }
-        if (domain.acme) {
-          bullets.push(rootCaRequired)
         }
       }
     }
@@ -251,11 +251,10 @@ function toDisplayAddress(
   }
 }
 
-export function getClearnetDomains(host: T.Host): ClearnetDomain[] {
-  return Object.entries(host.domains).map(([fqdn, info]) => ({
+export function getPublicDomains(publicDomains: any): PublicDomain[] {
+  return Object.entries(publicDomains).map(([fqdn, info]) => ({
     fqdn,
-    authority: toAuthorityName(info.acme),
-    public: info.public,
+    ...info,
   }))
 }
 
@@ -305,10 +304,19 @@ export class InterfaceService {
       }, [] as AddressWithInfo[])
 
     return {
-      common: bestAddrs.map(a => toDisplayAddress(a, gateways, host.domains)),
+      common: bestAddrs.map(a =>
+        toDisplayAddress(a, gateways, host.publicDomains, host.privateDomains),
+      ),
       uncommon: allAddressesWithInfo
         .filter(a => !bestAddrs.includes(a))
-        .map(a => toDisplayAddress(a, gateways, host.domains)),
+        .map(a =>
+          toDisplayAddress(
+            a,
+            gateways,
+            host.publicDomains,
+            host.privateDomains,
+          ),
+        ),
     }
   }
 
@@ -453,7 +461,8 @@ export class InterfaceService {
 export type MappedServiceInterface = T.ServiceInterface & {
   gateways: InterfaceGateway[]
   torDomains: string[]
-  clearnetDomains: ClearnetDomain[]
+  publicDomains: PublicDomain[]
+  privateDomains: string[]
   addresses: {
     common: DisplayAddress[]
     uncommon: DisplayAddress[]
@@ -463,12 +472,6 @@ export type MappedServiceInterface = T.ServiceInterface & {
 
 export type InterfaceGateway = GatewayPlus & {
   enabled: boolean
-}
-
-export type ClearnetDomain = {
-  fqdn: string
-  authority: string
-  public: boolean
 }
 
 export type DisplayAddress = {

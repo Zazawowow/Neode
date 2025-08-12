@@ -18,7 +18,7 @@ import { InterfaceComponent } from 'src/app/routes/portal/components/interfaces/
 import { DataModel } from 'src/app/services/patch-db/data-model'
 import { TitleDirective } from 'src/app/services/title.service'
 import {
-  getClearnetDomains,
+  getPublicDomains,
   InterfaceService,
 } from '../../../components/interfaces/interface.service'
 import { GatewayService } from 'src/app/services/gateway.service'
@@ -143,7 +143,8 @@ export default class ServiceInterfaceRoute {
           ...g,
         })) || [],
       torDomains: host.onions.map(o => `${o}.onion`),
-      clearnetDomains: getClearnetDomains(host),
+      publicDomains: getPublicDomains(host.domains.public),
+      privateDomains: host.domains.private,
       isOs: false,
     }
   })

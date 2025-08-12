@@ -11,10 +11,9 @@ import { T } from '@start9labs/start-sdk'
 import { TuiButton, TuiTitle } from '@taiga-ui/core'
 import { TuiHeader } from '@taiga-ui/layout'
 import { PatchDB } from 'patch-db-client'
-import { map } from 'rxjs'
 import { InterfaceComponent } from 'src/app/routes/portal/components/interfaces/interface.component'
 import {
-  getClearnetDomains,
+  getPublicDomains,
   InterfaceService,
 } from 'src/app/routes/portal/components/interfaces/interface.service'
 import { GatewayService } from 'src/app/services/gateway.service'
@@ -98,7 +97,8 @@ export default class StartOsUiComponent {
         ...g,
       })),
       torDomains: network.host.onions.map(o => `${o}.onion`),
-      clearnetDomains: getClearnetDomains(network.host),
+      publicDomains: getPublicDomains(network.host.domains.public),
+      privateDomains: network.host.domains.private,
       isOs: true,
     }
   })

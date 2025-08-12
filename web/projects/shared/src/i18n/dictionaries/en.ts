@@ -89,13 +89,12 @@ export const ENGLISH = {
   'Actions': 88, // as in, actions available to the user
   'not recommended': 89,
   'Root CA Trusted!': 90,
-  'Add domain': 96,
+  'Add public domain': 96,
   'Removing': 97,
   'Unsaved changes': 100,
   'You have unsaved changes. Are you sure you want to leave?': 101,
   'Leave': 102,
   'Are you sure?': 103,
-  'Select domain': 104,
   'public': 108,
   'private': 109,
   'No Tor domains': 111,
@@ -513,16 +512,18 @@ export const ENGLISH = {
   'Domain': 540, // as in, an internat domain name
   'Gateway': 541, // as in, a device or software that connects two different networks
   'Certificate Authority': 543,
-  'Edit domain': 544,
+  'Edit public domain': 544,
   'No public domains': 545,
   'Provider': 546,
   'View DNS': 547,
-  'Clearnet Domains': 548,
-  'No clearnet domains': 549,
+  'New public domain': 548,
   'Addresses': 550,
   'Common': 551,
   'Uncommon': 552,
   'No addresses': 553,
   'Change CA': 554,
   'Address details': 555,
+  'Private Domains': 556,
+  'No private domains': 557,
+  'New private domain': 558
 } as const

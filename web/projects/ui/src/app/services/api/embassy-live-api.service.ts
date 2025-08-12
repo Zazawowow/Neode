@@ -267,6 +267,13 @@ export class LiveApiService extends ApiService {
     })
   }
 
+  async testDns(params: RR.TestDnsReq): Promise<RR.TestDnsRes> {
+    return this.rpcRequest({
+      method: 'net.dns.test',
+      params,
+    })
+  }
+
   async resetTor(params: RR.ResetTorReq): Promise<RR.ResetTorRes> {
     return this.rpcRequest({ method: 'net.tor.reset', params })
   }
@@ -356,20 +363,6 @@ export class LiveApiService extends ApiService {
 
   async removeTunnel(params: RR.RemoveTunnelReq): Promise<RR.RemoveTunnelRes> {
     return this.rpcRequest({ method: 'net.tunnel.remove', params })
-  }
-
-  // domains
-
-  async addDomain(params: RR.AddDomainReq): Promise<RR.AddDomainRes> {
-    return this.rpcRequest({ method: 'net.domain.add', params })
-  }
-
-  async removeDomain(params: RR.RemoveDomainReq): Promise<RR.RemoveDomainRes> {
-    return this.rpcRequest({ method: 'net.domain.remove', params })
-  }
-
-  async testDomain(params: RR.TestDomainReq): Promise<RR.TestDomainRes> {
-    return this.rpcRequest({ method: 'net.domain.test-dns', params })
   }
 
   // wifi
@@ -663,20 +656,38 @@ export class LiveApiService extends ApiService {
     })
   }
 
-  async osUiAddDomain(
-    params: RR.OsUiAddDomainReq,
-  ): Promise<RR.OsUiAddDomainRes> {
+  async osUiAddPublicDomain(
+    params: RR.OsUiAddPublicDomainReq,
+  ): Promise<RR.OsUiAddPublicDomainRes> {
     return this.rpcRequest({
-      method: 'server.host.address.domain.add',
+      method: 'server.host.address.domain.public.add',
       params,
     })
   }
 
-  async osUiRemoveDomain(
-    params: RR.OsUiRemoveDomainReq,
-  ): Promise<RR.OsUiRemoveDomainRes> {
+  async osUiRemovePublicDomain(
+    params: RR.OsUiRemovePublicDomainReq,
+  ): Promise<RR.OsUiRemovePublicDomainRes> {
     return this.rpcRequest({
-      method: 'server.host.address.domain.remove',
+      method: 'server.host.address.domain.public.remove',
+      params,
+    })
+  }
+
+  async osUiAddPrivateDomain(
+    params: RR.OsUiAddPrivateDomainReq,
+  ): Promise<RR.OsUiAddPrivateDomainRes> {
+    return this.rpcRequest({
+      method: 'server.host.address.domain.private.add',
+      params,
+    })
+  }
+
+  async osUiRemovePrivateDomain(
+    params: RR.OsUiRemovePrivateDomainReq,
+  ): Promise<RR.OsUiRemovePrivateDomainRes> {
+    return this.rpcRequest({
+      method: 'server.host.address.domain.private.remove',
       params,
     })
   }
@@ -706,18 +717,38 @@ export class LiveApiService extends ApiService {
     })
   }
 
-  async pkgAddDomain(params: RR.PkgAddDomainReq): Promise<RR.PkgAddDomainRes> {
+  async pkgAddPublicDomain(
+    params: RR.PkgAddPublicDomainReq,
+  ): Promise<RR.PkgAddPublicDomainRes> {
     return this.rpcRequest({
-      method: 'package.host.address.domain.add',
+      method: 'package.host.address.domain.public.add',
       params,
     })
   }
 
-  async pkgRemoveDomain(
-    params: RR.PkgRemoveDomainReq,
-  ): Promise<RR.PkgRemoveDomainRes> {
+  async pkgRemovePublicDomain(
+    params: RR.PkgRemovePublicDomainReq,
+  ): Promise<RR.PkgRemovePublicDomainRes> {
     return this.rpcRequest({
-      method: 'package.host.address.domain.remove',
+      method: 'package.host.address.domain.public.remove',
+      params,
+    })
+  }
+
+  async pkgAddPrivateDomain(
+    params: RR.PkgAddPrivateDomainReq,
+  ): Promise<RR.PkgAddPrivateDomainRes> {
+    return this.rpcRequest({
+      method: 'package.host.address.domain.private.add',
+      params,
+    })
+  }
+
+  async pkgRemovePrivateDomain(
+    params: RR.PkgRemovePrivateDomainReq,
+  ): Promise<RR.PkgRemovePrivateDomainRes> {
+    return this.rpcRequest({
+      method: 'package.host.address.domain.private.remove',
       params,
     })
   }

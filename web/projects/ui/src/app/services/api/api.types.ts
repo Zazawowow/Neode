@@ -104,6 +104,12 @@ export namespace RR {
   export type DiskRepairReq = {} // server.disk.repair
   export type DiskRepairRes = null
 
+  export type TestDnsReq = {
+    fqdn: string
+    gateway: T.GatewayId // string
+  } // net.dns.test
+  export type TestDnsRes = string | null
+
   export type ResetTorReq = {
     wipeState: boolean
     reason: string
@@ -236,26 +242,6 @@ export namespace RR {
 
   // network
 
-  export type AddDomainReq = {
-    fqdn: string
-    gateway: string
-  } // net.domain.add
-  export type AddDomainRes = null
-
-  export type RemoveDomainReq = {
-    fqdn: string
-  } // net.domain.remove
-  export type RemoveDomainRes = null
-
-  export type TestDomainReq = {
-    fqdn: string
-    gateway: string
-  } // net.domain.test-dns
-  export type TestDomainRes = {
-    root: boolean
-    wildcard: boolean
-  }
-
   export type AddTunnelReq = {
     name: string
     config: string // file contents
@@ -309,19 +295,31 @@ export namespace RR {
   export type ServerRemoveOnionReq = ServerAddOnionReq // server.host.address.onion.remove
   export type RemoveOnionRes = null
 
-  export type OsUiAddDomainReq = {
-    // server.host.address.domain.add
+  export type OsUiAddPublicDomainReq = {
+    // server.host.address.domain.public.add
     fqdn: string // FQDN
-    private: boolean
+    gateway: T.GatewayId
     acme: string | null // URL. null means local Root CA
   }
-  export type OsUiAddDomainRes = null
+  export type OsUiAddPublicDomainRes = TestDnsRes
 
-  export type OsUiRemoveDomainReq = {
-    // server.host.address.domain.remove
+  export type OsUiRemovePublicDomainReq = {
+    // server.host.address.domain.public.remove
     fqdn: string // FQDN
   }
-  export type OsUiRemoveDomainRes = null
+  export type OsUiRemovePublicDomainRes = null
+
+  export type OsUiAddPrivateDomainReq = {
+    // server.host.address.domain.private.add
+    fqdn: string // FQDN
+  }
+  export type OsUiAddPrivateDomainRes = null
+
+  export type OsUiRemovePrivateDomainReq = {
+    // server.host.address.domain.private.remove
+    fqdn: string // FQDN
+  }
+  export type OsUiRemovePrivateDomainRes = null
 
   export type PkgBindingToggleGatewayReq = ServerBindingToggleGatewayReq & {
     // package.host.binding.set-gateway-enabled
@@ -336,22 +334,31 @@ export namespace RR {
     package: T.PackageId // string
     host: T.HostId // string
   }
-
   export type PkgRemoveOnionReq = PkgAddOnionReq // package.host.address.onion.remove
 
-  export type PkgAddDomainReq = OsUiAddDomainReq & {
-    // package.host.address.domain.add
+  export type PkgAddPublicDomainReq = OsUiAddPublicDomainReq & {
+    // package.host.address.domain.public.add
     package: T.PackageId // string
     host: T.HostId // string
   }
-  export type PkgAddDomainRes = null
+  export type PkgAddPublicDomainRes = OsUiAddPublicDomainRes
 
-  export type PkgRemoveDomainReq = OsUiRemoveDomainReq & {
-    // package.host.address.domain.remove
+  export type PkgRemovePublicDomainReq = OsUiRemovePublicDomainReq & {
+    // package.host.address.domain.public.remove
     package: T.PackageId // string
     host: T.HostId // string
   }
-  export type PkgRemoveDomainRes = null
+  export type PkgRemovePublicDomainRes = OsUiRemovePublicDomainRes
+
+  export type PkgAddPrivateDomainReq = OsUiAddPrivateDomainReq & {
+    // package.host.address.domain.private.add
+    package: T.PackageId // string
+    host: T.HostId // string
+  }
+  export type PkgAddPrivateDomainRes = OsUiAddPrivateDomainRes
+
+  export type PkgRemovePrivateDomainReq = PkgAddPrivateDomainReq
+  export type PkgRemovePrivateDomainRes = OsUiRemovePrivateDomainRes
 
   export type GetPackageLogsReq = FetchLogsReq & { id: string } // package.logs
   export type GetPackageLogsRes = FetchLogsRes

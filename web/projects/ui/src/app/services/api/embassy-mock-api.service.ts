@@ -462,6 +462,12 @@ export class MockApiService extends ApiService {
     return null
   }
 
+  async testDns(params: RR.TestDnsReq): Promise<RR.TestDnsRes> {
+    await pauseFor(2000)
+
+    return null
+  }
+
   async resetTor(params: RR.ResetTorReq): Promise<RR.ResetTorRes> {
     await pauseFor(2000)
     return null
@@ -599,50 +605,6 @@ export class MockApiService extends ApiService {
     this.mockRevision(patch)
 
     return null
-  }
-
-  // domains
-
-  async addDomain(params: RR.AddDomainReq): Promise<RR.AddDomainRes> {
-    await pauseFor(2000)
-
-    const patch = [
-      {
-        op: PatchOp.REPLACE,
-        path: `/serverInfo/network/domains`,
-        value: {
-          [params.fqdn]: {
-            gateway: params.gateway,
-          },
-        },
-      },
-    ]
-    this.mockRevision(patch)
-
-    return null
-  }
-
-  async removeDomain(params: RR.RemoveDomainReq): Promise<RR.RemoveDomainRes> {
-    await pauseFor(2000)
-    const patch = [
-      {
-        op: PatchOp.REPLACE,
-        path: '/serverInfo/network/domains',
-        value: {},
-      },
-    ]
-    this.mockRevision(patch)
-
-    return null
-  }
-
-  async testDomain(params: RR.TestDomainReq): Promise<RR.TestDomainRes> {
-    await pauseFor(2000)
-
-    return {
-      root: true,
-      wildcard: true,
-    }
   }
 
   // wifi
@@ -1432,18 +1394,71 @@ export class MockApiService extends ApiService {
     return null
   }
 
-  async osUiAddDomain(
-    params: RR.OsUiAddDomainReq,
-  ): Promise<RR.OsUiAddDomainRes> {
+  async osUiAddPublicDomain(
+    params: RR.OsUiAddPublicDomainReq,
+  ): Promise<RR.OsUiAddPublicDomainRes> {
     await pauseFor(2000)
 
     const patch: Operation<any>[] = [
       {
         op: PatchOp.ADD,
-        path: `/serverInfo/host/domains`,
+        path: `/serverInfo/host/domains/public`,
         value: {
-          [params.fqdn]: { public: !params.private, acme: params.acme },
+          [params.fqdn]: { gateway: params.gateway, acme: params.acme },
         },
+      },
+      {
+        op: PatchOp.ADD,
+        path: `/serverInfo/host/hostnameInfo/80/0`,
+        value: {
+          kind: 'ip',
+          gatewayId: 'eth0',
+          public: true,
+          hostname: {
+            kind: 'domain',
+            domain: params.fqdn,
+            subdomain: null,
+            port: null,
+            sslPort: 443,
+          },
+        },
+      },
+    ]
+    this.mockRevision(patch)
+
+    return null
+  }
+
+  async osUiRemovePublicDomain(
+    params: RR.OsUiRemovePublicDomainReq,
+  ): Promise<RR.OsUiRemovePublicDomainRes> {
+    await pauseFor(2000)
+
+    const patch: RemoveOperation[] = [
+      {
+        op: PatchOp.REMOVE,
+        path: `/serverInfo/host/domains/public/${params.fqdn}`,
+      },
+      {
+        op: PatchOp.REMOVE,
+        path: `/serverInfo/host/hostnameInfo/80/0`,
+      },
+    ]
+    this.mockRevision(patch)
+
+    return null
+  }
+
+  async osUiAddPrivateDomain(
+    params: RR.OsUiAddPrivateDomainReq,
+  ): Promise<RR.OsUiAddPrivateDomainRes> {
+    await pauseFor(2000)
+
+    const patch: Operation<any>[] = [
+      {
+        op: PatchOp.REPLACE,
+        path: `/serverInfo/host/domains/private`,
+        value: [params.fqdn],
       },
       {
         op: PatchOp.ADD,
@@ -1467,15 +1482,16 @@ export class MockApiService extends ApiService {
     return null
   }
 
-  async osUiRemoveDomain(
-    params: RR.OsUiRemoveDomainReq,
-  ): Promise<RR.OsUiRemoveDomainRes> {
+  async osUiRemovePrivateDomain(
+    params: RR.OsUiRemovePrivateDomainReq,
+  ): Promise<RR.OsUiRemovePrivateDomainRes> {
     await pauseFor(2000)
 
-    const patch: RemoveOperation[] = [
+    const patch: Operation<any>[] = [
       {
-        op: PatchOp.REMOVE,
-        path: `/serverInfo/host/domains/${params.fqdn}`,
+        op: PatchOp.REPLACE,
+        path: `/serverInfo/host/domains/private`,
+        value: [],
       },
       {
         op: PatchOp.REMOVE,
@@ -1551,16 +1567,71 @@ export class MockApiService extends ApiService {
     return null
   }
 
-  async pkgAddDomain(params: RR.PkgAddDomainReq): Promise<RR.PkgAddDomainRes> {
+  async pkgAddPublicDomain(
+    params: RR.PkgAddPublicDomainReq,
+  ): Promise<RR.PkgAddPublicDomainRes> {
     await pauseFor(2000)
 
     const patch: Operation<any>[] = [
       {
         op: PatchOp.ADD,
-        path: `/packageData/${params.package}/hosts/${params.host}/domains`,
+        path: `/packageData/${params.package}/hosts/${params.host}/domains/public`,
         value: {
-          [params.fqdn]: { public: !params.private, acme: params.acme },
+          [params.fqdn]: { gateway: params.gateway, acme: params.acme },
         },
+      },
+      {
+        op: PatchOp.ADD,
+        path: `/packageData/${params.package}/hosts/${params.host}/hostnameInfo/80/0`,
+        value: {
+          kind: 'ip',
+          gatewayId: 'eth0',
+          public: true,
+          hostname: {
+            kind: 'domain',
+            domain: params.fqdn,
+            subdomain: null,
+            port: null,
+            sslPort: 443,
+          },
+        },
+      },
+    ]
+    this.mockRevision(patch)
+
+    return null
+  }
+
+  async pkgRemovePublicDomain(
+    params: RR.PkgRemovePublicDomainReq,
+  ): Promise<RR.PkgRemovePublicDomainRes> {
+    await pauseFor(2000)
+
+    const patch: RemoveOperation[] = [
+      {
+        op: PatchOp.REMOVE,
+        path: `/packageData/${params.package}/hosts/${params.host}/domains/public/${params.fqdn}`,
+      },
+      {
+        op: PatchOp.REMOVE,
+        path: `/packageData/${params.package}/hosts/${params.host}/hostnameInfo/80/0`,
+      },
+    ]
+    this.mockRevision(patch)
+
+    return null
+  }
+
+  async pkgAddPrivateDomain(
+    params: RR.PkgAddPrivateDomainReq,
+  ): Promise<RR.PkgAddPrivateDomainRes> {
+    await pauseFor(2000)
+
+    const patch: Operation<any>[] = [
+      {
+        op: PatchOp.REPLACE,
+        path: `/packageData/${params.package}/hosts/${params.host}/domains/private`,
+        value: [params.fqdn],
       },
       {
         op: PatchOp.ADD,
@@ -1584,15 +1655,16 @@ export class MockApiService extends ApiService {
     return null
   }
 
-  async pkgRemoveDomain(
-    params: RR.PkgRemoveDomainReq,
-  ): Promise<RR.PkgRemoveDomainRes> {
+  async pkgRemovePrivateDomain(
+    params: RR.PkgRemovePrivateDomainReq,
+  ): Promise<RR.PkgRemovePrivateDomainRes> {
     await pauseFor(2000)
 
-    const patch: RemoveOperation[] = [
+    const patch: Operation<any>[] = [
       {
-        op: PatchOp.REMOVE,
-        path: `/packageData/${params.package}/hosts/${params.host}/domains/${params.fqdn}`,
+        op: PatchOp.REPLACE,
+        path: `/packageData/${params.package}/hosts/${params.host}/domains/private`,
+        value: [],
       },
       {
         op: PatchOp.REMOVE,

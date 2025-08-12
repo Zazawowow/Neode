@@ -32,14 +32,6 @@ export const mockPatchData: DataModel = {
           contact: ['mailto:support@start9.com'],
         },
       },
-      domains: {
-        'cloud.private.com': {
-          gateway: 'eth0',
-        },
-        'public.com': {
-          gateway: 'wireguard1',
-        },
-      },
       host: {
         bindings: {
           80: {
@@ -60,7 +52,10 @@ export const mockPatchData: DataModel = {
             },
           },
         },
-        domains: {},
+        domains: {
+          public: {},
+          private: {},
+        },
         onions: ['myveryownspecialtoraddress'],
         hostnameInfo: {
           80: [
@@ -344,7 +339,10 @@ export const mockPatchData: DataModel = {
             },
           },
           onions: [],
-          domains: {},
+          domains: {
+            public: {},
+            private: {},
+          },
           hostnameInfo: {
             80: [
               {
@@ -444,7 +442,10 @@ export const mockPatchData: DataModel = {
             },
           },
           onions: [],
-          domains: {},
+          domains: {
+            public: {},
+            private: {},
+          },
           hostnameInfo: {
             8332: [],
           },
@@ -467,7 +468,10 @@ export const mockPatchData: DataModel = {
             },
           },
           onions: [],
-          domains: {},
+          domains: {
+            public: {},
+            private: {},
+          },
           hostnameInfo: {
             8333: [],
           },

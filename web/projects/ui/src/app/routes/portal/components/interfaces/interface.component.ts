@@ -3,20 +3,23 @@ import { tuiButtonOptionsProvider } from '@taiga-ui/core'
 import { MappedServiceInterface } from './interface.service'
 import { InterfaceGatewaysComponent } from './gateways.component'
 import { InterfaceTorDomainsComponent } from './tor-domains.component'
-import { InterfaceClearnetDomainsComponent } from './clearnet-domains/clearnet-domains.component'
+import { PublicDomainsComponent } from './public-domains/pd.component'
+import { InterfacePrivateDomainsComponent } from './private-domains.component'
 import { InterfaceAddressesComponent } from './addresses/addresses.component'
+
+// @TODO translations
 
 @Component({
   selector: 'service-interface',
   template: `
-    <!-- @TODO Alex / Matt translation in all nested components -->
     <div [style.display]="'grid'">
       <section
         [gateways]="value()?.gateways"
         [isOs]="!!value()?.isOs"
       ></section>
       <section [torDomains]="value()?.torDomains"></section>
-      <section [clearnetDomains]="value()?.clearnetDomains"></section>
+      <section [privateDomains]="value()?.privateDomains"></section>
+      <section [publicDomains]="value()?.publicDomains"></section>
     </div>
     <hr [style.width.rem]="10" />
     <section [addresses]="value()?.addresses" [isRunning]="true"></section>
@@ -49,7 +52,8 @@ import { InterfaceAddressesComponent } from './addresses/addresses.component'
   imports: [
     InterfaceGatewaysComponent,
     InterfaceTorDomainsComponent,
-    InterfaceClearnetDomainsComponent,
+    PublicDomainsComponent,
+    InterfacePrivateDomainsComponent,
     InterfaceAddressesComponent,
   ],
 })
