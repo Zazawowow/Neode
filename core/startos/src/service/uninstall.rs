@@ -45,11 +45,9 @@ pub async fn cleanup(ctx: &RpcContext, id: &PackageId, soft: bool) -> Result<(),
         {
             let state = pde.state_info.expect_removing()?;
             if !soft {
-                for volume_id in &state.manifest.volumes {
-                    let path = data_dir(DATA_DIR, &state.manifest.id, volume_id);
-                    if tokio::fs::metadata(&path).await.is_ok() {
-                        tokio::fs::remove_dir_all(&path).await?;
-                    }
+                let path = Path::new(DATA_DIR).join(&state.manifest.id);
+                if tokio::fs::metadata(&path).await.is_ok() {
+                    tokio::fs::remove_dir_all(&path).await?;
                 }
                 let logs_dir = Path::new(PACKAGE_DATA)
                     .join("logs")
