@@ -462,7 +462,22 @@ export class MockApiService extends ApiService {
     return null
   }
 
-  async testDns(params: RR.TestDnsReq): Promise<RR.TestDnsRes> {
+  async setDns(params: RR.SetDnsReq): Promise<RR.SetDnsRes> {
+    await pauseFor(2000)
+
+    const patch: ReplaceOperation<RR.SetDnsReq>[] = [
+      {
+        op: PatchOp.REPLACE,
+        path: '/serverInfo/network/dns',
+        value: params,
+      },
+    ]
+    this.mockRevision(patch)
+
+    return null
+  }
+
+  async queryDns(params: RR.QueryDnsReq): Promise<RR.QueryDnsRes> {
     await pauseFor(2000)
 
     return null

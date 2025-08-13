@@ -267,9 +267,16 @@ export class LiveApiService extends ApiService {
     })
   }
 
-  async testDns(params: RR.TestDnsReq): Promise<RR.TestDnsRes> {
+  async setDns(params: RR.SetDnsReq): Promise<RR.SetDnsRes> {
     return this.rpcRequest({
-      method: 'net.dns.test',
+      method: 'net.dns.set',
+      params,
+    })
+  }
+
+  async queryDns(params: RR.QueryDnsReq): Promise<RR.QueryDnsRes> {
+    return this.rpcRequest({
+      method: 'net.dns.query',
       params,
     })
   }

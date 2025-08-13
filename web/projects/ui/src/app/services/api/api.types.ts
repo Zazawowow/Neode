@@ -104,11 +104,16 @@ export namespace RR {
   export type DiskRepairReq = {} // server.disk.repair
   export type DiskRepairRes = null
 
-  export type TestDnsReq = {
+  export type SetDnsReq = {
+    servers: string[]
+    static: boolean
+  } // net.dns.set
+  export type SetDnsRes = null
+
+  export type QueryDnsReq = {
     fqdn: string
-    gateway: T.GatewayId // string
-  } // net.dns.test
-  export type TestDnsRes = string | null
+  } // net.dns.query
+  export type QueryDnsRes = string | null
 
   export type ResetTorReq = {
     wipeState: boolean
@@ -301,7 +306,7 @@ export namespace RR {
     gateway: T.GatewayId
     acme: string | null // URL. null means local Root CA
   }
-  export type OsUiAddPublicDomainRes = TestDnsRes
+  export type OsUiAddPublicDomainRes = QueryDnsRes
 
   export type OsUiRemovePublicDomainReq = {
     // server.host.address.domain.public.remove

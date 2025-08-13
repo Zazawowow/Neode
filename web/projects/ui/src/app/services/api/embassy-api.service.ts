@@ -122,7 +122,9 @@ export abstract class ApiService {
 
   abstract toggleKiosk(enable: boolean): Promise<null>
 
-  abstract testDns(params: RR.TestDnsReq): Promise<RR.TestDnsRes>
+  abstract setDns(params: RR.SetDnsReq): Promise<RR.SetDnsRes>
+
+  abstract queryDns(params: RR.QueryDnsReq): Promise<RR.QueryDnsRes>
 
   abstract resetTor(params: RR.ResetTorReq): Promise<RR.ResetTorRes>
 

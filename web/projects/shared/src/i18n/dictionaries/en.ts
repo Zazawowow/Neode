@@ -523,5 +523,6 @@ export const ENGLISH = {
   'Address details': 555,
   'Private Domains': 556,
   'No private domains': 557,
-  'New private domain': 558
+  'New private domain': 558,
+  'DNS Servers': 559
 } as const
