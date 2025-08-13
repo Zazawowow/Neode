@@ -1,7 +1,6 @@
 import { inject, Injectable } from '@angular/core'
 import { T, utils } from '@start9labs/start-sdk'
 import { ConfigService } from 'src/app/services/config.service'
-import { toAuthorityName } from 'src/app/utils/acme'
 import { GatewayPlus } from 'src/app/services/gateway.service'
 import { PublicDomain } from './public-domains/pd.service'
 import { i18nKey } from '@start9labs/shared'
@@ -43,7 +42,7 @@ function cmpLan(host: T.Host, a: LanAddress, b: LanAddress): -1 | 0 | 1 {
   return cmpWithRankedPredicates(a, b, [
     x =>
       x.info.hostname.kind === 'domain' &&
-      !host.domains[x.info.hostname.value]?.public, // private domain
+      !!host.privateDomains[x.info.hostname.value], // private domain
     x => x.info.hostname.kind === 'local', // .local
     x => x.info.hostname.kind === 'ipv4', // ipv4
     x => x.info.hostname.kind === 'ipv6', // ipv6
@@ -67,7 +66,7 @@ function cmpVpn(host: T.Host, a: VpnAddress, b: VpnAddress): -1 | 0 | 1 {
   return cmpWithRankedPredicates(a, b, [
     x =>
       x.info.hostname.kind === 'domain' &&
-      !host.domains[x.info.hostname.value]?.public, // private domain
+      !!host.privateDomains[x.info.hostname.value], // private domain
     x => x.info.hostname.kind === 'ipv4', // ipv4
     x => x.info.hostname.kind === 'ipv6', // ipv6
     // remainder: public domains accessible privately
@@ -85,7 +84,6 @@ function filterClearnet(a: AddressWithInfo): a is ClearnetAddress {
   return a.info.kind === 'ip' && a.info.public
 }
 function cmpClearnet(
-  domains: Record<string, T.DomainSettings>,
   host: T.Host,
   a: ClearnetAddress,
   b: ClearnetAddress,
@@ -93,8 +91,7 @@ function cmpClearnet(
   return cmpWithRankedPredicates(a, b, [
     x =>
       x.info.hostname.kind === 'domain' &&
-      x.info.gatewayId ===
-        domains[host.domains[x.info.hostname.value]?.root!]?.gateway, // public domain for this gateway
+      x.info.gatewayId === host.publicDomains[x.info.hostname.value]?.gateway, // public domain for this gateway
     x => x.info.hostname.kind === 'ipv4', // ipv4
     x => x.info.hostname.kind === 'ipv6', // ipv6
     // remainder: private domains / domains public on other gateways
@@ -106,7 +103,6 @@ function toDisplayAddress(
   { info, url }: AddressWithInfo,
   gateways: GatewayPlus[],
   publicDomains: Record<string, T.DomainConfig>,
-  privateDomains: string[],
 ): DisplayAddress {
   let access: DisplayAddress['access']
   let gatewayName: DisplayAddress['gatewayName']
@@ -209,7 +205,7 @@ function toDisplayAddress(
           `Requires a DNS record for ${info.hostname.value} that resolves to ${gateway.ipInfo.wanIp}`,
           `Requires port forwarding in gateway "${gatewayName}": ${port} -> ${info.hostname.value}:${port === 443 ? 5443 : port}`,
         ]
-        if (publicDomains[info.hostname.value]!) {
+        if (publicDomains[info.hostname.value]?.acme) {
           bullets.unshift('Ideal for public access via the Internet')
         } else {
           bullets = [
@@ -251,7 +247,9 @@ function toDisplayAddress(
   }
 }
 
-export function getPublicDomains(publicDomains: any): PublicDomain[] {
+export function getPublicDomains(
+  publicDomains: Record<string, T.DomainConfig>,
+): PublicDomain[] {
   return Object.entries(publicDomains).map(([fqdn, info]) => ({
     fqdn,
     ...info,
@@ -267,7 +265,6 @@ export class InterfaceService {
   getAddresses(
     serviceInterface: T.ServiceInterface,
     host: T.Host,
-    serverDomains: Record<string, T.DomainSettings>,
     gateways: GatewayPlus[],
   ): MappedServiceInterface['addresses'] {
     const hostnamesInfos = this.hostnameInfo(serviceInterface, host)
@@ -294,7 +291,7 @@ export class InterfaceService {
       .sort((a, b) => cmpVpn(host, a, b))
     const clearnetAddrs = allAddressesWithInfo
       .filter(filterClearnet)
-      .sort((a, b) => cmpClearnet(serverDomains, host, a, b))
+      .sort((a, b) => cmpClearnet(host, a, b))
 
     let bestAddrs = [clearnetAddrs[0], lanAddrs[0], vpnAddrs[0], torAddrs[0]]
       .filter(a => !!a)
