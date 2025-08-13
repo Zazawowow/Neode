@@ -157,7 +157,7 @@ import { SystemWipeComponent } from './wipe.component'
         }
       </div>
       <div tuiCell tuiAppearance="outline-grayscale">
-        <tui-icon icon="@tui.circle-power" (click)="count = count + 1" />
+        <tui-icon icon="@tui.rotate-cw" (click)="count = count + 1" />
         <span tuiTitle>
           <strong>{{ 'Restart Tor' | i18n }}</strong>
           <span tuiSubtitle>
