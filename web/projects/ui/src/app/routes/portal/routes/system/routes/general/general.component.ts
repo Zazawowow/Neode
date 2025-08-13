@@ -159,13 +159,13 @@ import { SystemWipeComponent } from './wipe.component'
       <div tuiCell tuiAppearance="outline-grayscale">
         <tui-icon icon="@tui.circle-power" (click)="count = count + 1" />
         <span tuiTitle>
-          <strong>{{ 'Reset Tor' | i18n }}</strong>
+          <strong>{{ 'Restart Tor' | i18n }}</strong>
           <span tuiSubtitle>
             {{ 'Restart the Tor daemon on your server' | i18n }}
           </span>
         </span>
-        <button tuiButton appearance="glass" (click)="onReset()">
-          {{ 'Reset' | i18n }}
+        <button tuiButton appearance="glass" (click)="onTorRestart()">
+          {{ 'Restart' | i18n }}
         </button>
       </div>
       @if (count > 4) {
@@ -308,7 +308,7 @@ export default class SystemGeneralComponent {
       })
   }
 
-  onReset() {
+  onTorRestart() {
     this.wipe = false
     this.dialog
       .openConfirm({
@@ -318,7 +318,7 @@ export default class SystemGeneralComponent {
             SystemWipeComponent,
             this.injector,
           ),
-          yes: 'Reset',
+          yes: 'Restart',
           no: 'Cancel',
         },
       })
@@ -387,11 +387,11 @@ export default class SystemGeneralComponent {
   }
 
   private async resetTor(wipeState: boolean) {
-    const loader = this.loader.open('Resetting Tor').subscribe()
+    const loader = this.loader.open().subscribe()
 
     try {
       await this.api.resetTor({ wipeState, reason: 'User triggered' })
-      this.dialog.openAlert('Tor reset in progress').subscribe()
+      this.dialog.openAlert('Tor restart in progress').subscribe()
     } catch (e: any) {
       this.errorService.handleError(e)
     } finally {

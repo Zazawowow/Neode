@@ -2,7 +2,6 @@
 export const ENGLISH = {
   'Change': 1, // verb
   'Update': 2, // verb
-  'Reset': 3, // verb
   'System': 4, // as in, system preferences
   'General': 5, // as in, general settings
   'Email': 6,
@@ -22,7 +21,7 @@ export const ENGLISH = {
   'Root Certificate Authority': 21,
   'Download your Root CA': 22,
   'Download': 23,
-  'Reset Tor': 24,
+  'Restart Tor': 24,
   'Restart the Tor daemon on your server': 25,
   'Software Update': 26,
   'Restart to apply': 27,
@@ -37,8 +36,8 @@ export const ENGLISH = {
   'Cancel': 36,
   'This action should only be executed if directed by a Start9 support specialist. We recommend backing up your device before preforming this action. If anything happens to the device during the reboot, such as losing power or unplugging the drive, the filesystem will be in an unrecoverable state. Please proceed with caution.': 37,
   'Delete': 38,
-  'Tor reset in progress': 39,
-  'Resetting Tor': 40,
+  'Tor restart in progress': 39,
+  'Restarting Tor': 40,
   'Checking for updates': 41,
   'Beginning restart': 42,
   'You are on the latest version of StartOS.': 43,
@@ -46,8 +45,7 @@ export const ENGLISH = {
   'Release notes': 45,
   'Begin Update': 46,
   'Beginning update': 47,
-  'You are currently connected over Tor. If you reset the Tor daemon, you will lose connectivity until it comes back online.': 48,
-  'Reset Tor?': 49,
+  'You are currently connected over Tor. If you restart the Tor daemon, you will lose connectivity until it comes back online.': 48,
   'Optionally wipe state to forcibly acquire new guard nodes. It is recommended to try without wiping state first.': 50,
   'Wipe state': 51,
   'Saving high score': 52,
