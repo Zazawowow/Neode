@@ -2,7 +2,6 @@ use rpc_toolkit::{Context, HandlerExt, ParentHandler};
 
 pub mod acme;
 pub mod dns;
-pub mod domain;
 pub mod forward;
 pub mod gateway;
 pub mod host;
@@ -30,8 +29,8 @@ pub fn net_api<C: Context>() -> ParentHandler<C> {
             acme::acme_api::<C>().with_about("Setup automatic clearnet certificate acquisition"),
         )
         .subcommand(
-            "domain",
-            domain::domain_api::<C>().with_about("Setup clearnet domains"),
+            "dns",
+            dns::dns_api::<C>().with_about("Manage and query DNS"),
         )
         .subcommand(
             "gateway",

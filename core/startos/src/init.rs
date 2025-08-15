@@ -1,5 +1,4 @@
 use std::io::Cursor;
-use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::path::Path;
 use std::sync::Arc;
 use std::time::{Duration, SystemTime};
@@ -203,19 +202,7 @@ pub async fn init(
     let account = AccountInfo::load(&peek)?;
 
     start_net.start();
-    let net_ctrl = Arc::new(
-        NetController::init(
-            db.clone(),
-            cfg.tor_control
-                .unwrap_or(SocketAddr::from(([127, 0, 0, 1], 9051))),
-            cfg.tor_socks.unwrap_or(SocketAddr::V4(SocketAddrV4::new(
-                Ipv4Addr::new(127, 0, 0, 1),
-                9050,
-            ))),
-            &account.hostname,
-        )
-        .await?,
-    );
+    let net_ctrl = Arc::new(NetController::init(db.clone(), &account.hostname).await?);
     webserver.try_upgrade(|a| net_ctrl.net_iface.watcher.upgrade_listener(a))?;
     let os_net_service = net_ctrl.os_bindings().await?;
     start_net.complete();

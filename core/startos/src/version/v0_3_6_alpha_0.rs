@@ -13,7 +13,6 @@ use openssl::x509::X509;
 use sqlx::postgres::PgConnectOptions;
 use sqlx::{PgPool, Row};
 use tokio::process::Command;
-use torut::onion::TorSecretKeyV3;
 
 use super::v0_3_5::V0_3_0_COMPAT;
 use super::{v0_3_5_2, VersionT};
@@ -26,6 +25,7 @@ use crate::disk::mount::util::unmount;
 use crate::hostname::Hostname;
 use crate::net::forward::AvailablePorts;
 use crate::net::keys::KeyStore;
+use crate::net::tor::TorSecretKey;
 use crate::notifications::Notifications;
 use crate::prelude::*;
 use crate::s9pk::merkle_archive::source::multi_cursor_file::MultiCursorFile;
@@ -198,12 +198,9 @@ async fn init_postgres(datadir: impl AsRef<Path>) -> Result<PgPool, Error> {
                 .port(5433)
                 .socket("/var/run/postgresql"),
         )
-        .await?
-    };
-    sqlx::migrate!()
-        .run(&secret_store)
         .await
-        .with_kind(crate::ErrorKind::Database)?;
+        .with_kind(ErrorKind::Database)?
+    };
     Ok(secret_store)
 }
 
@@ -422,10 +419,11 @@ impl VersionT for Version {
 async fn previous_cifs(pg: &sqlx::Pool<sqlx::Postgres>) -> Result<CifsTargets, Error> {
     let cifs = sqlx::query(r#"SELECT * FROM cifs_shares"#)
         .fetch_all(pg)
-        .await?
+        .await
+        .with_kind(ErrorKind::Database)?
         .into_iter()
         .map(|row| {
-            let id: i32 = row.try_get("id")?;
+            let id: i32 = row.try_get("id").with_kind(ErrorKind::Database)?;
             Ok::<_, Error>((
                 id,
                 Cifs {
@@ -458,13 +456,14 @@ async fn previous_cifs(pg: &sqlx::Pool<sqlx::Postgres>) -> Result<CifsTargets, E
 async fn previous_account_info(pg: &sqlx::Pool<sqlx::Postgres>) -> Result<AccountInfo, Error> {
     let account_query = sqlx::query(r#"SELECT * FROM account"#)
         .fetch_one(pg)
-        .await?;
+        .await
+        .with_kind(ErrorKind::Database)?;
     let account = {
         AccountInfo {
             password: account_query
                 .try_get("password")
                 .with_ctx(|_| (ErrorKind::Database, "password"))?,
-            tor_keys: vec![TorSecretKeyV3::try_from(
+            tor_keys: vec![TorSecretKey::from_bytes(
                 if let Some(bytes) = account_query
                     .try_get::<Option<Vec<u8>>, _>("tor_key")
                     .with_ctx(|_| (ErrorKind::Database, "tor_key"))?
@@ -479,14 +478,18 @@ async fn previous_account_info(pg: &sqlx::Pool<sqlx::Postgres>) -> Result<Accoun
                         .with_ctx(|_| (ErrorKind::Database, "password.u8 64"))?
                 } else {
                     ed25519_expand_key(
-                        &<[u8; 32]>::try_from(account_query.try_get::<Vec<u8>, _>("network_key")?)
-                            .map_err(|e| {
-                                Error::new(
-                                    eyre!("expected vec of len 32, got len {}", e.len()),
-                                    ErrorKind::ParseDbField,
-                                )
-                            })
-                            .with_ctx(|_| (ErrorKind::Database, "password.u8 32"))?,
+                        &<[u8; 32]>::try_from(
+                            account_query
+                                .try_get::<Vec<u8>, _>("network_key")
+                                .with_kind(ErrorKind::Database)?,
+                        )
+                        .map_err(|e| {
+                            Error::new(
+                                eyre!("expected vec of len 32, got len {}", e.len()),
+                                ErrorKind::ParseDbField,
+                            )
+                        })
+                        .with_ctx(|_| (ErrorKind::Database, "password.u8 32"))?,
                     )
                 },
             )?],
@@ -527,7 +530,8 @@ async fn previous_account_info(pg: &sqlx::Pool<sqlx::Postgres>) -> Result<Accoun
 async fn previous_ssh_keys(pg: &sqlx::Pool<sqlx::Postgres>) -> Result<SshKeys, Error> {
     let ssh_query = sqlx::query(r#"SELECT * FROM ssh_keys"#)
         .fetch_all(pg)
-        .await?;
+        .await
+        .with_kind(ErrorKind::Database)?;
     let ssh_keys: SshKeys = {
         let keys = ssh_query.into_iter().fold(
             Ok::<_, Error>(BTreeMap::<InternedString, WithTimeData<SshPubKey>>::new()),
@@ -535,12 +539,12 @@ async fn previous_ssh_keys(pg: &sqlx::Pool<sqlx::Postgres>) -> Result<SshKeys, E
                 let mut ssh_keys = ssh_keys?;
                 let time = row
                     .try_get::<String, _>("created_at")
-                    .map_err(Error::from)
+                    .with_kind(ErrorKind::Database)
                     .and_then(|x| x.parse::<DateTime<Utc>>().with_kind(ErrorKind::Database))
                     .with_ctx(|_| (ErrorKind::Database, "openssh_pubkey::created_at"))?;
                 let value: SshPubKey = row
                     .try_get::<String, _>("openssh_pubkey")
-                    .map_err(Error::from)
+                    .with_kind(ErrorKind::Database)
                     .and_then(|x| x.parse().map(SshPubKey).with_kind(ErrorKind::Database))
                     .with_ctx(|_| (ErrorKind::Database, "openssh_pubkey"))?;
                 let data = WithTimeData {

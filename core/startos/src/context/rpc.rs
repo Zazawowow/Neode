@@ -65,7 +65,6 @@ pub struct RpcContextSeed {
     pub cancellable_installs: SyncMutex<BTreeMap<PackageId, oneshot::Sender<()>>>,
     pub metrics_cache: Watch<Option<crate::system::Metrics>>,
     pub shutdown: broadcast::Sender<Option<Shutdown>>,
-    pub tor_socks: SocketAddr,
     pub lxc_manager: Arc<LxcManager>,
     pub open_authed_continuations: OpenAuthedContinuations<Option<InternedString>>,
     pub rpc_continuations: RpcContinuations,
@@ -138,10 +137,12 @@ impl RpcContext {
             run_migrations,
         }: InitRpcContextPhases,
     ) -> Result<Self, Error> {
-        let tor_proxy = config.tor_socks.unwrap_or(SocketAddr::V4(SocketAddrV4::new(
-            Ipv4Addr::new(127, 0, 0, 1),
-            9050,
-        )));
+        let socks_proxy = config
+            .socks_listen
+            .unwrap_or(SocketAddr::V4(SocketAddrV4::new(
+                Ipv4Addr::new(127, 0, 0, 1),
+                9050,
+            )));
         let (shutdown, _) = tokio::sync::broadcast::channel(1);
 
         load_db.start();
@@ -163,17 +164,7 @@ impl RpcContext {
         {
             (net_ctrl, os_net_service)
         } else {
-            let net_ctrl = Arc::new(
-                NetController::init(
-                    db.clone(),
-                    config
-                        .tor_control
-                        .unwrap_or(SocketAddr::from(([127, 0, 0, 1], 9051))),
-                    tor_proxy,
-                    &account.hostname,
-                )
-                .await?,
-            );
+            let net_ctrl = Arc::new(NetController::init(db.clone(), &account.hostname).await?);
             webserver.try_upgrade(|a| net_ctrl.net_iface.watcher.upgrade_listener(a))?;
             let os_net_service = net_ctrl.os_bindings().await?;
             (net_ctrl, os_net_service)
@@ -183,7 +174,7 @@ impl RpcContext {
 
         let services = ServiceMap::default();
         let metrics_cache = Watch::<Option<crate::system::Metrics>>::new(None);
-        let tor_proxy_url = format!("socks5h://{tor_proxy}");
+        let socks_proxy_url = format!("socks5h://{socks_proxy}");
 
         let crons = SyncMutex::new(BTreeMap::new());
 
@@ -251,7 +242,6 @@ impl RpcContext {
             cancellable_installs: SyncMutex::new(BTreeMap::new()),
             metrics_cache,
             shutdown,
-            tor_socks: tor_proxy,
             lxc_manager: Arc::new(LxcManager::new()),
             open_authed_continuations: OpenAuthedContinuations::new(),
             rpc_continuations: RpcContinuations::new(),
@@ -267,13 +257,7 @@ impl RpcContext {
                 })?,
             ),
             client: Client::builder()
-                .proxy(Proxy::custom(move |url| {
-                    if url.host_str().map_or(false, |h| h.ends_with(".onion")) {
-                        Some(tor_proxy_url.clone())
-                    } else {
-                        None
-                    }
-                }))
+                .proxy(Proxy::all(socks_proxy_url)?)
                 .build()
                 .with_kind(crate::ErrorKind::ParseUrl)?,
             start_time: Instant::now(),

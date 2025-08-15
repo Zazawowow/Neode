@@ -23,13 +23,13 @@ use crate::install::PKG_ARCHIVE_DIR;
 use crate::notifications::{notify, NotificationLevel};
 use crate::prelude::*;
 use crate::progress::{FullProgressTracker, PhaseProgressTrackerHandle, ProgressTrackerWriter};
-use crate::sign::commitment::merkle_archive::MerkleArchiveCommitment;
 use crate::s9pk::manifest::PackageId;
 use crate::s9pk::merkle_archive::source::FileSource;
 use crate::s9pk::S9pk;
 use crate::service::rpc::ExitParams;
 use crate::service::start_stop::StartStop;
 use crate::service::{LoadDisposition, Service, ServiceRef};
+use crate::sign::commitment::merkle_archive::MerkleArchiveCommitment;
 use crate::status::MainStatus;
 use crate::util::serde::{Base32, Pem};
 use crate::util::sync::SyncMutex;
@@ -382,7 +382,7 @@ impl ServiceMap {
         id: PackageId,
         soft: bool,
         force: bool,
-    ) -> Result<impl Future<Output = Result<(), Error>> + Send, Error> {
+    ) -> Result<impl Future<Output = Result<(), Error>> + Send + 'static, Error> {
         let mut guard = self.get_mut(&id).await;
         ctx.db
             .mutate(|db| {

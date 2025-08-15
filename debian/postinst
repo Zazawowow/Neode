@@ -83,7 +83,6 @@ $SYSTEMCTL enable ssh.service
 $SYSTEMCTL disable wpa_supplicant.service
 $SYSTEMCTL mask systemd-networkd-wait-online.service # currently use `NetworkManager-wait-online.service`
 
-$SYSTEMCTL disable docker.service
 $SYSTEMCTL disable postgresql.service
 $SYSTEMCTL disable tor.service
 $SYSTEMCTL disable bluetooth.service
@@ -111,6 +110,8 @@ sed -i '/^\s*#\?\s*issue_discards\s*=\s*/c\issue_discards = 1' /etc/lvm/lvm.conf
 sed -i '/\(^\|#\)\s*unqualified-search-registries\s*=\s*/c\unqualified-search-registries = ["docker.io"]' /etc/containers/registries.conf
 sed -i 's/\(#\|\^\)\s*\([^=]\+\)=\(suspend\|hibernate\)\s*$/\2=ignore/g' /etc/systemd/logind.conf
 sed -i '/\(^\|#\)MulticastDNS=/c\MulticastDNS=no' /etc/systemd/resolved.conf
+sed -i '/\(^\|#\)DNS=/c\DNS=127.0.0.1:5355' /etc/systemd/resolved.conf
+sed -i '/\(^\|#\)DNSStubListenerExtra=/c\DNSStubListenerExtra=0.0.0.0:53' /etc/systemd/resolved.conf
 sed -i 's/\[Service\]/[Service]\nEnvironment=SYSTEMD_LOG_LEVEL=debug/' /lib/systemd/system/systemd-timesyncd.service
 sed -i "s/\.debian\./\./g;s/#FallbackNTP=/FallbackNTP=/"  /etc/systemd/timesyncd.conf
 sed -i '/\(^\|#\)RootDistanceMaxSec=/c\RootDistanceMaxSec=10' /etc/systemd/timesyncd.conf

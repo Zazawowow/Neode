@@ -1,3 +1,5 @@
+ls-files = $(shell git ls-files --cached --others --exclude-standard $1) 
+
 PLATFORM_FILE := $(shell ./check-platform.sh)
 ENVIRONMENT_FILE := $(shell ./check-environment.sh)
 GIT_HASH_FILE := $(shell ./check-git-hash.sh)
@@ -9,22 +11,19 @@ IMAGE_TYPE=$(shell if [ "$(PLATFORM)" = raspberrypi ]; then echo img; else echo 
 WEB_UIS := web/dist/raw/ui/index.html web/dist/raw/setup-wizard/index.html web/dist/raw/install-wizard/index.html
 COMPRESSED_WEB_UIS := web/dist/static/ui/index.html web/dist/static/setup-wizard/index.html web/dist/static/install-wizard/index.html
 FIRMWARE_ROMS := ./firmware/$(PLATFORM) $(shell jq --raw-output '.[] | select(.platform[] | contains("$(PLATFORM)")) | "./firmware/$(PLATFORM)/" + .id + ".rom.gz"' build/lib/firmware.json)
-BUILD_SRC := $(shell git ls-files build) build/lib/depends build/lib/conflicts $(FIRMWARE_ROMS)
-DEBIAN_SRC := $(shell git ls-files debian/)
-IMAGE_RECIPE_SRC := $(shell git ls-files image-recipe/)
+BUILD_SRC := $(call ls-files, build) build/lib/depends build/lib/conflicts $(FIRMWARE_ROMS)
+DEBIAN_SRC := $(call ls-files, debian/)
+IMAGE_RECIPE_SRC := $(call ls-files, image-recipe/)
 STARTD_SRC := core/startos/startd.service $(BUILD_SRC)
-COMPAT_SRC := $(shell git ls-files system-images/compat/)
-UTILS_SRC := $(shell git ls-files system-images/utils/)
-BINFMT_SRC := $(shell git ls-files system-images/binfmt/)
-CORE_SRC := $(shell git ls-files core) $(shell git ls-files --recurse-submodules patch-db) $(GIT_HASH_FILE)
-WEB_SHARED_SRC := $(shell git ls-files web/projects/shared) $(shell git ls-files web/projects/marketplace) $(shell ls -p web/ | grep -v / | sed 's/^/web\//g') web/node_modules/.package-lock.json web/config.json patch-db/client/dist/index.js sdk/baseDist/package.json web/patchdb-ui-seed.json sdk/dist/package.json
-WEB_UI_SRC := $(shell git ls-files web/projects/ui)
-WEB_SETUP_WIZARD_SRC := $(shell git ls-files web/projects/setup-wizard)
-WEB_INSTALL_WIZARD_SRC := $(shell git ls-files web/projects/install-wizard)
+CORE_SRC := $(call ls-files, core) $(shell git ls-files --recurse-submodules patch-db) $(GIT_HASH_FILE)
+WEB_SHARED_SRC := $(call ls-files, web/projects/shared) $(call ls-files, web/projects/marketplace) $(shell ls -p web/ | grep -v / | sed 's/^/web\//g') web/node_modules/.package-lock.json web/config.json patch-db/client/dist/index.js sdk/baseDist/package.json web/patchdb-ui-seed.json sdk/dist/package.json
+WEB_UI_SRC := $(call ls-files, web/projects/ui)
+WEB_SETUP_WIZARD_SRC := $(call ls-files, web/projects/setup-wizard)
+WEB_INSTALL_WIZARD_SRC := $(call ls-files, web/projects/install-wizard)
 PATCH_DB_CLIENT_SRC := $(shell git ls-files --recurse-submodules patch-db/client)
 GZIP_BIN := $(shell which pigz || which gzip)
 TAR_BIN := $(shell which gtar || which tar)
-COMPILED_TARGETS := core/target/$(ARCH)-unknown-linux-musl/release/startbox core/target/$(ARCH)-unknown-linux-musl/release/containerbox system-images/compat/docker-images/$(ARCH).tar system-images/utils/docker-images/$(ARCH).tar system-images/binfmt/docker-images/$(ARCH).tar container-runtime/rootfs.$(ARCH).squashfs
+COMPILED_TARGETS := core/target/$(ARCH)-unknown-linux-musl/release/startbox core/target/$(ARCH)-unknown-linux-musl/release/containerbox container-runtime/rootfs.$(ARCH).squashfs
 ALL_TARGETS := $(STARTD_SRC) $(ENVIRONMENT_FILE) $(GIT_HASH_FILE) $(VERSION_FILE) $(COMPILED_TARGETS) cargo-deps/$(ARCH)-unknown-linux-musl/release/startos-backup-fs $(shell if [ "$(PLATFORM)" = "raspberrypi" ]; then echo cargo-deps/aarch64-unknown-linux-musl/release/pi-beep; fi)  $(shell /bin/bash -c 'if [[ "${ENVIRONMENT}" =~ (^|-)unstable($$|-) ]]; then echo cargo-deps/$(ARCH)-unknown-linux-musl/release/tokio-console; fi') $(PLATFORM_FILE) 
 REBUILD_TYPES = 1
 
@@ -59,8 +58,6 @@ touch:
 metadata: $(VERSION_FILE) $(PLATFORM_FILE) $(ENVIRONMENT_FILE) $(GIT_HASH_FILE)
 
 clean:
-	rm -f system-images/**/*.tar
-	rm -rf system-images/compat/target
 	rm -rf core/target
 	rm -rf core/startos/bindings
 	rm -rf web/.angular
@@ -95,10 +92,10 @@ test: | test-core test-sdk test-container-runtime
 test-core: $(CORE_SRC) $(ENVIRONMENT_FILE) 
 	./core/run-tests.sh
 
-test-sdk: $(shell git ls-files sdk) sdk/base/lib/osBindings/index.ts
+test-sdk: $(call ls-files, sdk) sdk/base/lib/osBindings/index.ts
 	cd sdk && make test
 
-test-container-runtime: container-runtime/node_modules/.package-lock.json $(shell git ls-files container-runtime/src) container-runtime/package.json container-runtime/tsconfig.json 
+test-container-runtime: container-runtime/node_modules/.package-lock.json $(call ls-files, container-runtime/src) container-runtime/package.json container-runtime/tsconfig.json 
 	cd container-runtime && npm test
 
 cli:
@@ -151,10 +148,6 @@ install: $(ALL_TARGETS)
 	$(call cp,GIT_HASH.txt,$(DESTDIR)/usr/lib/startos/GIT_HASH.txt)
 	$(call cp,VERSION.txt,$(DESTDIR)/usr/lib/startos/VERSION.txt)
 
-	$(call mkdir,$(DESTDIR)/usr/lib/startos/system-images)
-	$(call cp,system-images/compat/docker-images/$(ARCH).tar,$(DESTDIR)/usr/lib/startos/system-images/compat.tar)
-	$(call cp,system-images/utils/docker-images/$(ARCH).tar,$(DESTDIR)/usr/lib/startos/system-images/utils.tar)
-	
 	$(call cp,firmware/$(PLATFORM),$(DESTDIR)/usr/lib/startos/firmware)
 
 update-overlay: $(ALL_TARGETS)
@@ -237,20 +230,20 @@ sdk/base/lib/osBindings/index.ts: $(shell if [ "$(REBUILD_TYPES)" -ne 0 ]; then 
 	rsync -ac --delete core/startos/bindings/ sdk/base/lib/osBindings/
 	touch sdk/base/lib/osBindings/index.ts
 
-core/startos/bindings/index.ts: $(shell git ls-files core) $(ENVIRONMENT_FILE)
+core/startos/bindings/index.ts: $(call ls-files, core) $(ENVIRONMENT_FILE)
 	rm -rf core/startos/bindings
 	./core/build-ts.sh
 	ls core/startos/bindings/*.ts | sed 's/core\/startos\/bindings\/\([^.]*\)\.ts/export { \1 } from ".\/\1";/g' | grep -v '"./index"' | tee core/startos/bindings/index.ts
 	npm --prefix sdk exec -- prettier --config ./sdk/base/package.json -w ./core/startos/bindings/*.ts
 	touch core/startos/bindings/index.ts
 
-sdk/dist/package.json sdk/baseDist/package.json: $(shell git ls-files sdk) sdk/base/lib/osBindings/index.ts
+sdk/dist/package.json sdk/baseDist/package.json: $(call ls-files, sdk) sdk/base/lib/osBindings/index.ts
 	(cd sdk && make bundle)
 	touch sdk/dist/package.json
 	touch sdk/baseDist/package.json
 
 # TODO: make container-runtime its own makefile?
-container-runtime/dist/index.js: container-runtime/node_modules/.package-lock.json $(shell git ls-files container-runtime/src) container-runtime/package.json container-runtime/tsconfig.json 
+container-runtime/dist/index.js: container-runtime/node_modules/.package-lock.json $(call ls-files, container-runtime/src) container-runtime/package.json container-runtime/tsconfig.json 
 	npm --prefix container-runtime run build
 
 container-runtime/dist/node_modules/.package-lock.json container-runtime/dist/package.json container-runtime/dist/package-lock.json: container-runtime/package.json container-runtime/package-lock.json sdk/dist/package.json container-runtime/install-dist-deps.sh
@@ -265,15 +258,6 @@ build/lib/depends build/lib/conflicts: build/dpkg-deps/*
 
 $(FIRMWARE_ROMS): build/lib/firmware.json download-firmware.sh $(PLATFORM_FILE)
 	./download-firmware.sh $(PLATFORM)
-
-system-images/compat/docker-images/$(ARCH).tar: $(COMPAT_SRC)
-	cd system-images/compat && make docker-images/$(ARCH).tar && touch docker-images/$(ARCH).tar
-
-system-images/utils/docker-images/$(ARCH).tar: $(UTILS_SRC)
-	cd system-images/utils && make docker-images/$(ARCH).tar && touch docker-images/$(ARCH).tar
-
-system-images/binfmt/docker-images/$(ARCH).tar: $(BINFMT_SRC)
-	cd system-images/binfmt && make docker-images/$(ARCH).tar && touch docker-images/$(ARCH).tar
 
 core/target/$(ARCH)-unknown-linux-musl/release/startbox: $(CORE_SRC) $(COMPRESSED_WEB_UIS) web/patchdb-ui-seed.json $(ENVIRONMENT_FILE)
 	ARCH=$(ARCH) ./core/build-startbox.sh

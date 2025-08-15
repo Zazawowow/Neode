@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 
 use exver::{PreReleaseSegment, VersionRange};
@@ -39,7 +39,6 @@ impl VersionT for Version {
             .flatten()
             .find(|(_, i)| i["ipInfo"]["wanIp"].is_string())
             .map(|(g, _)| g.clone());
-        let mut roots = BTreeSet::new();
         for (_, package) in db["public"]["packageData"]
             .as_object_mut()
             .ok_or_else(|| {
@@ -60,10 +59,8 @@ impl VersionT for Version {
                 })?
                 .iter_mut()
             {
-                if default_gateway.is_none() {
-                    host["domains"] = json!({});
-                    continue;
-                }
+                let mut public = BTreeMap::new();
+                let mut private = BTreeSet::new();
                 for (domain, info) in host["domains"]
                     .as_object_mut()
                     .ok_or_else(|| {
@@ -79,26 +76,25 @@ impl VersionT for Version {
                     let Some(info) = info.as_object_mut() else {
                         continue;
                     };
-                    let root = domain.clone();
-                    info.insert("root".into(), Value::String(Arc::new((&*root).to_owned())));
-                    roots.insert(root);
+                    if info["public"].as_bool().unwrap_or_default() && let Some(gateway) = &default_gateway {
+                        info.insert(
+                            "gateway".into(),
+                            Value::String(Arc::new((&**gateway).to_owned())),
+                        );
+                        public.insert(domain.clone(), info.clone());
+                    } else {
+                        private.insert(domain.clone());
+                    }
+                    
                 }
+                host["domains"] = json!({ "public": &public, "private": &private });
             }
         }
-        let network = db["public"]["serverInfo"]["network"]
-            .as_object_mut()
-            .ok_or_else(|| {
-                Error::new(
-                    eyre!("expected public.serverInfo.network to be an object"),
-                    ErrorKind::Database,
-                )
-            })?;
+        let network = &mut db["public"]["serverInfo"]["network"];
         network["gateways"] = network["networkInterfaces"].clone();
-        if let Some(gateway) = default_gateway {
-            for root in roots {
-                network["domains"][&*root] = json!({ "gateway": gateway });
-            }
-        }
+        network["dns"] = json!({
+            "dhcp": [],
+        });
 
         Ok(Value::Null)
     }

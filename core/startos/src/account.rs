@@ -3,11 +3,11 @@ use std::time::SystemTime;
 use imbl_value::InternedString;
 use openssl::pkey::{PKey, Private};
 use openssl::x509::X509;
-use torut::onion::TorSecretKeyV3;
 
 use crate::db::model::DatabaseModel;
 use crate::hostname::{generate_hostname, generate_id, Hostname};
 use crate::net::ssl::{generate_key, make_root_cert};
+use crate::net::tor::TorSecretKey;
 use crate::prelude::*;
 use crate::util::serde::Pem;
 
@@ -20,12 +20,12 @@ fn hash_password(password: &str) -> Result<String, Error> {
     .with_kind(crate::ErrorKind::PasswordHashGeneration)
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct AccountInfo {
     pub server_id: String,
     pub hostname: Hostname,
     pub password: String,
-    pub tor_keys: Vec<TorSecretKeyV3>,
+    pub tor_keys: Vec<TorSecretKey>,
     pub root_ca_key: PKey<Private>,
     pub root_ca_cert: X509,
     pub ssh_key: ssh_key::PrivateKey,
@@ -35,7 +35,7 @@ impl AccountInfo {
     pub fn new(password: &str, start_time: SystemTime) -> Result<Self, Error> {
         let server_id = generate_id();
         let hostname = generate_hostname();
-        let tor_key = vec![TorSecretKeyV3::generate()];
+        let tor_key = vec![TorSecretKey::generate()];
         let root_ca_key = generate_key()?;
         let root_ca_cert = make_root_cert(&root_ca_key, &hostname, start_time)?;
         let ssh_key = ssh_key::PrivateKey::from(ssh_key::private::Ed25519Keypair::random(
@@ -104,7 +104,7 @@ impl AccountInfo {
                 &self
                     .tor_keys
                     .iter()
-                    .map(|tor_key| tor_key.public().get_onion_address())
+                    .map(|tor_key| tor_key.onion_address())
                     .collect(),
             )?;
         db.as_private_mut().as_password_mut().ser(&self.password)?;
@@ -142,7 +142,7 @@ impl AccountInfo {
         .chain(
             self.tor_keys
                 .iter()
-                .map(|k| InternedString::from_display(&k.public().get_onion_address())),
+                .map(|k| InternedString::from_display(&k.onion_address())),
         )
     }
 }

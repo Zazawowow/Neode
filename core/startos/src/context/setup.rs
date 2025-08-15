@@ -55,7 +55,7 @@ impl TryFrom<&AccountInfo> for SetupResult {
             tor_addresses: value
                 .tor_keys
                 .iter()
-                .map(|tor_key| format!("https://{}", tor_key.public().get_onion_address()))
+                .map(|tor_key| format!("https://{}", tor_key.onion_address()))
                 .collect(),
             hostname: value.hostname.clone(),
             lan_address: value.hostname.lan_address(),

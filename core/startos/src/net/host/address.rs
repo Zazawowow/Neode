@@ -2,48 +2,43 @@ use std::collections::BTreeSet;
 
 use clap::Parser;
 use imbl_value::InternedString;
+use models::GatewayId;
 use rpc_toolkit::{from_fn_async, Context, Empty, HandlerArgs, HandlerExt, ParentHandler};
 use serde::{Deserialize, Serialize};
-use torut::onion::OnionAddressV3;
 use ts_rs::TS;
 
 use crate::context::{CliContext, RpcContext};
 use crate::db::model::DatabaseModel;
 use crate::net::acme::AcmeProvider;
 use crate::net::host::{all_hosts, HostApiKind};
+use crate::net::tor::OnionAddress;
 use crate::prelude::*;
 use crate::util::serde::{display_serializable, HandlerExtSerde};
 
-#[derive(Clone, Debug, Deserialize, Serialize, TS)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 #[serde(rename_all_fields = "camelCase")]
 #[serde(tag = "kind")]
-#[ts(export)]
 pub enum HostAddress {
     Onion {
-        #[ts(type = "string")]
-        address: OnionAddressV3,
+        address: OnionAddress,
     },
     Domain {
-        #[ts(type = "string")]
         address: InternedString,
-        public: bool,
-        acme: Option<AcmeProvider>,
+        public: Option<PublicDomainConfig>,
     },
 }
 
-#[derive(Debug, Deserialize, Serialize, TS)]
-pub struct DomainConfig {
-    #[ts(type = "string")]
-    pub root: InternedString,
-    pub public: bool,
+#[derive(Debug, Clone, Deserialize, Serialize, TS)]
+pub struct PublicDomainConfig {
+    pub gateway: GatewayId,
     pub acme: Option<AcmeProvider>,
 }
 
 fn check_duplicates(db: &DatabaseModel) -> Result<(), Error> {
-    let mut onions = BTreeSet::<OnionAddressV3>::new();
+    let mut onions = BTreeSet::<OnionAddress>::new();
     let mut domains = BTreeSet::<InternedString>::new();
-    let mut check_onion = |onion: OnionAddressV3| {
+    let mut check_onion = |onion: OnionAddress| {
         if onions.contains(&onion) {
             return Err(Error::new(
                 eyre!("onion address {onion} is already in use"),
@@ -68,7 +63,10 @@ fn check_duplicates(db: &DatabaseModel) -> Result<(), Error> {
         for onion in host.as_onions().de()? {
             check_onion(onion)?;
         }
-        for domain in host.as_domains().keys()? {
+        for domain in host.as_domains().as_public().keys()? {
+            check_domain(domain)?;
+        }
+        for domain in host.as_domains().as_private().de()? {
             check_domain(domain)?;
         }
     }
@@ -82,22 +80,50 @@ pub fn address_api<C: Context, Kind: HostApiKind>(
             "domain",
             ParentHandler::<C, Empty, Kind::Inheritance>::new()
                 .subcommand(
-                    "add",
-                    from_fn_async(add_domain::<Kind>)
-                        .with_metadata("sync_db", Value::Bool(true))
-                        .with_inherited(|_, a| a)
-                        .no_display()
-                        .with_about("Add an address to this host")
-                        .with_call_remote::<CliContext>(),
+                    "public",
+                    ParentHandler::<C, Empty, Kind::Inheritance>::new()
+                        .subcommand(
+                            "add",
+                            from_fn_async(add_public_domain::<Kind>)
+                                .with_metadata("sync_db", Value::Bool(true))
+                                .with_inherited(|_, a| a)
+                                .no_display()
+                                .with_about("Add a public domain to this host")
+                                .with_call_remote::<CliContext>(),
+                        )
+                        .subcommand(
+                            "remove",
+                            from_fn_async(remove_public_domain::<Kind>)
+                                .with_metadata("sync_db", Value::Bool(true))
+                                .with_inherited(|_, a| a)
+                                .no_display()
+                                .with_about("Remove a public domain from this host")
+                                .with_call_remote::<CliContext>(),
+                        )
+                        .with_inherited(|_, a| a),
                 )
                 .subcommand(
-                    "remove",
-                    from_fn_async(remove_domain::<Kind>)
-                        .with_metadata("sync_db", Value::Bool(true))
-                        .with_inherited(|_, a| a)
-                        .no_display()
-                        .with_about("Remove an address from this host")
-                        .with_call_remote::<CliContext>(),
+                    "private",
+                    ParentHandler::<C, Empty, Kind::Inheritance>::new()
+                        .subcommand(
+                            "add",
+                            from_fn_async(add_private_domain::<Kind>)
+                                .with_metadata("sync_db", Value::Bool(true))
+                                .with_inherited(|_, a| a)
+                                .no_display()
+                                .with_about("Add a private domain to this host")
+                                .with_call_remote::<CliContext>(),
+                        )
+                        .subcommand(
+                            "remove",
+                            from_fn_async(remove_private_domain::<Kind>)
+                                .with_metadata("sync_db", Value::Bool(true))
+                                .with_inherited(|_, a| a)
+                                .no_display()
+                                .with_about("Remove a private domain from this host")
+                                .with_call_remote::<CliContext>(),
+                        )
+                        .with_inherited(|_, a| a),
                 )
                 .with_inherited(Kind::inheritance),
         )
@@ -146,14 +172,19 @@ pub fn address_api<C: Context, Kind: HostApiKind>(
                             }
                             HostAddress::Domain {
                                 address,
-                                public,
-                                acme,
+                                public: Some(PublicDomainConfig { gateway, acme }),
                             } => {
                                 table.add_row(row![
                                     address,
-                                    *public,
+                                    &format!("YES ({gateway})"),
                                     acme.as_ref().map(|a| a.0.as_str()).unwrap_or("NONE")
                                 ]);
+                            }
+                            HostAddress::Domain {
+                                address,
+                                public: None,
+                            } => {
+                                table.add_row(row![address, &format!("NO"), "N/A"]);
                             }
                         }
                     }
@@ -168,40 +199,24 @@ pub fn address_api<C: Context, Kind: HostApiKind>(
 }
 
 #[derive(Deserialize, Serialize, Parser)]
-pub struct AddDomainParams {
+pub struct AddPublicDomainParams {
     pub domain: InternedString,
     #[arg(long)]
-    pub private: bool,
-    #[arg(long)]
     pub acme: Option<AcmeProvider>,
+    pub gateway: GatewayId,
 }
 
-pub async fn add_domain<Kind: HostApiKind>(
+pub async fn add_public_domain<Kind: HostApiKind>(
     ctx: RpcContext,
-    AddDomainParams {
+    AddPublicDomainParams {
         ref domain,
-        private,
         acme,
-    }: AddDomainParams,
+        gateway,
+    }: AddPublicDomainParams,
     inheritance: Kind::Inheritance,
 ) -> Result<(), Error> {
     ctx.db
         .mutate(|db| {
-            let root = db
-                .as_public()
-                .as_server_info()
-                .as_network()
-                .as_domains()
-                .keys()?
-                .into_iter()
-                .find(|root| {
-                    domain == root
-                        || domain
-                            .strip_suffix(&**root)
-                            .map_or(false, |d| d.ends_with("."))
-                })
-                .or_not_found(lazy_format!("root domain for {domain}"))?;
-
             if let Some(acme) = &acme {
                 if !db
                     .as_public()
@@ -214,14 +229,10 @@ pub async fn add_domain<Kind: HostApiKind>(
                 }
             }
 
-            Kind::host_for(&inheritance, db)?.as_domains_mut().insert(
-                domain,
-                &DomainConfig {
-                    root,
-                    public: !private,
-                    acme,
-                },
-            )?;
+            Kind::host_for(&inheritance, db)?
+                .as_domains_mut()
+                .as_public_mut()
+                .insert(domain, &PublicDomainConfig { acme, gateway })?;
             check_duplicates(db)
         })
         .await
@@ -236,7 +247,7 @@ pub struct RemoveDomainParams {
     pub domain: InternedString,
 }
 
-pub async fn remove_domain<Kind: HostApiKind>(
+pub async fn remove_public_domain<Kind: HostApiKind>(
     ctx: RpcContext,
     RemoveDomainParams { domain }: RemoveDomainParams,
     inheritance: Kind::Inheritance,
@@ -245,7 +256,52 @@ pub async fn remove_domain<Kind: HostApiKind>(
         .mutate(|db| {
             Kind::host_for(&inheritance, db)?
                 .as_domains_mut()
+                .as_public_mut()
                 .remove(&domain)
+        })
+        .await
+        .result?;
+    Kind::sync_host(&ctx, inheritance).await?;
+
+    Ok(())
+}
+
+#[derive(Deserialize, Serialize, Parser)]
+pub struct AddPrivateDomainParams {
+    pub domain: InternedString,
+}
+
+pub async fn add_private_domain<Kind: HostApiKind>(
+    ctx: RpcContext,
+    AddPrivateDomainParams { domain }: AddPrivateDomainParams,
+    inheritance: Kind::Inheritance,
+) -> Result<(), Error> {
+    ctx.db
+        .mutate(|db| {
+            Kind::host_for(&inheritance, db)?
+                .as_domains_mut()
+                .as_private_mut()
+                .mutate(|d| Ok(d.insert(domain)))?;
+            check_duplicates(db)
+        })
+        .await
+        .result?;
+    Kind::sync_host(&ctx, inheritance).await?;
+
+    Ok(())
+}
+
+pub async fn remove_private_domain<Kind: HostApiKind>(
+    ctx: RpcContext,
+    RemoveDomainParams { domain }: RemoveDomainParams,
+    inheritance: Kind::Inheritance,
+) -> Result<(), Error> {
+    ctx.db
+        .mutate(|db| {
+            Kind::host_for(&inheritance, db)?
+                .as_domains_mut()
+                .as_private_mut()
+                .mutate(|d| Ok(d.remove(&domain)))
         })
         .await
         .result?;
@@ -272,7 +328,7 @@ pub async fn add_onion<Kind: HostApiKind>(
                 ErrorKind::InvalidOnionAddress,
             )
         })?
-        .parse::<OnionAddressV3>()?;
+        .parse::<OnionAddress>()?;
     ctx.db
         .mutate(|db| {
             db.as_private().as_key_store().as_onion().get_key(&onion)?;
@@ -303,7 +359,7 @@ pub async fn remove_onion<Kind: HostApiKind>(
                 ErrorKind::InvalidOnionAddress,
             )
         })?
-        .parse::<OnionAddressV3>()?;
+        .parse::<OnionAddress>()?;
     ctx.db
         .mutate(|db| {
             Kind::host_for(&inheritance, db)?

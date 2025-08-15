@@ -21,6 +21,20 @@ impl<T> SyncMutex<T> {
     }
 }
 
+#[derive(Debug, Default)]
+pub struct SyncRwLock<T>(std::sync::RwLock<T>);
+impl<T> SyncRwLock<T> {
+    pub fn new(t: T) -> Self {
+        Self(std::sync::RwLock::new(t))
+    }
+    pub fn mutate<F: FnOnce(&mut T) -> U, U>(&self, f: F) -> U {
+        f(&mut *self.0.write().unwrap())
+    }
+    pub fn peek<F: FnOnce(&T) -> U, U>(&self, f: F) -> U {
+        f(&*self.0.read().unwrap())
+    }
+}
+
 struct WatchShared<T> {
     version: u64,
     data: T,

@@ -89,7 +89,19 @@ impl SignatureAuthContext for RpcContext {
                     .as_network()
                     .as_host()
                     .as_domains()
+                    .as_public()
                     .keys()
+                    .map(|k| k.into_iter())
+                    .transpose(),
+            )
+            .chain(
+                peek.as_public()
+                    .as_server_info()
+                    .as_network()
+                    .as_host()
+                    .as_domains()
+                    .as_private()
+                    .de()
                     .map(|k| k.into_iter())
                     .transpose(),
             )

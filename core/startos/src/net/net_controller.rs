@@ -9,23 +9,23 @@ use ipnet::IpNet;
 use models::{HostId, OptionExt, PackageId};
 use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
-use torut::onion::{OnionAddressV3, TorSecretKeyV3};
 use tracing::instrument;
 
+use crate::db::model::public::NetworkInterfaceInfo;
 use crate::db::model::Database;
 use crate::error::ErrorCollection;
 use crate::hostname::Hostname;
 use crate::net::dns::DnsController;
-use crate::net::forward::{PortForwardController, START9_BRIDGE_IFACE};
+use crate::net::forward::PortForwardController;
 use crate::net::gateway::{
-    AndFilter, DynInterfaceFilter, InterfaceFilter, LoopbackFilter, NetworkInterfaceController,
-    SecureFilter,
+    AndFilter, DynInterfaceFilter, IdFilter, InterfaceFilter, NetworkInterfaceController, OrFilter,
+    PublicFilter, SecureFilter,
 };
 use crate::net::host::address::HostAddress;
 use crate::net::host::binding::{AddSslOptions, BindId, BindOptions};
 use crate::net::host::{host_for, Host, Hosts};
 use crate::net::service_interface::{HostnameInfo, IpHostname, OnionHostname};
-use crate::net::tor::TorController;
+use crate::net::tor::{OnionAddress, TorController, TorSecretKey};
 use crate::net::utils::ipv6_is_local;
 use crate::net::vhost::{AlpnInfo, TargetInfo, VHostController};
 use crate::prelude::*;
@@ -45,23 +45,13 @@ pub struct NetController {
 }
 
 impl NetController {
-    pub async fn init(
-        db: TypedPatchDb<Database>,
-        tor_control: SocketAddr,
-        tor_socks: SocketAddr,
-        hostname: &Hostname,
-    ) -> Result<Self, Error> {
+    pub async fn init(db: TypedPatchDb<Database>, hostname: &Hostname) -> Result<Self, Error> {
         let net_iface = Arc::new(NetworkInterfaceController::new(db.clone()));
         Ok(Self {
             db: db.clone(),
-            tor: TorController::new(tor_control, tor_socks),
+            tor: TorController::new().await?,
             vhost: VHostController::new(db, net_iface.clone()),
-            dns: DnsController::init(
-                net_iface
-                    .watcher
-                    .wait_for_activated(START9_BRIDGE_IFACE.into()),
-            )
-            .await?,
+            dns: DnsController::init(&net_iface.watcher).await?,
             forward: PortForwardController::new(net_iface.watcher.subscribe()),
             net_iface,
             server_hostnames: vec![
@@ -86,7 +76,7 @@ impl NetController {
         package: PackageId,
         ip: Ipv4Addr,
     ) -> Result<NetService, Error> {
-        let dns = self.dns.add(Some(package.clone()), ip).await?;
+        let dns = self.dns.add_service(Some(package.clone()), ip)?;
 
         let res = NetService::new(NetServiceData {
             id: Some(package),
@@ -100,7 +90,7 @@ impl NetController {
     }
 
     pub async fn os_bindings(self: &Arc<Self>) -> Result<NetService, Error> {
-        let dns = self.dns.add(None, HOST_IP.into()).await?;
+        let dns = self.dns.add_service(None, HOST_IP.into())?;
 
         let service = NetService::new(NetServiceData {
             id: None,
@@ -136,7 +126,8 @@ impl NetController {
 struct HostBinds {
     forwards: BTreeMap<u16, (SocketAddr, DynInterfaceFilter, Arc<()>)>,
     vhosts: BTreeMap<(Option<InternedString>, u16), (TargetInfo, Arc<()>)>,
-    tor: BTreeMap<OnionAddressV3, (OrdMap<u16, SocketAddr>, Vec<Arc<()>>)>,
+    private_dns: BTreeMap<InternedString, Arc<()>>,
+    tor: BTreeMap<OnionAddress, (OrdMap<u16, SocketAddr>, Vec<Arc<()>>)>,
 }
 
 pub struct NetServiceData {
@@ -227,7 +218,8 @@ impl NetServiceData {
     async fn update(&mut self, ctrl: &NetController, id: HostId, host: Host) -> Result<(), Error> {
         let mut forwards: BTreeMap<u16, (SocketAddr, DynInterfaceFilter)> = BTreeMap::new();
         let mut vhosts: BTreeMap<(Option<InternedString>, u16), TargetInfo> = BTreeMap::new();
-        let mut tor: BTreeMap<OnionAddressV3, (TorSecretKeyV3, OrdMap<u16, SocketAddr>)> =
+        let mut private_dns: BTreeSet<InternedString> = BTreeSet::new();
+        let mut tor: BTreeMap<OnionAddress, (TorSecretKey, OrdMap<u16, SocketAddr>)> =
             BTreeMap::new();
         let mut hostname_info: BTreeMap<u16, Vec<HostnameInfo>> = BTreeMap::new();
         let binds = self.binds.entry(id.clone()).or_default();
@@ -278,52 +270,100 @@ impl NetServiceData {
                                     vhosts.insert(
                                         (Some(hostname), external),
                                         TargetInfo {
-                                            filter: LoopbackFilter.into_dyn(),
+                                            filter: OrFilter(
+                                                IdFilter(
+                                                    NetworkInterfaceInfo::loopback().0.clone(),
+                                                ),
+                                                IdFilter(
+                                                    NetworkInterfaceInfo::lxc_bridge().0.clone(),
+                                                ),
+                                            )
+                                            .into_dyn(),
                                             acme: None,
                                             addr,
                                             connect_ssl: connect_ssl.clone(),
                                         },
-                                    );
+                                    ); // TODO: wrap onion ssl stream directly in tor ctrl
                                 }
                             }
-                            HostAddress::Domain {
-                                address,
-                                public,
-                                acme,
-                            } => {
+                            HostAddress::Domain { address, public } => {
                                 if hostnames.insert(address.clone()) {
                                     let address = Some(address.clone());
                                     if ssl.preferred_external_port == 443 {
-                                        if public {
+                                        if let Some(public) = &public {
                                             vhosts.insert(
                                                 (address.clone(), 5443),
                                                 TargetInfo {
-                                                    filter: bind.net.clone().into_dyn(),
-                                                    acme: acme.clone(),
+                                                    filter: AndFilter(
+                                                        bind.net.clone(),
+                                                        AndFilter(
+                                                            IdFilter(public.gateway.clone()),
+                                                            PublicFilter { public: false },
+                                                        ),
+                                                    )
+                                                    .into_dyn(),
+                                                    acme: public.acme.clone(),
+                                                    addr,
+                                                    connect_ssl: connect_ssl.clone(),
+                                                },
+                                            );
+                                            vhosts.insert(
+                                                (address.clone(), 443),
+                                                TargetInfo {
+                                                    filter: AndFilter(
+                                                        bind.net.clone(),
+                                                        OrFilter(
+                                                            IdFilter(public.gateway.clone()),
+                                                            PublicFilter { public: false },
+                                                        ),
+                                                    )
+                                                    .into_dyn(),
+                                                    acme: public.acme.clone(),
+                                                    addr,
+                                                    connect_ssl: connect_ssl.clone(),
+                                                },
+                                            );
+                                        } else {
+                                            vhosts.insert(
+                                                (address.clone(), 443),
+                                                TargetInfo {
+                                                    filter: AndFilter(
+                                                        bind.net.clone(),
+                                                        PublicFilter { public: false },
+                                                    )
+                                                    .into_dyn(),
+                                                    acme: None,
                                                     addr,
                                                     connect_ssl: connect_ssl.clone(),
                                                 },
                                             );
                                         }
-                                        vhosts.insert(
-                                            (address.clone(), 443),
-                                            TargetInfo {
-                                                filter: bind.net.clone().into_dyn(),
-                                                acme,
-                                                addr,
-                                                connect_ssl: connect_ssl.clone(),
-                                            },
-                                        );
                                     } else {
-                                        vhosts.insert(
-                                            (address.clone(), external),
-                                            TargetInfo {
-                                                filter: bind.net.clone().into_dyn(),
-                                                acme,
-                                                addr,
-                                                connect_ssl: connect_ssl.clone(),
-                                            },
-                                        );
+                                        if let Some(public) = public {
+                                            vhosts.insert(
+                                                (address.clone(), external),
+                                                TargetInfo {
+                                                    filter: AndFilter(
+                                                        bind.net.clone(),
+                                                        IdFilter(public.gateway.clone()),
+                                                    )
+                                                    .into_dyn(),
+                                                    acme: public.acme.clone(),
+                                                    addr,
+                                                    connect_ssl: connect_ssl.clone(),
+                                                },
+                                            );
+                                        } else {
+                                            vhosts.insert(
+                                                (address.clone(), external),
+                                                TargetInfo {
+                                                    filter: bind.net.clone().into_dyn(),
+                                                    acme: None,
+                                                    addr,
+                                                    connect_ssl: connect_ssl.clone(),
+                                                },
+                                            );
+                                        }
                                     }
                                 }
                             }
@@ -383,7 +423,7 @@ impl NetServiceData {
                             {
                                 bind_hostname_info.push(HostnameInfo::Ip {
                                     gateway_id: interface.clone(),
-                                    public, // TODO: check if port forward is active
+                                    public: public.is_some(),
                                     hostname: IpHostname::Domain {
                                         value: address.clone(),
                                         port: None,
@@ -393,7 +433,7 @@ impl NetServiceData {
                             } else {
                                 bind_hostname_info.push(HostnameInfo::Ip {
                                     gateway_id: interface.clone(),
-                                    public,
+                                    public: public.is_some(),
                                     hostname: IpHostname::Domain {
                                         value: address.clone(),
                                         port: bind.net.assigned_port,
@@ -448,6 +488,7 @@ impl NetServiceData {
                     }
                 }
                 hostname_info.insert(*port, bind_hostname_info);
+                private_dns.append(&mut hostnames);
             }
         }
 
@@ -497,7 +538,7 @@ impl NetServiceData {
                 .as_key_store()
                 .as_onion()
                 .get_key(tor_addr)?;
-            tor.insert(key.public().get_onion_address(), (key, tor_binds.clone()));
+            tor.insert(key.onion_address(), (key, tor_binds.clone()));
             for (internal, ports) in &tor_hostname_ports {
                 let mut bind_hostname_info = hostname_info.remove(internal).unwrap_or_default();
                 bind_hostname_info.push(HostnameInfo::Onion {
@@ -563,6 +604,22 @@ impl NetServiceData {
             }
         }
 
+        let mut rm = BTreeSet::new();
+        binds.private_dns.retain(|fqdn, _| {
+            if private_dns.remove(fqdn) {
+                true
+            } else {
+                rm.insert(fqdn.clone());
+                false
+            }
+        });
+        for fqdn in private_dns {
+            binds
+                .private_dns
+                .insert(fqdn.clone(), ctrl.dns.add_private_domain(fqdn)?);
+        }
+        ctrl.dns.gc_private_domains(&rm)?;
+
         let all = binds
             .tor
             .keys()
@@ -578,17 +635,15 @@ impl NetServiceData {
                     if let Some(prev) = prev {
                         prev
                     } else {
-                        let rcs = ctrl
-                            .tor
-                            .add(key, tor_binds.iter().map(|(k, v)| (*k, *v)).collect())
-                            .await?;
+                        let service = ctrl.tor.service(key)?;
+                        let rcs = service.proxy_all(tor_binds.iter().map(|(k, v)| (*k, *v)));
                         (tor_binds, rcs)
                     },
                 );
             } else {
                 if let Some((_, rc)) = prev {
                     drop(rc);
-                    ctrl.tor.gc(Some(onion), None).await?;
+                    ctrl.tor.gc(Some(onion)).await?;
                 }
             }
         }

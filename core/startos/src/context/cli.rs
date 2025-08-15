@@ -131,7 +131,11 @@ impl CliContext {
             tunnel_listen: config.tunnel_listen,
             client: {
                 let mut builder = Client::builder().cookie_provider(cookie_store.clone());
-                if let Some(proxy) = config.proxy {
+                if let Some(proxy) = config.proxy.or_else(|| {
+                    config
+                        .socks_listen
+                        .and_then(|socks| format!("socks5h://{socks}").parse::<Url>().log_err())
+                }) {
                     builder =
                         builder.proxy(Proxy::all(proxy).with_kind(crate::ErrorKind::ParseUrl)?)
                 }

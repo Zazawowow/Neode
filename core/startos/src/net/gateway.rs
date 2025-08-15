@@ -261,6 +261,12 @@ trait ConnectionSettings {
 trait Ip4Config {
     #[zbus(property)]
     fn address_data(&self) -> Result<Vec<AddressData>, Error>;
+
+    #[zbus(property)]
+    fn gateway(&self) -> Result<String, Error>;
+
+    #[zbus(property)]
+    fn nameserver_data(&self) -> Result<Vec<NameserverData>, Error>;
 }
 
 #[proxy(
@@ -270,6 +276,12 @@ trait Ip4Config {
 trait Ip6Config {
     #[zbus(property)]
     fn address_data(&self) -> Result<Vec<AddressData>, Error>;
+
+    #[zbus(property)]
+    fn gateway(&self) -> Result<String, Error>;
+
+    #[zbus(property)]
+    fn nameserver_data(&self) -> Result<Vec<NameserverData>, Error>;
 }
 
 #[derive(Clone, Debug, DeserializeDict, ZValue, ZType)]
@@ -283,6 +295,12 @@ impl TryFrom<AddressData> for IpNet {
     fn try_from(value: AddressData) -> Result<Self, Self::Error> {
         IpNet::new(value.address.parse()?, value.prefix as u8).with_kind(ErrorKind::ParseNetAddress)
     }
+}
+
+#[derive(Clone, Debug, DeserializeDict, ZValue, ZType)]
+#[zvariant(signature = "dict")]
+struct NameserverData {
+    address: String,
 }
 
 #[proxy(
@@ -573,7 +591,15 @@ async fn watch_ip(
                                 Ip6ConfigProxy::new(&connection, ip6_config.clone()).await?;
                             let mut until = Until::new()
                                 .with_stream(ip4_proxy.receive_address_data_changed().await.stub())
-                                .with_stream(ip6_proxy.receive_address_data_changed().await.stub());
+                                .with_stream(ip4_proxy.receive_gateway_changed().await.stub())
+                                .with_stream(
+                                    ip4_proxy.receive_nameserver_data_changed().await.stub(),
+                                )
+                                .with_stream(ip6_proxy.receive_address_data_changed().await.stub())
+                                .with_stream(ip6_proxy.receive_gateway_changed().await.stub())
+                                .with_stream(
+                                    ip6_proxy.receive_nameserver_data_changed().await.stub(),
+                                );
 
                             let dhcp4_proxy = if &*dhcp4_config != "/" {
                                 let dhcp4_proxy =
@@ -595,6 +621,12 @@ async fn watch_ip(
                                             .into_iter()
                                             .chain(ip6_proxy.address_data().await?)
                                             .collect_vec();
+                                        let lan_ip = [
+                                            ip4_proxy.gateway().await?.parse::<IpAddr>()?,
+                                            ip6_proxy.gateway().await?.parse::<IpAddr>()?,
+                                        ]
+                                        .into_iter()
+                                        .collect();
                                         let mut ntp_servers = OrdSet::new();
                                         if let Some(dhcp4_proxy) = &dhcp4_proxy {
                                             let dhcp = dhcp4_proxy.options().await?;
@@ -605,14 +637,22 @@ async fn watch_ip(
                                                 );
                                             }
                                         }
+                                        let dns_servers = []
+                                            .into_iter()
+                                            .chain(ip4_proxy.nameserver_data().await?)
+                                            .chain(ip6_proxy.nameserver_data().await?)
+                                            .map(|NameserverData { address }| {
+                                                address.parse::<IpAddr>()
+                                            })
+                                            .collect::<Result<_, _>>()?;
                                         let scope_id = if_nametoindex(iface.as_str())
                                             .with_kind(ErrorKind::Network)?;
                                         let subnets: OrdSet<IpNet> = addresses
                                             .into_iter()
                                             .map(IpNet::try_from)
                                             .try_collect()?;
-                                        let ip_info = if !subnets.is_empty() {
-                                            let wan_ip = match get_wan_ipv4(iface.as_str()).await {
+                                        let wan_ip = if !subnets.is_empty() {
+                                            match get_wan_ipv4(iface.as_str()).await {
                                                 Ok(a) => a,
                                                 Err(e) => {
                                                     tracing::error!(
@@ -621,18 +661,20 @@ async fn watch_ip(
                                                     tracing::debug!("{e:?}");
                                                     None
                                                 }
-                                            };
-                                            Some(IpInfo {
-                                                name: name.clone(),
-                                                scope_id,
-                                                device_type,
-                                                subnets,
-                                                wan_ip,
-                                                ntp_servers,
-                                            })
+                                            }
                                         } else {
                                             None
                                         };
+                                        let ip_info = Some(IpInfo {
+                                            name: name.clone(),
+                                            scope_id,
+                                            device_type,
+                                            subnets,
+                                            lan_ip,
+                                            wan_ip,
+                                            ntp_servers,
+                                            dns_servers,
+                                        });
 
                                         write_to.send_if_modified(
                                             |m: &mut OrdMap<GatewayId, NetworkInterfaceInfo>| {
@@ -810,12 +852,12 @@ impl NetworkInterfaceController {
     ) -> Result<(), Error> {
         tracing::debug!("syncronizing {info:?} to db");
 
+        let dns = todo!();
+
         db.mutate(|db| {
-            db.as_public_mut()
-                .as_server_info_mut()
-                .as_network_mut()
-                .as_gateways_mut()
-                .ser(info)
+            let net = db.as_public_mut().as_server_info_mut().as_network_mut();
+            net.as_dns_mut().as_dhcp_mut().ser(&dns)?;
+            net.as_gateways_mut().ser(info)
         })
         .await
         .result?;
@@ -1170,15 +1212,11 @@ impl InterfaceFilter for bool {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub struct LoopbackFilter;
-impl InterfaceFilter for LoopbackFilter {
-    fn filter(&self, _: &GatewayId, info: &NetworkInterfaceInfo) -> bool {
-        info.ip_info.as_ref().map_or(false, |i| {
-            i.subnets
-                .iter()
-                .any(|i| i.contains(&IpAddr::V4(Ipv4Addr::LOCALHOST)))
-        })
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub struct IdFilter(pub GatewayId);
+impl InterfaceFilter for IdFilter {
+    fn filter(&self, id: &GatewayId, _: &NetworkInterfaceInfo) -> bool {
+        id == &self.0
     }
 }
 
@@ -1428,7 +1466,10 @@ impl ListenerMap {
         let mut keep = BTreeSet::<SocketAddr>::new();
         for (_, info) in ip_info
             .iter()
-            .chain([NetworkInterfaceInfo::loopback()])
+            .chain([
+                NetworkInterfaceInfo::loopback(),
+                NetworkInterfaceInfo::lxc_bridge(),
+            ])
             .filter(|(id, info)| filter.filter(*id, *info))
         {
             if let Some(ip_info) = &info.ip_info {
@@ -1503,7 +1544,10 @@ pub fn lookup_info_by_addr(
 ) -> Option<(&GatewayId, &NetworkInterfaceInfo)> {
     ip_info
         .iter()
-        .chain([NetworkInterfaceInfo::loopback()])
+        .chain([
+            NetworkInterfaceInfo::loopback(),
+            NetworkInterfaceInfo::lxc_bridge(),
+        ])
         .find(|(_, i)| {
             i.ip_info
                 .as_ref()

@@ -18,8 +18,9 @@ use ts_rs::TS;
 use crate::account::AccountInfo;
 use crate::db::model::package::AllPackageData;
 use crate::net::acme::AcmeProvider;
+use crate::net::forward::START9_BRIDGE_IFACE;
 use crate::net::host::binding::{AddSslOptions, BindInfo, BindOptions, NetInfo};
-use crate::net::host::Host;
+use crate::net::host::{Domains, Host};
 use crate::net::utils::ipv6_is_local;
 use crate::net::vhost::AlpnInfo;
 use crate::prelude::*;
@@ -29,7 +30,7 @@ use crate::util::cpupower::Governor;
 use crate::util::lshw::LshwDevice;
 use crate::util::serde::MaybeUtf8String;
 use crate::version::{Current, VersionT};
-use crate::{ARCH, PLATFORM};
+use crate::{ARCH, HOST_IP, PLATFORM};
 
 #[derive(Debug, Deserialize, Serialize, HasModel, TS)]
 #[serde(rename_all = "camelCase")]
@@ -80,12 +81,8 @@ impl Public {
                         )]
                         .into_iter()
                         .collect(),
-                        onions: account
-                            .tor_keys
-                            .iter()
-                            .map(|k| k.public().get_onion_address())
-                            .collect(),
-                        domains: BTreeMap::new(),
+                        onions: account.tor_keys.iter().map(|k| k.onion_address()).collect(),
+                        domains: Domains::default(),
                         hostname_info: BTreeMap::new(),
                     },
                     wifi: WifiInfo {
@@ -95,6 +92,7 @@ impl Public {
                     gateways: OrdMap::new(),
                     acme: BTreeMap::new(),
                     domains: BTreeMap::new(),
+                    dns: Default::default(),
                 },
                 status_info: ServerStatus {
                     backup_progress: None,
@@ -198,6 +196,18 @@ pub struct NetworkInfo {
     #[serde(default)]
     #[ts(as = "BTreeMap::<String, DomainSettings>")]
     pub domains: BTreeMap<InternedString, DomainSettings>,
+    #[serde(default)]
+    pub dns: DnsSettings,
+}
+
+#[derive(Debug, Default, Deserialize, Serialize, HasModel, TS)]
+#[serde(rename_all = "camelCase")]
+#[model = "Model<Self>"]
+#[ts(export)]
+pub struct DnsSettings {
+    pub dhcp: Vec<IpAddr>,
+    #[serde(rename = "static")]
+    pub static_servers: Option<Vec<IpAddr>>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, HasModel, TS)]
@@ -226,12 +236,41 @@ impl NetworkInterfaceInfo {
                     ]
                     .into_iter()
                     .collect(),
+                    lan_ip: [
+                        IpAddr::from(Ipv4Addr::LOCALHOST),
+                        IpAddr::from(Ipv6Addr::LOCALHOST)
+                    ]
+                    .into_iter()
+                    .collect(),
                     wan_ip: None,
                     ntp_servers: Default::default(),
+                    dns_servers: Default::default(),
                 }),
             };
         }
         (&*LO, &*LOOPBACK)
+    }
+    pub fn lxc_bridge() -> (&'static GatewayId, &'static Self) {
+        lazy_static! {
+            static ref LXCBR0: GatewayId = GatewayId::from(START9_BRIDGE_IFACE);
+            static ref LXC_BRIDGE: NetworkInterfaceInfo = NetworkInterfaceInfo {
+                public: Some(false),
+                secure: Some(true),
+                ip_info: Some(IpInfo {
+                    name: START9_BRIDGE_IFACE.into(),
+                    scope_id: 0,
+                    device_type: None,
+                    subnets: [IpNet::new(HOST_IP.into(), 24).unwrap()]
+                        .into_iter()
+                        .collect(),
+                    lan_ip: [IpAddr::from(HOST_IP)].into_iter().collect(),
+                    wan_ip: None,
+                    ntp_servers: Default::default(),
+                    dns_servers: Default::default(),
+                }),
+            };
+        }
+        (&*LXCBR0, &*LXC_BRIDGE)
     }
     pub fn public(&self) -> bool {
         self.public.unwrap_or_else(|| {
@@ -285,9 +324,13 @@ pub struct IpInfo {
     pub device_type: Option<NetworkInterfaceType>,
     #[ts(type = "string[]")]
     pub subnets: OrdSet<IpNet>,
+    #[ts(type = "string[]")]
+    pub lan_ip: OrdSet<IpAddr>,
     pub wan_ip: Option<Ipv4Addr>,
     #[ts(type = "string[]")]
     pub ntp_servers: OrdSet<InternedString>,
+    #[ts(type = "string[]")]
+    pub dns_servers: OrdSet<IpAddr>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize, TS)]

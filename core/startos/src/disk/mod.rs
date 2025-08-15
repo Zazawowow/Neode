@@ -96,14 +96,13 @@ fn display_disk_info(params: WithIoFormat<Empty>, args: Vec<DiskInfo>) -> Result
                     "N/A"
                 },
                 part.capacity,
-                if let Some(used) = part
+                &if let Some(used) = part
                     .used
                     .map(|u| format!("{:.2} GiB", u as f64 / 1024.0 / 1024.0 / 1024.0))
-                    .as_ref()
                 {
                     used
                 } else {
-                    "N/A"
+                    "N/A".to_owned()
                 },
                 &if part.start_os.is_empty() {
                     "N/A".to_owned()

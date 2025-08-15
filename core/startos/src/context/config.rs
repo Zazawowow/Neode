@@ -74,6 +74,8 @@ pub struct ClientConfig {
     pub tunnel_listen: Option<SocketAddr>,
     #[arg(short = 'p', long)]
     pub proxy: Option<Url>,
+    #[arg(skip)]
+    pub socks_listen: Option<SocketAddr>,
     #[arg(long)]
     pub cookie_path: Option<PathBuf>,
     #[arg(long)]
@@ -114,9 +116,7 @@ pub struct ServerConfig {
     #[arg(skip)]
     pub os_partitions: Option<OsPartitionInfo>,
     #[arg(long)]
-    pub tor_control: Option<SocketAddr>,
-    #[arg(long)]
-    pub tor_socks: Option<SocketAddr>,
+    pub socks_listen: Option<SocketAddr>,
     #[arg(long)]
     pub revision_cache_size: Option<usize>,
     #[arg(long)]
@@ -133,8 +133,7 @@ impl ContextConfig for ServerConfig {
     fn merge_with(&mut self, other: Self) {
         self.ethernet_interface = self.ethernet_interface.take().or(other.ethernet_interface);
         self.os_partitions = self.os_partitions.take().or(other.os_partitions);
-        self.tor_control = self.tor_control.take().or(other.tor_control);
-        self.tor_socks = self.tor_socks.take().or(other.tor_socks);
+        self.socks_listen = self.socks_listen.take().or(other.socks_listen);
         self.revision_cache_size = self
             .revision_cache_size
             .take()

@@ -4,10 +4,10 @@ use openssl::x509::X509;
 use patch_db::Value;
 use serde::{Deserialize, Serialize};
 use ssh_key::private::Ed25519Keypair;
-use torut::onion::TorSecretKeyV3;
 
 use crate::account::AccountInfo;
 use crate::hostname::{generate_hostname, generate_id, Hostname};
+use crate::net::tor::TorSecretKey;
 use crate::prelude::*;
 use crate::util::crypto::ed25519_expand_key;
 use crate::util::serde::{Base32, Base64, Pem};
@@ -85,7 +85,10 @@ impl OsBackupV0 {
                     &mut ssh_key::rand_core::OsRng::default(),
                     ssh_key::Algorithm::Ed25519,
                 )?,
-                tor_keys: vec![TorSecretKeyV3::from(self.tor_key.0)],
+                tor_keys: TorSecretKey::from_bytes(self.tor_key.0)
+                    .ok()
+                    .into_iter()
+                    .collect(),
                 developer_key: ed25519_dalek::SigningKey::generate(
                     &mut ssh_key::rand_core::OsRng::default(),
                 ),
@@ -116,7 +119,10 @@ impl OsBackupV1 {
                 root_ca_key: self.root_ca_key.0,
                 root_ca_cert: self.root_ca_cert.0,
                 ssh_key: ssh_key::PrivateKey::from(Ed25519Keypair::from_seed(&self.net_key.0)),
-                tor_keys: vec![TorSecretKeyV3::from(ed25519_expand_key(&self.net_key.0))],
+                tor_keys: TorSecretKey::from_bytes(ed25519_expand_key(&self.net_key.0))
+                    .ok()
+                    .into_iter()
+                    .collect(),
                 developer_key: ed25519_dalek::SigningKey::from_bytes(&self.net_key),
             },
             ui: self.ui,
@@ -134,7 +140,7 @@ struct OsBackupV2 {
     root_ca_key: Pem<PKey<Private>>,                 // PEM Encoded OpenSSL Key
     root_ca_cert: Pem<X509>,                         // PEM Encoded OpenSSL X509 Certificate
     ssh_key: Pem<ssh_key::PrivateKey>,               // PEM Encoded OpenSSH Key
-    tor_keys: Vec<TorSecretKeyV3>,                   // Base64 Encoded Ed25519 Expanded Secret Key
+    tor_keys: Vec<TorSecretKey>,                     // Base64 Encoded Ed25519 Expanded Secret Key
     compat_s9pk_key: Pem<ed25519_dalek::SigningKey>, // PEM Encoded ED25519 Key
     ui: Value,                                       // JSON Value
 }
