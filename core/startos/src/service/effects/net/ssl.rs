@@ -59,8 +59,8 @@ pub async fn get_ssl_certificate(
                         .de()?
                         .iter()
                         .map(InternedString::from_display)
-                        .chain(m.as_domains().as_public().keys()?)
-                        .chain(m.as_domains().as_private().de()?)
+                        .chain(m.as_public_domains().keys()?)
+                        .chain(m.as_private_domains().de()?)
                         .chain(
                             m.as_hostname_info()
                                 .de()?
@@ -185,8 +185,8 @@ pub async fn get_ssl_key(
                         .de()?
                         .iter()
                         .map(InternedString::from_display)
-                        .chain(m.as_domains().as_public().keys()?)
-                        .chain(m.as_domains().as_private().de()?)
+                        .chain(m.as_public_domains().keys()?)
+                        .chain(m.as_private_domains().de()?)
                         .chain(
                             m.as_hostname_info()
                                 .de()?

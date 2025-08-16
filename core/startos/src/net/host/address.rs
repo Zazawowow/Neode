@@ -63,10 +63,10 @@ fn check_duplicates(db: &DatabaseModel) -> Result<(), Error> {
         for onion in host.as_onions().de()? {
             check_onion(onion)?;
         }
-        for domain in host.as_domains().as_public().keys()? {
+        for domain in host.as_public_domains().keys()? {
             check_domain(domain)?;
         }
-        for domain in host.as_domains().as_private().de()? {
+        for domain in host.as_private_domains().de()? {
             check_domain(domain)?;
         }
     }
@@ -230,8 +230,7 @@ pub async fn add_public_domain<Kind: HostApiKind>(
             }
 
             Kind::host_for(&inheritance, db)?
-                .as_domains_mut()
-                .as_public_mut()
+                .as_public_domains_mut()
                 .insert(domain, &PublicDomainConfig { acme, gateway })?;
             check_duplicates(db)
         })
@@ -255,8 +254,7 @@ pub async fn remove_public_domain<Kind: HostApiKind>(
     ctx.db
         .mutate(|db| {
             Kind::host_for(&inheritance, db)?
-                .as_domains_mut()
-                .as_public_mut()
+                .as_public_domains_mut()
                 .remove(&domain)
         })
         .await
@@ -279,8 +277,7 @@ pub async fn add_private_domain<Kind: HostApiKind>(
     ctx.db
         .mutate(|db| {
             Kind::host_for(&inheritance, db)?
-                .as_domains_mut()
-                .as_private_mut()
+                .as_private_domains_mut()
                 .mutate(|d| Ok(d.insert(domain)))?;
             check_duplicates(db)
         })
@@ -299,8 +296,7 @@ pub async fn remove_private_domain<Kind: HostApiKind>(
     ctx.db
         .mutate(|db| {
             Kind::host_for(&inheritance, db)?
-                .as_domains_mut()
-                .as_private_mut()
+                .as_private_domains_mut()
                 .mutate(|d| Ok(d.remove(&domain)))
         })
         .await

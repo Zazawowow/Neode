@@ -87,7 +87,8 @@ impl VersionT for Version {
                     }
                     
                 }
-                host["domains"] = json!({ "public": &public, "private": &private });
+                host["publicDomains"] = to_value(&public)?;
+                host["privateDomains"] = to_value(&private)?;
             }
         }
         let network = &mut db["public"]["serverInfo"]["network"];

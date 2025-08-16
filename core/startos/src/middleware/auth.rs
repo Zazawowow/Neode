@@ -88,8 +88,7 @@ impl SignatureAuthContext for RpcContext {
                     .as_server_info()
                     .as_network()
                     .as_host()
-                    .as_domains()
-                    .as_public()
+                    .as_public_domains()
                     .keys()
                     .map(|k| k.into_iter())
                     .transpose(),
@@ -99,8 +98,7 @@ impl SignatureAuthContext for RpcContext {
                     .as_server_info()
                     .as_network()
                     .as_host()
-                    .as_domains()
-                    .as_private()
+                    .as_private_domains()
                     .de()
                     .map(|k| k.into_iter())
                     .transpose(),

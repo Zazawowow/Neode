@@ -30,20 +30,10 @@ pub struct Host {
     pub bindings: BTreeMap<u16, BindInfo>,
     #[ts(type = "string[]")]
     pub onions: BTreeSet<OnionAddress>,
-    pub domains: Domains,
+    pub public_domains: BTreeMap<InternedString, PublicDomainConfig>,
+    pub private_domains: BTreeSet<InternedString>,
     /// COMPUTED: NetService::update
     pub hostname_info: BTreeMap<u16, Vec<HostnameInfo>>, // internal port -> Hostnames
-}
-
-#[derive(Debug, Default, Deserialize, Serialize, HasModel, TS)]
-#[serde(rename_all = "camelCase")]
-#[model = "Model<Self>"]
-#[ts(export)]
-pub struct Domains {
-    #[ts(as = "BTreeMap::<String, PublicDomainConfig>")]
-    pub public: BTreeMap<InternedString, PublicDomainConfig>,
-    #[ts(as = "BTreeSet::<String>")]
-    pub private: BTreeSet<InternedString>,
 }
 
 impl AsRef<Host> for Host {
@@ -61,8 +51,7 @@ impl Host {
             .cloned()
             .map(|address| HostAddress::Onion { address })
             .chain(
-                self.domains
-                    .public
+                self.public_domains
                     .iter()
                     .map(|(address, config)| HostAddress::Domain {
                         address: address.clone(),
@@ -70,8 +59,7 @@ impl Host {
                     }),
             )
             .chain(
-                self.domains
-                    .private
+                self.private_domains
                     .iter()
                     .map(|address| HostAddress::Domain {
                         address: address.clone(),

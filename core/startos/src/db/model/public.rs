@@ -20,7 +20,7 @@ use crate::db::model::package::AllPackageData;
 use crate::net::acme::AcmeProvider;
 use crate::net::forward::START9_BRIDGE_IFACE;
 use crate::net::host::binding::{AddSslOptions, BindInfo, BindOptions, NetInfo};
-use crate::net::host::{Domains, Host};
+use crate::net::host::Host;
 use crate::net::utils::ipv6_is_local;
 use crate::net::vhost::AlpnInfo;
 use crate::prelude::*;
@@ -82,7 +82,8 @@ impl Public {
                         .into_iter()
                         .collect(),
                         onions: account.tor_keys.iter().map(|k| k.onion_address()).collect(),
-                        domains: Domains::default(),
+                        public_domains: BTreeMap::new(),
+                        private_domains: BTreeSet::new(),
                         hostname_info: BTreeMap::new(),
                     },
                     wifi: WifiInfo {
