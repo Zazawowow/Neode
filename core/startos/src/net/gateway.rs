@@ -856,7 +856,7 @@ impl NetworkInterfaceController {
 
         db.mutate(|db| {
             let net = db.as_public_mut().as_server_info_mut().as_network_mut();
-            net.as_dns_mut().as_dhcp_mut().ser(&dns)?;
+            net.as_dns_mut().as_dhcp_servers_mut().ser(&dns)?;
             net.as_gateways_mut().ser(info)
         })
         .await

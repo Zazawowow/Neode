@@ -19,13 +19,13 @@ export class GatewayService {
       .pipe(
         map(gateways =>
           Object.entries(gateways)
-            .filter(([_, val]) => !!val.ipInfo)
+            .filter(([_, val]) => !!val?.ipInfo)
             .map(
               ([id, val]) =>
                 ({
                   ...val,
                   id,
-                  lanIpv4: val.ipInfo?.subnets
+                  lanIpv4: val?.ipInfo?.subnets
                     .filter(s => !s.includes('::'))
                     .map(s => s.split('/')[0]),
                 }) as GatewayPlus,

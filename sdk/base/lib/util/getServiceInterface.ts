@@ -165,7 +165,7 @@ export const filledAddress = (
   addressInfo: AddressInfo,
 ): FilledAddressInfo => {
   const toUrl = addressHostToUrl.bind(null, addressInfo)
-  const hostnames = host.hostnameInfo[addressInfo.internalPort]
+  const hostnames = host.hostnameInfo[addressInfo.internalPort] ?? []
 
   return {
     ...addressInfo,

@@ -2,7 +2,6 @@
 import type { AcmeProvider } from "./AcmeProvider"
 import type { AcmeSettings } from "./AcmeSettings"
 import type { DnsSettings } from "./DnsSettings"
-import type { DomainSettings } from "./DomainSettings"
 import type { GatewayId } from "./GatewayId"
 import type { Host } from "./Host"
 import type { NetworkInterfaceInfo } from "./NetworkInterfaceInfo"
@@ -11,8 +10,7 @@ import type { WifiInfo } from "./WifiInfo"
 export type NetworkInfo = {
   wifi: WifiInfo
   host: Host
-  gateways: { [key: GatewayId]: NetworkInterfaceInfo }
-  acme: { [key: AcmeProvider]: AcmeSettings }
-  domains: { [key: string]: DomainSettings }
+  gateways: { [key in GatewayId]?: NetworkInterfaceInfo }
+  acme: { [key in AcmeProvider]?: AcmeSettings }
   dns: DnsSettings
 }

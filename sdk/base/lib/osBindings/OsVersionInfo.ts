@@ -8,7 +8,7 @@ export type OsVersionInfo = {
   releaseNotes: string
   sourceVersion: string
   authorized: Array<Guid>
-  iso: { [key: string]: RegistryAsset<Blake3Commitment> }
-  squashfs: { [key: string]: RegistryAsset<Blake3Commitment> }
-  img: { [key: string]: RegistryAsset<Blake3Commitment> }
+  iso: { [key in string]?: RegistryAsset<Blake3Commitment> }
+  squashfs: { [key in string]?: RegistryAsset<Blake3Commitment> }
+  img: { [key in string]?: RegistryAsset<Blake3Commitment> }
 }

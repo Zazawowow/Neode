@@ -2,4 +2,4 @@
 import type { Host } from "./Host"
 import type { HostId } from "./HostId"
 
-export type Hosts = { [key: HostId]: Host }
+export type Hosts = { [key in HostId]?: Host }

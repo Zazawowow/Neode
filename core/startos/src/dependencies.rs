@@ -37,7 +37,6 @@ pub struct DepInfo {
 #[derive(Clone, Debug, Deserialize, Serialize, HasModel, TS)]
 #[serde(rename_all = "camelCase")]
 #[model = "Model<Self>"]
-#[ts(export)]
 pub struct DependencyMetadata {
     #[ts(type = "string")]
     pub title: InternedString,

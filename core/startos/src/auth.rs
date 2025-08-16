@@ -24,7 +24,6 @@ use crate::util::serde::{display_serializable, HandlerExtSerde, WithIoFormat};
 use crate::{ensure_code, Error, ResultExt};
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize, TS)]
-#[ts(as = "BTreeMap::<String, Session>")]
 pub struct Sessions(pub BTreeMap<InternedString, Session>);
 impl Sessions {
     pub fn new() -> Self {

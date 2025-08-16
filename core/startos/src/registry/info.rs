@@ -51,7 +51,6 @@ pub fn info_api<C: Context>() -> ParentHandler<C, WithIoFormat<Empty>> {
 pub struct RegistryInfo {
     pub name: Option<String>,
     pub icon: Option<DataUrl<'static>>,
-    #[ts(as = "BTreeMap::<String, Category>")]
     pub categories: BTreeMap<InternedString, Category>,
 }
 

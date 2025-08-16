@@ -4,7 +4,7 @@ import type { FullProgress } from "./FullProgress"
 import type { PackageId } from "./PackageId"
 
 export type ServerStatus = {
-  backupProgress: { [key: PackageId]: BackupProgress } | null
+  backupProgress: { [key in PackageId]?: BackupProgress } | null
   updated: boolean
   updateProgress: FullProgress | null
   shuttingDown: boolean

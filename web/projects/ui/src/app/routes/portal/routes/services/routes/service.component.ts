@@ -211,5 +211,5 @@ export class ServiceRoute {
 function toHealthCheck(status: T.MainStatus): T.NamedHealthCheckResult[] {
   return status.main !== 'running' || isEmptyObject(status.health)
     ? []
-    : Object.values(status.health)
+    : Object.values(status.health).filter(h => !!h)
 }

@@ -92,7 +92,6 @@ impl Public {
                     },
                     gateways: OrdMap::new(),
                     acme: BTreeMap::new(),
-                    domains: BTreeMap::new(),
                     dns: Default::default(),
                 },
                 status_info: ServerStatus {
@@ -195,9 +194,6 @@ pub struct NetworkInfo {
     #[serde(default)]
     pub acme: BTreeMap<AcmeProvider, AcmeSettings>,
     #[serde(default)]
-    #[ts(as = "BTreeMap::<String, DomainSettings>")]
-    pub domains: BTreeMap<InternedString, DomainSettings>,
-    #[serde(default)]
     pub dns: DnsSettings,
 }
 
@@ -206,8 +202,7 @@ pub struct NetworkInfo {
 #[model = "Model<Self>"]
 #[ts(export)]
 pub struct DnsSettings {
-    pub dhcp: Vec<IpAddr>,
-    #[serde(rename = "static")]
+    pub dhcp_servers: Vec<IpAddr>,
     pub static_servers: Option<Vec<IpAddr>>,
 }
 

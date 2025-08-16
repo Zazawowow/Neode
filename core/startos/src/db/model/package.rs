@@ -375,7 +375,6 @@ pub struct PackageDataEntry {
     pub last_backup: Option<DateTime<Utc>>,
     pub current_dependencies: CurrentDependencies,
     pub actions: BTreeMap<ActionId, ActionMetadata>,
-    #[ts(as = "BTreeMap::<String, TaskEntry>")]
     pub tasks: BTreeMap<ReplayId, TaskEntry>,
     pub service_interfaces: BTreeMap<ServiceInterfaceId, ServiceInterface>,
     pub hosts: Hosts,

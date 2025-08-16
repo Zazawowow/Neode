@@ -6,6 +6,7 @@ import type { DataUrl } from "./DataUrl"
 import type { Hosts } from "./Hosts"
 import type { MainStatus } from "./MainStatus"
 import type { PackageState } from "./PackageState"
+import type { ReplayId } from "./ReplayId"
 import type { ServiceInterface } from "./ServiceInterface"
 import type { ServiceInterfaceId } from "./ServiceInterfaceId"
 import type { TaskEntry } from "./TaskEntry"
@@ -19,9 +20,9 @@ export type PackageDataEntry = {
   icon: DataUrl
   lastBackup: string | null
   currentDependencies: CurrentDependencies
-  actions: { [key: ActionId]: ActionMetadata }
-  tasks: { [key: string]: TaskEntry }
-  serviceInterfaces: { [key: ServiceInterfaceId]: ServiceInterface }
+  actions: { [key in ActionId]?: ActionMetadata }
+  tasks: { [key in ReplayId]?: TaskEntry }
+  serviceInterfaces: { [key in ServiceInterfaceId]?: ServiceInterface }
   hosts: Hosts
   storeExposedDependents: string[]
 }

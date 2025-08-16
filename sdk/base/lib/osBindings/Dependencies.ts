@@ -2,4 +2,4 @@
 import type { DepInfo } from "./DepInfo"
 import type { PackageId } from "./PackageId"
 
-export type Dependencies = { [key: PackageId]: DepInfo }
+export type Dependencies = { [key in PackageId]?: DepInfo }

@@ -5,5 +5,5 @@ import type { DataUrl } from "./DataUrl"
 export type RegistryInfo = {
   name: string | null
   icon: DataUrl | null
-  categories: { [key: string]: Category }
+  categories: { [key in string]?: Category }
 }

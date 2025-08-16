@@ -25,9 +25,9 @@ export function getInstalledPrimaryStatus({
   tasks,
   status,
 }: T.PackageDataEntry): PrimaryStatus {
-  return Object.values(tasks).some(
-    t => t.active && t.task.severity === 'critical',
-  )
+  return Object.values(tasks)
+    .filter(t => !!t)
+    .some(t => t.active && t.task.severity === 'critical')
     ? 'actionRequired'
     : status.main
 }
@@ -37,7 +37,7 @@ function getHealthStatus(status: T.MainStatus): T.HealthStatus | null {
     return null
   }
 
-  const values = Object.values(status.health)
+  const values = Object.values(status.health).filter(h => !!h)
 
   if (values.some(h => h.result === 'failure')) {
     return 'failure'

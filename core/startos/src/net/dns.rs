@@ -21,11 +21,14 @@ use hickory_server::ServerFuture;
 use imbl::OrdMap;
 use imbl_value::InternedString;
 use models::{GatewayId, PackageId};
-use rpc_toolkit::{from_fn_blocking, Context, HandlerArgs, HandlerExt, ParentHandler};
+use rpc_toolkit::{
+    from_fn_async, from_fn_blocking, Context, HandlerArgs, HandlerExt, ParentHandler,
+};
 use serde::{Deserialize, Serialize};
 use tokio::net::{TcpListener, UdpSocket};
 use tracing::instrument;
 
+use crate::context::RpcContext;
 use crate::db::model::public::NetworkInterfaceInfo;
 use crate::net::gateway::NetworkInterfaceWatcher;
 use crate::util::serde::{display_serializable, HandlerExtSerde};
@@ -33,23 +36,30 @@ use crate::util::sync::{SyncRwLock, Watch};
 use crate::{Error, ErrorKind, ResultExt};
 
 pub fn dns_api<C: Context>() -> ParentHandler<C> {
-    ParentHandler::new().subcommand(
-        "query",
-        from_fn_blocking(query_dns::<C>)
-            .with_display_serializable()
-            .with_custom_display_fn(|HandlerArgs { params, .. }, res| {
-                if let Some(format) = params.format {
-                    return display_serializable(format, res);
-                }
+    ParentHandler::new()
+        .subcommand(
+            "query",
+            from_fn_blocking(query_dns::<C>)
+                .with_display_serializable()
+                .with_custom_display_fn(|HandlerArgs { params, .. }, res| {
+                    if let Some(format) = params.format {
+                        return display_serializable(format, res);
+                    }
 
-                if let Some(ip) = res {
-                    println!("{}", ip)
-                }
+                    if let Some(ip) = res {
+                        println!("{}", ip)
+                    }
 
-                Ok(())
-            })
-            .with_about("Test the DNS configuration for a domain"),
-    )
+                    Ok(())
+                })
+                .with_about("Test the DNS configuration for a domain"),
+        )
+        .subcommand(
+            "set-static",
+            from_fn_async(set_static_dns)
+                .no_display()
+                .with_about("Set static DNS servers"),
+        )
 }
 
 #[derive(Deserialize, Serialize, Parser)]
@@ -91,17 +101,17 @@ pub fn query_dns<C: Context>(
         .map_err(Error::from)
 }
 
-// #[test]
-// fn test_dns() {
-//     assert!(query_dns(
-//         (),
-//         QueryDnsParams {
-//             fqdn: "fakedomain-definitely-not-real.com"
-//         }
-//     )
-//     .unwrap()
-//     .is_none())
-// }
+#[derive(Deserialize, Serialize, Parser)]
+pub struct SetStaticDnsParams {
+    pub servers: Option<Vec<IpAddr>>,
+}
+
+pub async fn set_static_dns(
+    ctx: RpcContext,
+    SetStaticDnsParams { servers }: SetStaticDnsParams,
+) -> Result<(), Error> {
+    todo!()
+}
 
 #[derive(Default)]
 struct ResolveMap {

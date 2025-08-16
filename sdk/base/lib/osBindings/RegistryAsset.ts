@@ -6,5 +6,5 @@ export type RegistryAsset<Commitment> = {
   publishedAt: string
   url: string
   commitment: Commitment
-  signatures: { [key: AnyVerifyingKey]: AnySignature }
+  signatures: { [key in AnyVerifyingKey]?: AnySignature }
 }

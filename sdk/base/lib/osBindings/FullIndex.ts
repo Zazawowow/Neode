@@ -10,5 +10,5 @@ export type FullIndex = {
   icon: DataUrl | null
   package: PackageIndex
   os: OsIndex
-  signers: { [key: Guid]: SignerInfo }
+  signers: { [key in Guid]?: SignerInfo }
 }
