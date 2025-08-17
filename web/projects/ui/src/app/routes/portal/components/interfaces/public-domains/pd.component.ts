@@ -39,7 +39,7 @@ import { PublicDomain, PublicDomainService } from './pd.service'
     </header>
     <table [appTable]="['Domain', 'Gateway', 'Certificate Authority', null]">
       @for (domain of publicDomains(); track $index) {
-        <tr [domain]="domain"></tr>
+        <tr [publicDomain]="domain"></tr>
       } @empty {
         @if (publicDomains()) {
           <tr>

@@ -52,10 +52,8 @@ export const mockPatchData: DataModel = {
             },
           },
         },
-        domains: {
-          public: {},
-          private: {},
-        },
+        publicDomains: {},
+        privateDomains: [],
         onions: ['myveryownspecialtoraddress'],
         hostnameInfo: {
           80: [
@@ -149,6 +147,8 @@ export const mockPatchData: DataModel = {
             subnets: ['10.0.0.2/24'],
             wanIp: '203.0.113.45',
             ntpServers: [],
+            lanIp: ['10.0.2.12'],
+            dnsServers: [],
           },
         },
         wlan0: {
@@ -164,6 +164,8 @@ export const mockPatchData: DataModel = {
             ],
             wanIp: '203.0.113.45',
             ntpServers: [],
+            lanIp: ['10.0.90.12'],
+            dnsServers: ['8.8.8.8'],
           },
         },
         wireguard1: {
@@ -179,8 +181,14 @@ export const mockPatchData: DataModel = {
             ],
             wanIp: '203.0.113.45',
             ntpServers: [],
+            lanIp: ['10.0.90.12'],
+            dnsServers: ['1.1.1.1'],
           },
         },
+      },
+      dns: {
+        dhcpServers: ['1.1.1.1', '8.8.8.8'],
+        staticServers: null,
       },
     },
     unreadNotificationCount: 4,
@@ -338,11 +346,9 @@ export const mockPatchData: DataModel = {
               },
             },
           },
+          publicDomains: {},
+          privateDomains: [],
           onions: [],
-          domains: {
-            public: {},
-            private: {},
-          },
           hostnameInfo: {
             80: [
               {
@@ -441,11 +447,9 @@ export const mockPatchData: DataModel = {
               },
             },
           },
+          publicDomains: {},
+          privateDomains: [],
           onions: [],
-          domains: {
-            public: {},
-            private: {},
-          },
           hostnameInfo: {
             8332: [],
           },
@@ -467,11 +471,9 @@ export const mockPatchData: DataModel = {
               },
             },
           },
+          publicDomains: {},
+          privateDomains: [],
           onions: [],
-          domains: {
-            public: {},
-            private: {},
-          },
           hostnameInfo: {
             8333: [],
           },

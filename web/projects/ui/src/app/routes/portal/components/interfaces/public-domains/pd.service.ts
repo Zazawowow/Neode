@@ -15,7 +15,6 @@ import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
 import { PatchDB } from 'patch-db-client'
 import { DataModel } from 'src/app/services/patch-db/data-model'
 import { toAuthorityName } from 'src/app/utils/acme'
-import { GatewayPlus } from 'src/app/services/gateway.service'
 import { InterfaceComponent } from '../interface.component'
 import { DNS } from './dns.component'
 
@@ -23,7 +22,7 @@ import { DNS } from './dns.component'
 
 export type PublicDomain = {
   fqdn: string
-  gateway: GatewayPlus
+  gateway: GatewayWithId | null
   acme: string | null
 }
 
@@ -104,7 +103,7 @@ export class PublicDomainService {
           },
         ],
         value: {
-          gateway: domain.gateway.id,
+          gateway: domain.gateway!.id,
           authority: domain.acme,
         },
       },

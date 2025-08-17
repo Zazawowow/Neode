@@ -150,9 +150,8 @@ export class DnsComponent {
     this.loading.set(true)
 
     try {
-      const ip = await this.api.testDns({
+      const ip = await this.api.queryDns({
         fqdn: this.context.data.fqdn,
-        gateway: this.context.data.gateway.id,
       })
 
       this.pass.set(ip === this.context.data.gateway.ipInfo.wanIp)

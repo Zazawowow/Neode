@@ -89,7 +89,6 @@ export default class StartOsUiComponent {
       addresses: this.interfaceService.getAddresses(
         this.iface,
         network.host,
-        network.domains,
         gateways,
       ),
       gateways: gateways.map(g => ({
@@ -97,8 +96,8 @@ export default class StartOsUiComponent {
         ...g,
       })),
       torDomains: network.host.onions.map(o => `${o}.onion`),
-      publicDomains: getPublicDomains(network.host.domains.public),
-      privateDomains: network.host.domains.private,
+      publicDomains: getPublicDomains(network.host.publicDomains, gateways),
+      privateDomains: network.host.privateDomains,
       isOs: true,
     }
   })

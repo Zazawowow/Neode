@@ -2069,11 +2069,9 @@ export namespace Mock {
             },
           },
         },
+        publicDomains: {},
+        privateDomains: [],
         onions: [],
-        domains: {
-          public: {},
-          private: {},
-        },
         hostnameInfo: {
           80: [
             {
@@ -2172,11 +2170,9 @@ export namespace Mock {
             },
           },
         },
+        publicDomains: {},
+        privateDomains: [],
         onions: [],
-        domains: {
-          public: {},
-          private: {},
-        },
         hostnameInfo: {
           8332: [],
         },
@@ -2198,11 +2194,9 @@ export namespace Mock {
             },
           },
         },
+        publicDomains: {},
+        privateDomains: [],
         onions: [],
-        domains: {
-          public: {},
-          private: {},
-        },
         hostnameInfo: {
           8333: [],
         },

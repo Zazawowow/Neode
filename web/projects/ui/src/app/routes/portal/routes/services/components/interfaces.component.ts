@@ -48,7 +48,7 @@ export class ServiceInterfacesComponent {
   readonly pkg = input.required<PackageDataEntry>()
   readonly disabled = input(false)
 
-  readonly interfaces = computed(({ serviceInterfaces, hosts } = this.pkg()) =>
+  readonly interfaces = computed(({ serviceInterfaces } = this.pkg()) =>
     Object.entries(serviceInterfaces)
       .sort((a, b) => tuiDefaultSort(a[1], b[1]))
       .map(([id, value]) => {

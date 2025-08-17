@@ -16,10 +16,10 @@ import { PublicDomain, PublicDomainService } from './pd.service'
 import { toAuthorityName } from 'src/app/utils/acme'
 
 @Component({
-  selector: 'tr[domain]',
+  selector: 'tr[publicDomain]',
   template: `
-    <td>{{ domain().fqdn }}</td>
-    <td>{{ domain().gateway }}</td>
+    <td>{{ publicDomain().fqdn }}</td>
+    <td>{{ publicDomain().gateway?.ipInfo?.name }}</td>
     <td>{{ authority() }}</td>
     <td>
       <button
@@ -39,7 +39,11 @@ import { toAuthorityName } from 'src/app/utils/acme'
               new
               iconStart="@tui.eye"
               (click)="
-                service.showDns(domain().fqdn, domain().gateway, dnsMessage())
+                service.showDns(
+                  publicDomain().fqdn,
+                  publicDomain().gateway!,
+                  dnsMessage()
+                )
               "
             >
               {{ 'View DNS' | i18n }}
@@ -48,7 +52,7 @@ import { toAuthorityName } from 'src/app/utils/acme'
               tuiOption
               new
               iconStart="@tui.pencil"
-              (click)="service.edit(domain())"
+              (click)="service.edit(publicDomain())"
             >
               {{ 'Edit' | i18n }}
             </button>
@@ -59,7 +63,7 @@ import { toAuthorityName } from 'src/app/utils/acme'
               new
               iconStart="@tui.trash"
               class="g-negative"
-              (click)="service.remove(domain().fqdn)"
+              (click)="service.remove(publicDomain().fqdn)"
             >
               {{ 'Delete' | i18n }}
             </button>
@@ -99,11 +103,11 @@ export class PublicDomainsItemComponent {
 
   open = false
 
-  readonly domain = input.required<PublicDomain>()
+  readonly publicDomain = input.required<PublicDomain>()
 
-  readonly authority = computed(() => toAuthorityName(this.domain().acme))
+  readonly authority = computed(() => toAuthorityName(this.publicDomain().acme))
   readonly dnsMessage = computed<i18nKey>(
     () =>
-      `Create one of the DNS records below to cause ${this.domain().fqdn} to resolve to ${this.domain().gateway.ipInfo.wanIp}` as i18nKey,
+      `Create one of the DNS records below to cause ${this.publicDomain().fqdn} to resolve to ${this.publicDomain().gateway?.ipInfo.wanIp}` as i18nKey,
   )
 }

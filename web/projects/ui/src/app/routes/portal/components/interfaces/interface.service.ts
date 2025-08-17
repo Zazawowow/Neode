@@ -42,7 +42,7 @@ function cmpLan(host: T.Host, a: LanAddress, b: LanAddress): -1 | 0 | 1 {
   return cmpWithRankedPredicates(a, b, [
     x =>
       x.info.hostname.kind === 'domain' &&
-      !!host.privateDomains[x.info.hostname.value], // private domain
+      !!host.privateDomains.find(d => d === x.info.hostname.value), // private domain
     x => x.info.hostname.kind === 'local', // .local
     x => x.info.hostname.kind === 'ipv4', // ipv4
     x => x.info.hostname.kind === 'ipv6', // ipv6
@@ -66,7 +66,7 @@ function cmpVpn(host: T.Host, a: VpnAddress, b: VpnAddress): -1 | 0 | 1 {
   return cmpWithRankedPredicates(a, b, [
     x =>
       x.info.hostname.kind === 'domain' &&
-      !!host.privateDomains[x.info.hostname.value], // private domain
+      !!host.privateDomains.find(d => d === x.info.hostname.value), // private domain
     x => x.info.hostname.kind === 'ipv4', // ipv4
     x => x.info.hostname.kind === 'ipv6', // ipv6
     // remainder: public domains accessible privately
@@ -102,7 +102,7 @@ function cmpClearnet(
 function toDisplayAddress(
   { info, url }: AddressWithInfo,
   gateways: GatewayPlus[],
-  publicDomains: Record<string, T.DomainConfig>,
+  publicDomains: Record<string, T.PublicDomainConfig>,
 ): DisplayAddress {
   let access: DisplayAddress['access']
   let gatewayName: DisplayAddress['gatewayName']
@@ -248,11 +248,13 @@ function toDisplayAddress(
 }
 
 export function getPublicDomains(
-  publicDomains: Record<string, T.DomainConfig>,
+  publicDomains: Record<string, T.PublicDomainConfig>,
+  gateways: GatewayPlus[],
 ): PublicDomain[] {
   return Object.entries(publicDomains).map(([fqdn, info]) => ({
     fqdn,
-    ...info,
+    acme: info.acme,
+    gateway: gateways.find(g => g.id === info.gateway) || null,
   }))
 }
 
@@ -302,18 +304,11 @@ export class InterfaceService {
 
     return {
       common: bestAddrs.map(a =>
-        toDisplayAddress(a, gateways, host.publicDomains, host.privateDomains),
+        toDisplayAddress(a, gateways, host.publicDomains),
       ),
       uncommon: allAddressesWithInfo
         .filter(a => !bestAddrs.includes(a))
-        .map(a =>
-          toDisplayAddress(
-            a,
-            gateways,
-            host.publicDomains,
-            host.privateDomains,
-          ),
-        ),
+        .map(a => toDisplayAddress(a, gateways, host.publicDomains)),
     }
   }
 

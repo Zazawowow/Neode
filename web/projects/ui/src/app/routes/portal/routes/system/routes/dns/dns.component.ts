@@ -158,19 +158,27 @@ export default class SystemDnsComponent {
       switchMap(async ([pkgs, { gateways, dns }]) => {
         const spec = await configBuilderToSpec(this.dnsSpec)
 
-        const selection = dns.static ? 'custom' : 'defaults'
+        const current = dns.staticServers
+          ? {
+              selection: 'custom',
+              value: dns.staticServers,
+            }
+          : { selection: 'defaults', value: dns.dhcpServers }
 
-        const form = this.formService.createForm(spec, {
-          strategy: { selection, value: dns.servers },
-        })
+        const form = this.formService.createForm(spec, current)
 
         return {
           spec,
           form,
           warn:
-            (Object.values(pkgs).some(p => p) || []) &&
+            (Object.values(pkgs).some(p =>
+              Object.values(p.hosts).some(h => h?.privateDomains.length),
+            ) ||
+              []) &&
             Object.values(gateways)
-              .filter(g => dns.servers.includes(g.ipInfo?.lanIp))
+              .filter(g =>
+                dns.dhcpServers.some(d => g.ipInfo?.lanIp.includes(d)),
+              )
               .map(g => g.ipInfo?.name),
         }
       }),

@@ -100,10 +100,6 @@ export default class ServiceInterfaceRoute {
 
   readonly pkg = toSignal(this.patch.watch$('packageData', this.pkgId))
 
-  readonly domains = toSignal(
-    this.patch.watch$('serverInfo', 'network', 'domains'),
-  )
-
   readonly isRunning = computed(() => {
     return this.pkg()?.status.main === 'running'
   })
@@ -111,9 +107,8 @@ export default class ServiceInterfaceRoute {
   readonly serviceInterface = computed(() => {
     const pkg = this.pkg()
     const id = this.interfaceId()
-    const domains = this.domains()
 
-    if (!pkg || !id || !domains) {
+    if (!pkg || !id) {
       return
     }
 
@@ -131,20 +126,15 @@ export default class ServiceInterfaceRoute {
 
     return {
       ...iFace,
-      addresses: this.interfaceService.getAddresses(
-        iFace,
-        host,
-        domains,
-        gateways,
-      ),
+      addresses: this.interfaceService.getAddresses(iFace, host, gateways),
       gateways:
         gateways.map(g => ({
           enabled: true,
           ...g,
         })) || [],
       torDomains: host.onions.map(o => `${o}.onion`),
-      publicDomains: getPublicDomains(host.domains.public),
-      privateDomains: host.domains.private,
+      publicDomains: getPublicDomains(host.publicDomains, gateways),
+      privateDomains: host.privateDomains,
       isOs: false,
     }
   })

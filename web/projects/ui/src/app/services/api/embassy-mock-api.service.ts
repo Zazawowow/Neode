@@ -582,9 +582,11 @@ export class MockApiService extends ApiService {
             name: params.name,
             scopeId: 3,
             deviceType: 'wireguard',
-            subnets: [],
-            wanIp: '1.1.1.1',
+            subnets: ['192.168.1.10/24'],
+            wanIp: '203.0.113.45',
             ntpServers: [],
+            lanIp: ['192.168.1.10'],
+            dnsServers: [],
           },
         },
       },
@@ -1417,7 +1419,7 @@ export class MockApiService extends ApiService {
     const patch: Operation<any>[] = [
       {
         op: PatchOp.ADD,
-        path: `/serverInfo/host/domains/public`,
+        path: `/serverInfo/host/publicDomains`,
         value: {
           [params.fqdn]: { gateway: params.gateway, acme: params.acme },
         },
@@ -1452,7 +1454,7 @@ export class MockApiService extends ApiService {
     const patch: RemoveOperation[] = [
       {
         op: PatchOp.REMOVE,
-        path: `/serverInfo/host/domains/public/${params.fqdn}`,
+        path: `/serverInfo/host/publicDomains/${params.fqdn}`,
       },
       {
         op: PatchOp.REMOVE,
@@ -1472,7 +1474,7 @@ export class MockApiService extends ApiService {
     const patch: Operation<any>[] = [
       {
         op: PatchOp.REPLACE,
-        path: `/serverInfo/host/domains/private`,
+        path: `/serverInfo/host/privateDomains`,
         value: [params.fqdn],
       },
       {
@@ -1505,7 +1507,7 @@ export class MockApiService extends ApiService {
     const patch: Operation<any>[] = [
       {
         op: PatchOp.REPLACE,
-        path: `/serverInfo/host/domains/private`,
+        path: `/serverInfo/host/privateDomains`,
         value: [],
       },
       {
@@ -1590,7 +1592,7 @@ export class MockApiService extends ApiService {
     const patch: Operation<any>[] = [
       {
         op: PatchOp.ADD,
-        path: `/packageData/${params.package}/hosts/${params.host}/domains/public`,
+        path: `/packageData/${params.package}/hosts/${params.host}/publicDomains`,
         value: {
           [params.fqdn]: { gateway: params.gateway, acme: params.acme },
         },
@@ -1625,7 +1627,7 @@ export class MockApiService extends ApiService {
     const patch: RemoveOperation[] = [
       {
         op: PatchOp.REMOVE,
-        path: `/packageData/${params.package}/hosts/${params.host}/domains/public/${params.fqdn}`,
+        path: `/packageData/${params.package}/hosts/${params.host}/publicDomains/${params.fqdn}`,
       },
       {
         op: PatchOp.REMOVE,
@@ -1645,7 +1647,7 @@ export class MockApiService extends ApiService {
     const patch: Operation<any>[] = [
       {
         op: PatchOp.REPLACE,
-        path: `/packageData/${params.package}/hosts/${params.host}/domains/private`,
+        path: `/packageData/${params.package}/hosts/${params.host}/privateDomains`,
         value: [params.fqdn],
       },
       {
@@ -1678,7 +1680,7 @@ export class MockApiService extends ApiService {
     const patch: Operation<any>[] = [
       {
         op: PatchOp.REPLACE,
-        path: `/packageData/${params.package}/hosts/${params.host}/domains/private`,
+        path: `/packageData/${params.package}/hosts/${params.host}/privateDomains`,
         value: [],
       },
       {
