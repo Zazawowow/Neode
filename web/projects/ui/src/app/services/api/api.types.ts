@@ -105,9 +105,8 @@ export namespace RR {
   export type DiskRepairRes = null
 
   export type SetDnsReq = {
-    servers: string[]
-    static: boolean
-  } // net.dns.set
+    servers: string[] | null
+  } // net.dns.set-static
   export type SetDnsRes = null
 
   export type QueryDnsReq = {

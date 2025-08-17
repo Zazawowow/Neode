@@ -269,7 +269,7 @@ export class LiveApiService extends ApiService {
 
   async setDns(params: RR.SetDnsReq): Promise<RR.SetDnsRes> {
     return this.rpcRequest({
-      method: 'net.dns.set',
+      method: 'net.dns.set-static',
       params,
     })
   }

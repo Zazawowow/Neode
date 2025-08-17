@@ -465,11 +465,11 @@ export class MockApiService extends ApiService {
   async setDns(params: RR.SetDnsReq): Promise<RR.SetDnsRes> {
     await pauseFor(2000)
 
-    const patch: ReplaceOperation<RR.SetDnsReq>[] = [
+    const patch: ReplaceOperation<T.DnsSettings['staticServers']>[] = [
       {
         op: PatchOp.REPLACE,
-        path: '/serverInfo/network/dns',
-        value: params,
+        path: '/serverInfo/network/dns/staticServers',
+        value: params.servers,
       },
     ]
     this.mockRevision(patch)

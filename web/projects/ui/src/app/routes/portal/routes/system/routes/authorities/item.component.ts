@@ -63,7 +63,7 @@ import { Authority, AuthorityService } from './authority.service'
                   iconStart="@tui.download"
                   href="/static/local-root-ca.crt"
                 >
-                  {{ 'Download your Root CA' | i18n }}
+                  {{ 'Download' | i18n }}
                 </a>
               </tui-opt-group>
             }

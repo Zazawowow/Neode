@@ -115,29 +115,27 @@ export default class SystemDnsComponent {
 
   private readonly dnsSpec = ISB.InputSpec.of({
     strategy: ISB.Value.union({
-      name: 'DNS Servers',
-      default: 'defaults',
+      name: 'strategy',
+      default: 'dhcp',
       variants: ISB.Variants.of({
-        defaults: {
-          name: 'Default',
+        dhcp: {
+          name: 'DHCP',
           spec: ISB.InputSpec.of({
-            servers: ISB.Value.list(
-              ISB.List.text(
-                {
-                  name: 'Default DNS Servers',
-                },
-                {},
-              ),
-            ),
+            servers: ISB.Value.dynamicText(() => ({
+              name: 'DHCP Servers',
+              default: null,
+              required: true,
+              disabled: 'Cannot edit DHCP servers',
+            })),
           }),
         },
-        custom: {
-          name: 'Custom',
+        static: {
+          name: 'Static',
           spec: ISB.InputSpec.of({
             servers: ISB.Value.list(
               ISB.List.text(
                 {
-                  name: 'DNS Servers',
+                  name: 'Static Servers',
                   minLength: 1,
                   maxLength: 3,
                 },
@@ -158,14 +156,24 @@ export default class SystemDnsComponent {
       switchMap(async ([pkgs, { gateways, dns }]) => {
         const spec = await configBuilderToSpec(this.dnsSpec)
 
-        const current = dns.staticServers
-          ? {
-              selection: 'custom',
-              value: dns.staticServers,
-            }
-          : { selection: 'defaults', value: dns.dhcpServers }
+        const dhcpServers = { servers: dns.dhcpServers.join(', ') }
+        const staticServers = { servers: dns.staticServers || [] }
 
-        const form = this.formService.createForm(spec, current)
+        const current: (typeof this.dnsSpec._TYPE)['strategy'] =
+          dns.staticServers
+            ? {
+                selection: 'static',
+                value: staticServers,
+                other: {
+                  dhcp: dhcpServers,
+                },
+              }
+            : {
+                selection: 'dhcp',
+                value: dhcpServers,
+              }
+
+        const form = this.formService.createForm(spec, { strategy: current })
 
         return {
           spec,
@@ -190,8 +198,10 @@ export default class SystemDnsComponent {
 
     try {
       await this.api.setDns({
-        servers: value.strategy.value.servers,
-        static: value.strategy.selection === 'custom',
+        servers:
+          value.strategy.selection === 'dhcp'
+            ? null
+            : value.strategy.value.servers,
       })
     } catch (e: any) {
       this.errorService.handleError(e)
