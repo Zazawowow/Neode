@@ -26,7 +26,7 @@ export type Manifest = {
   donationUrl: string | null
   docsUrl: string | null
   description: Description
-  images: { [key in ImageId]?: ImageConfig }
+  images: { [key: ImageId]: ImageConfig }
   volumes: Array<VolumeId>
   alerts: Alerts
   dependencies: Dependencies

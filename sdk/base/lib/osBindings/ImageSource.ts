@@ -7,7 +7,7 @@ export type ImageSource =
       dockerBuild: {
         workdir?: string
         dockerfile?: string
-        buildArgs?: { [key in string]?: BuildArg }
+        buildArgs?: { [key: string]: BuildArg }
       }
     }
   | { dockerTag: string }

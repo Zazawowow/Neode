@@ -5,6 +5,6 @@ import type { Version } from "./Version"
 
 export type GetPackageResponse = {
   categories: string[]
-  best: { [key in Version]?: PackageVersionInfo }
-  otherVersions?: { [key in Version]?: PackageInfoShort }
+  best: { [key: Version]: PackageVersionInfo }
+  otherVersions?: { [key: Version]: PackageInfoShort }
 }

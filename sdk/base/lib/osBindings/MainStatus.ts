@@ -15,11 +15,11 @@ export type MainStatus =
   | { main: "stopping" }
   | {
       main: "starting"
-      health: { [key in HealthCheckId]?: NamedHealthCheckResult }
+      health: { [key: HealthCheckId]: NamedHealthCheckResult }
     }
   | {
       main: "running"
       started: string
-      health: { [key in HealthCheckId]?: NamedHealthCheckResult }
+      health: { [key: HealthCheckId]: NamedHealthCheckResult }
     }
   | { main: "backingUp"; onComplete: StartStop }

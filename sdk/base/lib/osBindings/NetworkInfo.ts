@@ -10,7 +10,7 @@ import type { WifiInfo } from "./WifiInfo"
 export type NetworkInfo = {
   wifi: WifiInfo
   host: Host
-  gateways: { [key in GatewayId]?: NetworkInterfaceInfo }
-  acme: { [key in AcmeProvider]?: AcmeSettings }
+  gateways: { [key: GatewayId]: NetworkInterfaceInfo }
+  acme: { [key: AcmeProvider]: AcmeSettings }
   dns: DnsSettings
 }

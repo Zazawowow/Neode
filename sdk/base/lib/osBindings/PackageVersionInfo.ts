@@ -23,7 +23,7 @@ export type PackageVersionInfo = {
   donationUrl: string | null
   docsUrl: string | null
   alerts: Alerts
-  dependencyMetadata: { [key in PackageId]?: DependencyMetadata }
+  dependencyMetadata: { [key: PackageId]: DependencyMetadata }
   osVersion: string
   sdkVersion: string | null
   hardwareRequirements: HardwareRequirements

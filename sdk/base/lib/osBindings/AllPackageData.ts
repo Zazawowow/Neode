@@ -2,4 +2,4 @@
 import type { PackageDataEntry } from "./PackageDataEntry"
 import type { PackageId } from "./PackageId"
 
-export type AllPackageData = { [key in PackageId]?: PackageDataEntry }
+export type AllPackageData = { [key: PackageId]: PackageDataEntry }

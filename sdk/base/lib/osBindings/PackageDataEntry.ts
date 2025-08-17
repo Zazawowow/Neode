@@ -20,9 +20,9 @@ export type PackageDataEntry = {
   icon: DataUrl
   lastBackup: string | null
   currentDependencies: CurrentDependencies
-  actions: { [key in ActionId]?: ActionMetadata }
-  tasks: { [key in ReplayId]?: TaskEntry }
-  serviceInterfaces: { [key in ServiceInterfaceId]?: ServiceInterface }
+  actions: { [key: ActionId]: ActionMetadata }
+  tasks: { [key: ReplayId]: TaskEntry }
+  serviceInterfaces: { [key: ServiceInterfaceId]: ServiceInterface }
   hosts: Hosts
   storeExposedDependents: string[]
 }

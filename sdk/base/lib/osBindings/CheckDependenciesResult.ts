@@ -12,6 +12,6 @@ export type CheckDependenciesResult = {
   installedVersion: Version | null
   satisfies: Array<Version>
   isRunning: boolean
-  tasks: { [key in ReplayId]?: TaskEntry }
-  healthChecks: { [key in HealthCheckId]?: NamedHealthCheckResult }
+  tasks: { [key: ReplayId]: TaskEntry }
+  healthChecks: { [key: HealthCheckId]: NamedHealthCheckResult }
 }

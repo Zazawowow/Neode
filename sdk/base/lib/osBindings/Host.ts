@@ -4,12 +4,12 @@ import type { HostnameInfo } from "./HostnameInfo"
 import type { PublicDomainConfig } from "./PublicDomainConfig"
 
 export type Host = {
-  bindings: { [key in number]?: BindInfo }
+  bindings: { [key: number]: BindInfo }
   onions: string[]
-  publicDomains: { [key in string]?: PublicDomainConfig }
+  publicDomains: { [key: string]: PublicDomainConfig }
   privateDomains: Array<string>
   /**
    * COMPUTED: NetService::update
    */
-  hostnameInfo: { [key in number]?: Array<HostnameInfo> }
+  hostnameInfo: { [key: number]: Array<HostnameInfo> }
 }

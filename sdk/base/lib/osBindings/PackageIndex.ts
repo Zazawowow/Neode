@@ -4,6 +4,6 @@ import type { PackageId } from "./PackageId"
 import type { PackageInfo } from "./PackageInfo"
 
 export type PackageIndex = {
-  categories: { [key in string]?: Category }
-  packages: { [key in PackageId]?: PackageInfo }
+  categories: { [key: string]: Category }
+  packages: { [key: PackageId]: PackageInfo }
 }
