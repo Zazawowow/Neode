@@ -516,13 +516,11 @@ export const ENGLISH = {
   'View DNS': 547,
   'New public domain': 548,
   'Addresses': 550,
-  'Common': 551,
-  'Uncommon': 552,
   'No addresses': 553,
   'Change CA': 554,
   'Address details': 555,
   'Private Domains': 556,
   'No private domains': 557,
   'New private domain': 558,
-  'DNS Servers': 559
+  'DNS Servers': 559,
 } as const
