@@ -147,8 +147,6 @@ pub struct PackParams {
     pub icon: Option<PathBuf>,
     #[arg(long)]
     pub license: Option<PathBuf>,
-    #[arg(long)]
-    pub instructions: Option<PathBuf>,
     #[arg(long, conflicts_with = "no-assets")]
     pub assets: Option<PathBuf>,
     #[arg(long, conflicts_with = "assets")]
@@ -239,12 +237,6 @@ impl PackParams {
                 )
                 .await?
         }
-    }
-    fn instructions(&self) -> PathBuf {
-        self.instructions
-            .as_ref()
-            .cloned()
-            .unwrap_or_else(|| self.path().join("instructions.md"))
     }
     fn assets(&self) -> PathBuf {
         self.assets
@@ -797,20 +789,10 @@ pub async fn list_ingredients(_: CliContext, params: PackParams) -> Result<Vec<P
         Err(e) => {
             warn!("failed to load manifest: {e}");
             debug!("{e:?}");
-            return Ok(vec![
-                js_path,
-                params.icon().await?,
-                params.license().await?,
-                params.instructions(),
-            ]);
+            return Ok(vec![js_path, params.icon().await?, params.license().await?]);
         }
     };
-    let mut ingredients = vec![
-        js_path,
-        params.icon().await?,
-        params.license().await?,
-        params.instructions(),
-    ];
+    let mut ingredients = vec![js_path, params.icon().await?, params.license().await?];
 
     for (_, dependency) in manifest.dependencies.0 {
         if let Some(PathOrUrl::Path(p)) = dependency.s9pk {

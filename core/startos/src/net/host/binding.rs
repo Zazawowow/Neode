@@ -12,8 +12,8 @@ use ts_rs::TS;
 use crate::context::{CliContext, RpcContext};
 use crate::db::model::public::NetworkInterfaceInfo;
 use crate::net::forward::AvailablePorts;
-use crate::net::host::HostApiKind;
 use crate::net::gateway::InterfaceFilter;
+use crate::net::host::HostApiKind;
 use crate::net::vhost::AlpnInfo;
 use crate::prelude::*;
 use crate::util::serde::{display_serializable, HandlerExtSerde};
@@ -58,8 +58,10 @@ pub struct BindInfo {
 #[ts(export)]
 pub struct NetInfo {
     #[ts(as = "BTreeSet::<GatewayId>")]
+    #[serde(default)]
     pub private_disabled: OrdSet<GatewayId>,
     #[ts(as = "BTreeSet::<GatewayId>")]
+    #[serde(default)]
     pub public_enabled: OrdSet<GatewayId>,
     pub assigned_port: Option<u16>,
     pub assigned_ssl_port: Option<u16>,

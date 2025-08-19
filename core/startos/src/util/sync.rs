@@ -19,6 +19,9 @@ impl<T> SyncMutex<T> {
     pub fn peek<F: FnOnce(&T) -> U, U>(&self, f: F) -> U {
         f(&*self.0.lock().unwrap())
     }
+    pub fn replace(&self, value: T) -> T {
+        std::mem::replace(&mut *self.0.lock().unwrap(), value)
+    }
 }
 
 #[derive(Debug, Default)]

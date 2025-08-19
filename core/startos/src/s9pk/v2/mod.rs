@@ -34,7 +34,6 @@ pub mod recipe;
     ├── manifest.json
     ├── icon.<ext>
     ├── LICENSE.md
-    ├── instructions.md
     ├── dependencies
     │   └── <id>
     │       ├── metadata.json

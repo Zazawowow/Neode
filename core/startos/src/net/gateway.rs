@@ -622,8 +622,8 @@ async fn watch_ip(
                                             .chain(ip6_proxy.address_data().await?)
                                             .collect_vec();
                                         let lan_ip = [
-                                            ip4_proxy.gateway().await?.parse::<IpAddr>()?,
-                                            ip6_proxy.gateway().await?.parse::<IpAddr>()?,
+                                            dbg!(ip4_proxy.gateway().await?).parse::<IpAddr>()?,
+                                            dbg!(ip6_proxy.gateway().await?).parse::<IpAddr>()?,
                                         ]
                                         .into_iter()
                                         .collect();
@@ -852,7 +852,13 @@ impl NetworkInterfaceController {
     ) -> Result<(), Error> {
         tracing::debug!("syncronizing {info:?} to db");
 
-        let dns = todo!();
+        // let dns = todo!();
+        let dns = info
+            .values()
+            .filter_map(|i| i.ip_info.as_ref())
+            .flat_map(|i| &i.dns_servers)
+            .copied()
+            .collect();
 
         db.mutate(|db| {
             let net = db.as_public_mut().as_server_info_mut().as_network_mut();
