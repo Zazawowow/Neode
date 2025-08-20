@@ -143,6 +143,7 @@ export class GatewaysItemComponent {
   private readonly errorService = inject(ErrorService)
   private readonly api = inject(ApiService)
   private readonly formDialog = inject(FormDialogService)
+  private readonly i18n = inject(i18nPipe)
 
   readonly gateway = input.required<GatewayPlus>()
 
@@ -169,7 +170,7 @@ export class GatewaysItemComponent {
     const { ipInfo, id } = this.gateway()
     const renameSpec = ISB.InputSpec.of({
       label: ISB.Value.text({
-        name: 'Label',
+        name: this.i18n.transform('Name'),
         required: true,
         default: ipInfo?.name || null,
       }),

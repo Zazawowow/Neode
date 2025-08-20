@@ -72,82 +72,82 @@ export default class GatewaysComponent {
   private readonly errorService = inject(ErrorService)
   private readonly api = inject(ApiService)
   private readonly formDialog = inject(FormDialogService)
+  private readonly i18n = inject(i18nPipe)
 
   async add() {
+    const spec = ISB.InputSpec.of({
+      name: ISB.Value.text({
+        name: this.i18n.transform('Name'),
+        description: this.i18n.transform(
+          'A name to easily identify the gateway',
+        ),
+        required: true,
+        default: null,
+      }),
+      type: ISB.Value.select({
+        name: this.i18n.transform('Type'),
+        description: `-**${this.i18n.transform('private')}**: ${this.i18n.transform('select this option if the gateway is configured for private access to authorized clients only. StartTunnel is a private gateway.')}\n-**${this.i18n.transform('public')}**: ${this.i18n.transform('select this option if the gateway is configured for unfettered public access.')}`,
+        default: 'private',
+        values: {
+          private: this.i18n.transform('private'),
+          public: this.i18n.transform('public'),
+        },
+      }),
+      config: ISB.Value.union({
+        name: this.i18n.transform('Wireguard Config File'),
+        default: 'paste',
+        variants: ISB.Variants.of({
+          paste: {
+            name: this.i18n.transform('Copy/Paste'),
+            spec: ISB.InputSpec.of({
+              file: ISB.Value.textarea({
+                name: this.i18n.transform('File Contents'),
+                default: null,
+                required: true,
+              }),
+            }),
+          },
+          upload: {
+            name: this.i18n.transform('Upload'),
+            spec: ISB.InputSpec.of({
+              file: ISB.Value.file({
+                name: this.i18n.transform('File'),
+                required: true,
+                extensions: ['.conf'],
+              }),
+            }),
+          },
+        }),
+      }),
+    })
+
     this.formDialog.open(FormComponent, {
       label: 'Add gateway',
       data: {
-        spec: await configBuilderToSpec(gatewaySpec),
+        spec: await configBuilderToSpec(spec),
         buttons: [
           {
-            text: 'Save',
-            handler: (input: typeof gatewaySpec._TYPE) => this.save(input),
+            text: this.i18n.transform('Save'),
+            handler: async (input: typeof spec._TYPE) => {
+              const loader = this.loader.open('Saving').subscribe()
+
+              try {
+                await this.api.addTunnel({
+                  name: input.name,
+                  config: '' as string, // @TODO alex/matt when types arrive
+                  public: input.type === 'public',
+                })
+                return true
+              } catch (e: any) {
+                this.errorService.handleError(e)
+                return false
+              } finally {
+                loader.unsubscribe()
+              }
+            },
           },
         ],
       },
     })
   }
-
-  private async save(input: typeof gatewaySpec._TYPE): Promise<boolean> {
-    const loader = this.loader.open('Saving').subscribe()
-
-    try {
-      await this.api.addTunnel({
-        name: input.name,
-        config: '' as string, // @TODO alex/matt when types arrive
-        public: input.type === 'public',
-      })
-      return true
-    } catch (e: any) {
-      this.errorService.handleError(e)
-      return false
-    } finally {
-      loader.unsubscribe()
-    }
-  }
 }
-
-const gatewaySpec = ISB.InputSpec.of({
-  name: ISB.Value.text({
-    name: 'Name',
-    description: 'A name to easily identify the gateway',
-    required: true,
-    default: null,
-  }),
-  type: ISB.Value.select({
-    name: 'Type',
-    description:
-      '-**Private**: select this option if the gateway is configured for private access to authorized clients only. StartTunnel is a private gateway.\n-**Public**: select this option if the gateway is configured for unfettered public access.',
-    default: 'private',
-    values: {
-      private: 'Private',
-      public: 'Public',
-    },
-  }),
-  config: ISB.Value.union({
-    name: 'Wireguard Config',
-    default: 'paste',
-    variants: ISB.Variants.of({
-      paste: {
-        name: 'Paste File Contents',
-        spec: ISB.InputSpec.of({
-          file: ISB.Value.textarea({
-            name: 'Paste File Contents',
-            default: null,
-            required: true,
-          }),
-        }),
-      },
-      upload: {
-        name: 'Upload File',
-        spec: ISB.InputSpec.of({
-          file: ISB.Value.file({
-            name: 'File',
-            required: true,
-            extensions: ['.conf'],
-          }),
-        }),
-      },
-    }),
-  }),
-})

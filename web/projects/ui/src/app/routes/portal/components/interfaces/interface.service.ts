@@ -3,7 +3,7 @@ import { T, utils } from '@start9labs/start-sdk'
 import { ConfigService } from 'src/app/services/config.service'
 import { GatewayPlus } from 'src/app/services/gateway.service'
 import { PublicDomain } from './public-domains/pd.service'
-import { i18nKey } from '@start9labs/shared'
+import { i18nKey, i18nPipe } from '@start9labs/shared'
 
 type AddressWithInfo = {
   url: URL
@@ -98,155 +98,6 @@ function cmpClearnet(
   ])
 }
 
-// @TODO translations
-function toDisplayAddress(
-  { info, url }: AddressWithInfo,
-  gateways: GatewayPlus[],
-  publicDomains: Record<string, T.PublicDomainConfig>,
-): DisplayAddress {
-  let access: DisplayAddress['access']
-  let gatewayName: DisplayAddress['gatewayName']
-  let type: DisplayAddress['type']
-  let bullets: any[]
-  // let bullets: DisplayAddress['bullets']
-
-  const rootCaRequired = `Requires trusting your server's Root CA`
-
-  // ** Tor **
-  if (info.kind === 'onion') {
-    access = null
-    gatewayName = null
-    type = 'Tor'
-    bullets = [
-      'Connections can be slow or unreliable at times',
-      'Public if you share the address publicly, otherwise private',
-      'Requires using a Tor-enabled device or browser',
-    ]
-    // Tor (HTTPS)
-    if (url.protocol.startsWith('https')) {
-      type = `${type} (HTTPS)`
-      bullets = [
-        'Only useful for clients that enforce HTTPS',
-        rootCaRequired,
-        ...bullets,
-      ]
-      // Tor (HTTP)
-    } else {
-      bullets.unshift(
-        'Ideal for anonymous, censorship-resistant hosting and remote access',
-      )
-      type = `${type} (HTTP)`
-    }
-    // ** Not Tor **
-  } else {
-    const port = info.hostname.sslPort || info.hostname.port
-    const gateway = gateways.find(g => g.id === info.gatewayId)!
-    gatewayName = gateway.ipInfo.name
-
-    const gatewayLanIpv4 = gateway.lanIpv4[0]
-    const isWireguard = gateway.ipInfo.deviceType === 'wireguard'
-
-    const localIdeal = 'Ideal for local access'
-    const lanRequired =
-      'Requires being connected to the same Local Area Network (LAN) as your server, either physically or via VPN'
-    const staticRequired = `Requires setting a static IP address for ${gatewayLanIpv4} in your gateway`
-    const vpnAccess = 'Ideal for VPN access via your'
-
-    // * Local *
-    if (info.hostname.kind === 'local') {
-      type = 'Local'
-      access = 'private'
-      bullets = [
-        localIdeal,
-        'Not recommended for VPN access. VPNs do not support ".local" domains without advanced configuration',
-        lanRequired,
-        rootCaRequired,
-      ]
-      // * IPv4 *
-    } else if (info.hostname.kind === 'ipv4') {
-      type = 'IPv4'
-      if (info.public) {
-        access = 'public'
-        bullets = [
-          'Can be used for clearnet access',
-          'Not recommended in most cases. Clearnet domains are preferred',
-          rootCaRequired,
-        ]
-        if (!gateway.public) {
-          bullets.push(
-            `Requires port forwarding in gateway "${gatewayName}": ${port} -> ${info.hostname.value}:${port}`,
-          )
-        }
-      } else {
-        access = 'private'
-        if (isWireguard) {
-          bullets = [`${vpnAccess} StartTunnel (or similar)`, rootCaRequired]
-        } else {
-          bullets = [
-            localIdeal,
-            `${vpnAccess} router's Wireguard server`,
-            lanRequired,
-            rootCaRequired,
-            staticRequired,
-          ]
-        }
-      }
-      // * IPv6 *
-    } else if (info.hostname.kind === 'ipv6') {
-      type = 'IPv6'
-      access = 'private'
-      bullets = ['Can be used for local access', lanRequired, rootCaRequired]
-      // * Domain *
-    } else {
-      type = 'Domain'
-      if (info.public) {
-        access = 'public'
-        bullets = [
-          `Requires a DNS record for ${info.hostname.value} that resolves to ${gateway.ipInfo.wanIp}`,
-          `Requires port forwarding in gateway "${gatewayName}": ${port} -> ${info.hostname.value}:${port === 443 ? 5443 : port}`,
-        ]
-        if (publicDomains[info.hostname.value]?.acme) {
-          bullets.unshift('Ideal for public access via the Internet')
-        } else {
-          bullets = [
-            'Can be used for personal access via the public Internet. VPN is more private and secure',
-            rootCaRequired,
-            ...bullets,
-          ]
-        }
-      } else {
-        access = 'private'
-        const ipPortBad = 'when using IP addresses and ports is undesirable'
-        const customDnsRequired = `Requires a DNS record for ${info.hostname.value} that resolves to ${gatewayLanIpv4}`
-        if (isWireguard) {
-          bullets = [
-            `${vpnAccess} StartTunnel (or similar) ${ipPortBad}`,
-            customDnsRequired,
-            rootCaRequired,
-          ]
-        } else {
-          bullets = [
-            `${localIdeal} ${ipPortBad}`,
-            `${vpnAccess} router's Wireguard server ${ipPortBad}`,
-            customDnsRequired,
-            rootCaRequired,
-            lanRequired,
-            staticRequired,
-          ]
-        }
-      }
-    }
-  }
-
-  return {
-    url: url.href,
-    access,
-    gatewayName,
-    type,
-    bullets,
-  }
-}
-
 export function getPublicDomains(
   publicDomains: Record<string, T.PublicDomainConfig>,
   gateways: GatewayPlus[],
@@ -263,6 +114,7 @@ export function getPublicDomains(
 })
 export class InterfaceService {
   private readonly config = inject(ConfigService)
+  private readonly i18n = inject(i18nPipe)
 
   getAddresses(
     serviceInterface: T.ServiceInterface,
@@ -304,11 +156,11 @@ export class InterfaceService {
 
     return {
       common: bestAddrs.map(a =>
-        toDisplayAddress(a, gateways, host.publicDomains),
+        this.toDisplayAddress(a, gateways, host.publicDomains),
       ),
       uncommon: allAddressesWithInfo
         .filter(a => !bestAddrs.includes(a))
-        .map(a => toDisplayAddress(a, gateways, host.publicDomains)),
+        .map(a => this.toDisplayAddress(a, gateways, host.publicDomains)),
     }
   }
 
@@ -447,6 +299,183 @@ export class InterfaceService {
           ),
       ) || []
     )
+  }
+
+  private toDisplayAddress(
+    { info, url }: AddressWithInfo,
+    gateways: GatewayPlus[],
+    publicDomains: Record<string, T.PublicDomainConfig>,
+  ): DisplayAddress {
+    let access: DisplayAddress['access']
+    let gatewayName: DisplayAddress['gatewayName']
+    let type: DisplayAddress['type']
+    let bullets: any[]
+    // let bullets: DisplayAddress['bullets']
+
+    const rootCaRequired = this.i18n.transform(
+      "Requires trusting your server's Root CA",
+    )
+
+    // ** Tor **
+    if (info.kind === 'onion') {
+      access = null
+      gatewayName = null
+      type = 'Tor'
+      bullets = [
+        this.i18n.transform('Connections can be slow or unreliable at times'),
+        this.i18n.transform(
+          'Public if you share the address publicly, otherwise private',
+        ),
+        this.i18n.transform('Requires using a Tor-enabled device or browser'),
+      ]
+      // Tor (HTTPS)
+      if (url.protocol.startsWith('https')) {
+        type = `${type} (HTTPS)`
+        bullets = [
+          this.i18n.transform('Only useful for clients that enforce HTTPS'),
+          rootCaRequired,
+          ...bullets,
+        ]
+        // Tor (HTTP)
+      } else {
+        bullets.unshift(
+          this.i18n.transform(
+            'Ideal for anonymous, censorship-resistant hosting and remote access',
+          ),
+        )
+        type = `${type} (HTTP)`
+      }
+      // ** Not Tor **
+    } else {
+      const port = info.hostname.sslPort || info.hostname.port
+      const gateway = gateways.find(g => g.id === info.gatewayId)!
+      gatewayName = gateway.ipInfo.name
+
+      const gatewayLanIpv4 = gateway.lanIpv4[0]
+      const isWireguard = gateway.ipInfo.deviceType === 'wireguard'
+
+      const localIdeal = this.i18n.transform('Ideal for local access')
+      const lanRequired = this.i18n.transform(
+        'Requires being connected to the same Local Area Network (LAN) as your server, either physically or via VPN',
+      )
+      const staticRequired = `${this.i18n.transform('Requires setting a static IP address for')} ${gatewayLanIpv4} ${this.i18n.transform('in your gateway')}`
+      const vpnAccess = this.i18n.transform('Ideal for VPN access via')
+      const routerWireguard = this.i18n.transform(
+        "your router's Wireguard server",
+      )
+      const portForwarding = this.i18n.transform(
+        'Requires port forwarding in gateway',
+      )
+      const dnsFor = this.i18n.transform('Requires a DNS record for')
+      const resolvesTo = this.i18n.transform('that resolves to')
+
+      // * Local *
+      if (info.hostname.kind === 'local') {
+        type = this.i18n.transform('Local')
+        access = 'private'
+        bullets = [
+          localIdeal,
+          this.i18n.transform(
+            'Not recommended for VPN access. VPNs do not support ".local" domains without advanced configuration',
+          ),
+          lanRequired,
+          rootCaRequired,
+        ]
+        // * IPv4 *
+      } else if (info.hostname.kind === 'ipv4') {
+        type = 'IPv4'
+        if (info.public) {
+          access = 'public'
+          bullets = [
+            this.i18n.transform('Can be used for clearnet access'),
+            this.i18n.transform(
+              'Not recommended in most cases. Clearnet domains are preferred',
+            ),
+            rootCaRequired,
+          ]
+          if (!gateway.public) {
+            bullets.push(
+              `${portForwarding} "${gatewayName}": ${port} -> ${info.hostname.value}:${port}`,
+            )
+          }
+        } else {
+          access = 'private'
+          if (isWireguard) {
+            bullets = [`${vpnAccess} StartTunnel`, rootCaRequired]
+          } else {
+            bullets = [
+              localIdeal,
+              `${vpnAccess} ${routerWireguard}`,
+              lanRequired,
+              rootCaRequired,
+              staticRequired,
+            ]
+          }
+        }
+        // * IPv6 *
+      } else if (info.hostname.kind === 'ipv6') {
+        type = 'IPv6'
+        access = 'private'
+        bullets = [
+          this.i18n.transform('Can be used for local access'),
+          lanRequired,
+          rootCaRequired,
+        ]
+        // * Domain *
+      } else {
+        type = this.i18n.transform('Domain')
+        if (info.public) {
+          access = 'public'
+          bullets = [
+            `${dnsFor} ${info.hostname.value} ${resolvesTo} ${gateway.ipInfo.wanIp}`,
+            `${portForwarding} "${gatewayName}": ${port} -> ${info.hostname.value}:${port === 443 ? 5443 : port}`,
+          ]
+          if (publicDomains[info.hostname.value]?.acme) {
+            bullets.unshift(
+              this.i18n.transform('Ideal for public access via the Internet'),
+            )
+          } else {
+            bullets = [
+              this.i18n.transform(
+                'Can be used for personal access via the public Internet. VPN is more private and secure',
+              ),
+              rootCaRequired,
+              ...bullets,
+            ]
+          }
+        } else {
+          access = 'private'
+          const ipPortBad = this.i18n.transform(
+            'when using IP addresses and ports is undesirable',
+          )
+          const customDnsRequired = `${dnsFor} ${info.hostname.value} ${resolvesTo} ${gatewayLanIpv4}`
+          if (isWireguard) {
+            bullets = [
+              `${vpnAccess} StartTunnel ${ipPortBad}`,
+              customDnsRequired,
+              rootCaRequired,
+            ]
+          } else {
+            bullets = [
+              `${localIdeal} ${ipPortBad}`,
+              `${vpnAccess} ${routerWireguard} ${ipPortBad}`,
+              customDnsRequired,
+              rootCaRequired,
+              lanRequired,
+              staticRequired,
+            ]
+          }
+        }
+      }
+    }
+
+    return {
+      url: url.href,
+      access,
+      gatewayName,
+      type,
+      bullets,
+    }
   }
 }
 

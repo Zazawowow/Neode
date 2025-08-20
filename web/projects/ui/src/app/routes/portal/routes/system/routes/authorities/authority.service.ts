@@ -55,7 +55,7 @@ export class AuthorityService {
 
     const addSpec = ISB.InputSpec.of({
       provider: ISB.Value.union({
-        name: 'Provider',
+        name: this.i18n.transform('Provider'),
         default: (availableAuthorities[0]?.url as any) || 'other',
         variants: ISB.Variants.of({
           ...availableAuthorities.reduce(
@@ -69,7 +69,7 @@ export class AuthorityService {
             {},
           ),
           other: {
-            name: 'Other',
+            name: this.i18n.transform('Other'),
             spec: ISB.InputSpec.of({
               url: ISB.Value.text({
                 name: 'URL',

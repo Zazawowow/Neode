@@ -7,8 +7,6 @@ import { PublicDomainsComponent } from './public-domains/pd.component'
 import { InterfacePrivateDomainsComponent } from './private-domains.component'
 import { InterfaceAddressesComponent } from './addresses/addresses.component'
 
-// @TODO translations
-
 @Component({
   selector: 'service-interface',
   template: `

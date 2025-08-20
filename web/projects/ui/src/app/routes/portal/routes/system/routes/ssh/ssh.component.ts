@@ -107,14 +107,29 @@ export default class SystemSSHComponent {
   protected tableKeys = viewChild<SSHTableComponent<SSHKey>>('table')
 
   async add(all: readonly SSHKey[]) {
+    const spec = ISB.InputSpec.of({
+      key: ISB.Value.text({
+        name: this.i18n.transform('Public Key'),
+        required: true,
+        default: null,
+        patterns: [
+          {
+            regex:
+              '^(ssh-(rsa|ed25519|dss|ecdsa)|ecdsa-sha2-nistp(256|384|521))\\s+[A-Za-z0-9+/=]+(\\s[^\\s]+)?$',
+            description: this.i18n.transform('must be a valid SSH public key'),
+          },
+        ],
+      }),
+    })
+
     this.formDialog.open(FormComponent, {
       label: 'Add SSH key',
       data: {
-        spec: await configBuilderToSpec(SSHSpec),
+        spec: await configBuilderToSpec(spec),
         buttons: [
           {
             text: this.i18n.transform('Save'),
-            handler: async ({ key }: typeof SSHSpec._TYPE) => {
+            handler: async ({ key }: typeof spec._TYPE) => {
               const loader = this.loader.open('Saving').subscribe()
 
               try {
@@ -157,18 +172,3 @@ export default class SystemSSHComponent {
       })
   }
 }
-
-const SSHSpec = ISB.InputSpec.of({
-  key: ISB.Value.text({
-    name: 'Public Key',
-    required: true,
-    default: null,
-    patterns: [
-      {
-        regex:
-          '^(ssh-(rsa|ed25519|dss|ecdsa)|ecdsa-sha2-nistp(256|384|521))\\s+[A-Za-z0-9+/=]+(\\s[^\\s]+)?$',
-        description: 'must be a valid SSH public key',
-      },
-    ],
-  }),
-})

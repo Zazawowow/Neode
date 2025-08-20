@@ -4,6 +4,7 @@ import {
   ErrorService,
   i18nKey,
   LoadingService,
+  i18nPipe,
 } from '@start9labs/shared'
 import { toSignal } from '@angular/core/rxjs-interop'
 import { ISB, T, utils } from '@start9labs/start-sdk'
@@ -17,8 +18,6 @@ import { DataModel } from 'src/app/services/patch-db/data-model'
 import { toAuthorityName } from 'src/app/utils/acme'
 import { InterfaceComponent } from '../interface.component'
 import { DNS } from './dns.component'
-
-// @TODO translations
 
 export type PublicDomain = {
   fqdn: string
@@ -40,6 +39,7 @@ export class PublicDomainService {
   private readonly formDialog = inject(FormDialogService)
   private readonly dialog = inject(DialogService)
   private readonly interface = inject(InterfaceComponent)
+  private readonly i18n = inject(i18nPipe)
 
   readonly data = toSignal(
     this.patch.watch$('serverInfo', 'network').pipe(
@@ -61,9 +61,10 @@ export class PublicDomainService {
   async add() {
     const addSpec = ISB.InputSpec.of({
       fqdn: ISB.Value.text({
-        name: 'Domain',
-        description:
+        name: this.i18n.transform('Domain'),
+        description: this.i18n.transform(
           'Enter a fully qualified domain name. For example, if you control domain.com, you could enter domain.com or subdomain.domain.com or another.subdomain.domain.com.',
+        ),
         required: true,
         default: null,
         patterns: [utils.Patterns.domain],
@@ -140,7 +141,7 @@ export class PublicDomainService {
   showDns(fqdn: string, gateway: GatewayWithId, message: i18nKey) {
     this.dialog
       .openComponent(DNS, {
-        label: 'DNS Records' as i18nKey,
+        label: 'DNS Records',
         size: 'l',
         data: {
           fqdn,
@@ -177,7 +178,9 @@ export class PublicDomainService {
       }
 
       const wanIp = gateway.ipInfo.wanIp
-      let message = `Create one of the DNS records below to cause ${fqdn} to resolve to ${wanIp}`
+      let message = this.i18n.transform(
+        'Create one of the DNS records below.',
+      ) as i18nKey
 
       if (!ip) {
         setTimeout(
@@ -185,7 +188,7 @@ export class PublicDomainService {
             this.showDns(
               fqdn,
               gateway,
-              `No DNS detected for ${fqdn}. ${message}` as i18nKey,
+              `${this.i18n.transform('No DNS record detected for')} ${fqdn}. ${message}` as i18nKey,
             ),
           250,
         )
@@ -195,7 +198,7 @@ export class PublicDomainService {
             this.showDns(
               fqdn,
               gateway,
-              `Invalid DNS. ${fqdn} is currently resolving to ${ip}. ${message}` as i18nKey,
+              `${this.i18n.transform('Invalid DNS record')}. ${fqdn} ${this.i18n.transform('resolves to')} ${ip}. ${message}` as i18nKey,
             ),
           250,
         )
@@ -203,8 +206,8 @@ export class PublicDomainService {
         setTimeout(
           () =>
             this.dialog.openAlert(
-              `${fqdn} is successfully resolving to ${wanIp}` as i18nKey,
-              { label: 'DNS detected!' as i18nKey, appearance: 'positive' },
+              `${fqdn} ${this.i18n.transform('resolves to')} ${wanIp}` as i18nKey,
+              { label: 'DNS record detected!', appearance: 'positive' },
             ),
           250,
         )
@@ -224,8 +227,10 @@ export class PublicDomainService {
 
     return {
       gateway: ISB.Value.dynamicSelect(() => ({
-        name: 'Gateway',
-        description: 'Select a gateway to use for this domain.',
+        name: this.i18n.transform('Gateway'),
+        description: this.i18n.transform(
+          'Select a gateway to use for this domain.',
+        ),
         values: data.gateways.reduce<Record<string, string>>(
           (obj, gateway) => ({
             ...obj,
@@ -241,9 +246,10 @@ export class PublicDomainService {
           .map(g => g.id),
       })),
       authority: ISB.Value.select({
-        name: 'Certificate Authority',
-        description:
-          'Select the Certificate Authority that will issue the SSL/TLS certificate for this domain',
+        name: this.i18n.transform('Certificate Authority'),
+        description: this.i18n.transform(
+          'Select a Certificate Authority to issue SSL/TLS certificates for this domain',
+        ),
         values: data.authorities,
         default: '',
       }),

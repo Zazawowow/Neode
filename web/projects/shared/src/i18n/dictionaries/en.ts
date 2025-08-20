@@ -523,4 +523,55 @@ export const ENGLISH = {
   'No private domains': 557,
   'New private domain': 558,
   'DNS Servers': 559,
+  'Enter a fully qualified domain name. Since the domain is for private use, it can be any domain you want, even one you do not control.': 560,
+  'Enter a fully qualified domain name. For example, if you control domain.com, you could enter domain.com or subdomain.domain.com or another.subdomain.domain.com.': 561,
+  'DNS Records': 562,
+  'Create one of the DNS records below.': 563,
+  'No DNS record detected for': 564, // this is a partial sentence. A domain name will be added after "for" to complete the sentence.
+  'Invalid DNS record': 565,
+  'resolves to': 566, // as in "domain.com 'resolves to' [IP address]"
+  'DNS record detected!': 567,
+  'Select a gateway to use for this domain.': 568,
+  'Select a Certificate Authority to issue SSL/TLS certificates for this domain': 569,
+  'Other': 570, // as in, a list option to indicate none of the options listed
+  'A name to easily identify the gateway': 571,
+  'select this option if the gateway is configured for private access to authorized clients only. StartTunnel is a private gateway.': 572,
+  'select this option if the gateway is configured for unfettered public access.': 573,
+  'File': 574, // as in, a computer file
+  'Wireguard Config File': 575,
+  'Copy/Paste': 576,
+  'File Contents': 577,
+  'Public Key': 578, // as in, a cryptographic public key
+  'must be a valid SSH public key': 579,
+  'Refresh Needed': 580,
+  'Your user interface is cached and out of date. Attempt to reload the PWA using the button below. If you continue to see this message, uninstall and reinstall the PWA.': 581,
+  'Your user interface is cached and out of date. Hard refresh the page to get the latest UI.': 582,
+  "Requires trusting your server's Root CA": 583,
+  'Connections can be slow or unreliable at times': 584,
+  'Public if you share the address publicly, otherwise private': 585,
+  'Requires using a Tor-enabled device or browser': 586,
+  'Only useful for clients that enforce HTTPS': 587,
+  'Ideal for anonymous, censorship-resistant hosting and remote access': 588,
+  'Ideal for local access': 589,
+  'Requires being connected to the same Local Area Network (LAN) as your server, either physically or via VPN': 590,
+  'Requires setting a static IP address for': 591, // this is a partial sentence. An IP address will be added after "for" to complete the sentence.
+  'Ideal for VPN access via': 592, // this is a partial sentence. A connection medium will be added after "via" to complete the sentence.
+  'in your gateway': 593, // this is a partial sentence. It is preceded by an instruction: e.g. "do something" in your gateway. Gateway refers to a router or VPN server.
+  "your router's Wireguard server": 594, // this is a partial sentence. It is preceded by "ideal for access via"
+  'Requires port forwarding in gateway': 595,
+  'Requires a DNS record for': 596, // this is a partial sentence. A domain name will be added after "for" to complete the sentence.
+  'that resolves to': 597, // this is a partial sentence. It is preceded by "requires a DNS record for [domain] "
+  'Not recommended for VPN access. VPNs do not support ".local" domains without advanced configuration': 598,
+  'Can be used for clearnet access': 599,
+  'Not recommended in most cases. Clearnet domains are preferred': 600,
+  'Local': 601, // as in, not remote
+  'Can be used for local access': 602,
+  'Ideal for public access via the Internet': 603,
+  'Can be used for personal access via the public Internet. VPN is more private and secure': 604,
+  'when using IP addresses and ports is undesirable': 605, // this is a partial sentence. It is preceded by "Good for connections "
+  'Host': 606, // as in, a network host
+  'Value': 607, // as in, the value in a column of a table
+  'Purpose': 608, // as in, the reason for a thing to exist
+  'subdomains of': 609, // this is a partial sentence. A domain name will be added after "of" to complete the sentence.
+  'Dynamic DNS': 610,
 } as const

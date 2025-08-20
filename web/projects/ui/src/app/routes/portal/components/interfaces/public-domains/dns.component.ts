@@ -19,8 +19,6 @@ import { ApiService } from 'src/app/services/api/embassy-api.service'
 import { parse } from 'tldts'
 import { GatewayWithId } from './pd.service'
 
-// @TODO translations
-
 @Component({
   selector: 'dns',
   template: `
@@ -37,11 +35,11 @@ import { GatewayWithId } from './pd.service'
           [(ngModel)]="ddns"
           (ngModelChange)="pass.set(undefined)"
         />
-        Dynamic DNS
+        {{ 'Dynamic DNS' | i18n }}
       </label>
     }
 
-    <table [appTable]="['Type', $any('Host'), 'Value', 'Purpose']">
+    <table [appTable]="['Type', 'Host', 'Value', 'Purpose']">
       @for (row of rows(); track $index) {
         <tr>
           <td>
@@ -98,6 +96,7 @@ import { GatewayWithId } from './pd.service'
 export class DnsComponent {
   private readonly errorService = inject(ErrorService)
   private readonly api = inject(ApiService)
+  private readonly i18n = inject(i18nPipe)
 
   readonly ddns = false
 
@@ -126,6 +125,8 @@ export class DnsComponent {
 
     const segments = subdomain.split('.')
 
+    const subdomains = this.i18n.transform('subdomains of')
+
     return [
       {
         host: subdomain,
@@ -135,12 +136,12 @@ export class DnsComponent {
         const parent = segments.slice(i + 1).join('.')
         return {
           host: `*.${parent}`,
-          purpose: `subdomains of ${parent}`,
+          purpose: `${subdomains} ${parent}`,
         }
       }),
       {
         host: '*',
-        purpose: `subdomains of ${domain}`,
+        purpose: `${subdomains} ${domain}`,
       },
     ]
   })

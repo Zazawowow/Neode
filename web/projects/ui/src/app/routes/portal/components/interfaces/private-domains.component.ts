@@ -26,8 +26,6 @@ import { FormDialogService } from 'src/app/services/form-dialog.service'
 import { configBuilderToSpec } from 'src/app/utils/configBuilderToSpec'
 import { InterfaceComponent } from './interface.component'
 
-// @TODO translations
-
 @Component({
   selector: 'section[privateDomains]',
   template: `
@@ -113,9 +111,10 @@ export class InterfacePrivateDomainsComponent {
         spec: await configBuilderToSpec(
           ISB.InputSpec.of({
             fqdn: ISB.Value.text({
-              name: 'Domain',
-              description:
+              name: this.i18n.transform('Domain'),
+              description: this.i18n.transform(
                 'Enter a fully qualified domain name. Since the domain is for private use, it can be any domain you want, even one you do not control.',
+              ),
               required: true,
               default: null,
               patterns: [utils.Patterns.domain],
