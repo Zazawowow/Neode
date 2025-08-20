@@ -13,10 +13,10 @@ use crate::registry::asset::RegistryAsset;
 use crate::registry::context::RegistryContext;
 use crate::registry::device_info::DeviceInfo;
 use crate::rpc_continuations::Guid;
+use crate::s9pk::S9pk;
 use crate::s9pk::git_hash::GitHash;
 use crate::s9pk::manifest::{Alerts, Description, HardwareRequirements};
 use crate::s9pk::merkle_archive::source::FileSource;
-use crate::s9pk::S9pk;
 use crate::sign::commitment::merkle_archive::MerkleArchiveCommitment;
 use crate::sign::{AnySignature, AnyVerifyingKey};
 

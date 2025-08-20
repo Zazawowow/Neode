@@ -5,7 +5,7 @@ use clap::Parser;
 use exver::{Version, VersionRange};
 use imbl_value::InternedString;
 use itertools::Itertools;
-use rpc_toolkit::{from_fn_async, Context, HandlerExt, ParentHandler};
+use rpc_toolkit::{Context, HandlerExt, ParentHandler, from_fn_async};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -15,7 +15,7 @@ use crate::registry::context::RegistryContext;
 use crate::registry::device_info::DeviceInfo;
 use crate::registry::os::index::OsVersionInfo;
 use crate::sign::AnyVerifyingKey;
-use crate::util::serde::{display_serializable, HandlerExtSerde, WithIoFormat};
+use crate::util::serde::{HandlerExtSerde, WithIoFormat, display_serializable};
 
 pub mod signer;
 

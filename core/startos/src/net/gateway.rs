@@ -316,6 +316,7 @@ trait Dhcp4Config {
 #[zvariant(signature = "dict")]
 struct Dhcp4Options {
     ntp_servers: Option<String>,
+    domain_name_servers: Option<String>,
 }
 impl TryFrom<OwnedValue> for Dhcp4Options {
     type Error = zbus::Error;
@@ -323,6 +324,8 @@ impl TryFrom<OwnedValue> for Dhcp4Options {
         let dict = value.downcast_ref::<Dict>()?;
         Ok(Self {
             ntp_servers: dict.get::<_, String>(&zbus::zvariant::Str::from_static("ntp_servers"))?,
+            domain_name_servers: dict
+                .get::<_, String>(&zbus::zvariant::Str::from_static("domain_name_servers"))?,
         })
     }
 }
@@ -622,12 +625,20 @@ async fn watch_ip(
                                             .chain(ip6_proxy.address_data().await?)
                                             .collect_vec();
                                         let lan_ip = [
-                                            dbg!(ip4_proxy.gateway().await?).parse::<IpAddr>()?,
-                                            dbg!(ip6_proxy.gateway().await?).parse::<IpAddr>()?,
+                                            Some(ip4_proxy.gateway().await?)
+                                                .filter(|g| !g.is_empty())
+                                                .map(|g| g.parse::<IpAddr>())
+                                                .transpose()?,
+                                            Some(ip6_proxy.gateway().await?)
+                                                .filter(|g| !g.is_empty())
+                                                .map(|g| g.parse::<IpAddr>())
+                                                .transpose()?,
                                         ]
                                         .into_iter()
+                                        .filter_map(|a| a)
                                         .collect();
                                         let mut ntp_servers = OrdSet::new();
+                                        let mut dns_servers = OrdSet::new();
                                         if let Some(dhcp4_proxy) = &dhcp4_proxy {
                                             let dhcp = dhcp4_proxy.options().await?;
                                             if let Some(ntp) = dhcp.ntp_servers {
@@ -636,15 +647,14 @@ async fn watch_ip(
                                                         .map(InternedString::intern),
                                                 );
                                             }
+                                            if let Some(dns) = dhcp.domain_name_servers {
+                                                dns_servers.extend(
+                                                    dns.split(",")
+                                                        .map(|s| s.trim().parse::<IpAddr>())
+                                                        .collect::<Result<Vec<_>, _>>()?,
+                                                );
+                                            }
                                         }
-                                        let dns_servers = []
-                                            .into_iter()
-                                            .chain(ip4_proxy.nameserver_data().await?)
-                                            .chain(ip6_proxy.nameserver_data().await?)
-                                            .map(|NameserverData { address }| {
-                                                address.parse::<IpAddr>()
-                                            })
-                                            .collect::<Result<_, _>>()?;
                                         let scope_id = if_nametoindex(iface.as_str())
                                             .with_kind(ErrorKind::Network)?;
                                         let subnets: OrdSet<IpNet> = addresses
@@ -851,22 +861,6 @@ impl NetworkInterfaceController {
         info: &OrdMap<GatewayId, NetworkInterfaceInfo>,
     ) -> Result<(), Error> {
         tracing::debug!("syncronizing {info:?} to db");
-
-        // let dns = todo!();
-        let dns = info
-            .values()
-            .filter_map(|i| i.ip_info.as_ref())
-            .flat_map(|i| &i.dns_servers)
-            .copied()
-            .collect();
-
-        db.mutate(|db| {
-            let net = db.as_public_mut().as_server_info_mut().as_network_mut();
-            net.as_dns_mut().as_dhcp_servers_mut().ser(&dns)?;
-            net.as_gateways_mut().ser(info)
-        })
-        .await
-        .result?;
 
         let ntp: BTreeSet<_> = info
             .values()
@@ -1191,23 +1185,39 @@ impl ListenerMap {
 }
 
 pub trait InterfaceFilter: Any + Clone + std::fmt::Debug + Eq + Ord + Send + Sync {
+    #[cfg_attr(feature = "unstable", inline(never))]
     fn filter(&self, id: &GatewayId, info: &NetworkInterfaceInfo) -> bool;
+    #[cfg_attr(feature = "unstable", inline(never))]
     fn simplify(&self) -> &dyn DynInterfaceFilterT {
         self
     }
+    #[cfg_attr(feature = "unstable", inline(never))]
     fn eq(&self, other: &dyn Any) -> bool {
         Some(self) == other.downcast_ref::<Self>()
     }
+    #[cfg_attr(feature = "unstable", inline(never))]
     fn cmp(&self, other: &dyn Any) -> std::cmp::Ordering {
-        match self.as_any().type_id().cmp(&other.type_id()) {
-            std::cmp::Ordering::Equal => std::cmp::Ord::cmp(&self, other.downcast_ref().unwrap()),
+        match (self as &dyn Any).type_id().cmp(&other.type_id()) {
+            std::cmp::Ordering::Equal => {
+                std::cmp::Ord::cmp(self, other.downcast_ref::<Self>().unwrap())
+            }
             ord => ord,
         }
     }
+    #[cfg_attr(feature = "unstable", inline(never))]
     fn as_any(&self) -> &dyn Any {
         self
     }
     fn into_dyn(self) -> DynInterfaceFilter {
+        #[cfg(feature = "unstable")]
+        {
+            let res = DynInterfaceFilter::new(self.clone());
+            if !DynInterfaceFilterT::eq(&self, &res) || !DynInterfaceFilterT::eq(&res, &self) {
+                panic!("self != self")
+            }
+            res
+        }
+        #[cfg(not(feature = "unstable"))]
         DynInterfaceFilter::new(self)
     }
 }
@@ -1285,12 +1295,9 @@ impl<A: InterfaceFilter, B: InterfaceFilter> InterfaceFilter for AndFilter<A, B>
                 })
                 .into_inner()
         } else {
-            match InterfaceFilter::as_any(self)
-                .type_id()
-                .cmp(&other.type_id())
-            {
+            match (self as &dyn Any).type_id().cmp(&other.type_id()) {
                 std::cmp::Ordering::Equal => {
-                    std::cmp::Ord::cmp(&self, other.downcast_ref().unwrap())
+                    std::cmp::Ord::cmp(self, other.downcast_ref::<Self>().unwrap())
                 }
                 ord => ord,
             }
@@ -1337,12 +1344,9 @@ impl<A: InterfaceFilter, B: InterfaceFilter> InterfaceFilter for OrFilter<A, B> 
                 })
                 .into_inner()
         } else {
-            match InterfaceFilter::as_any(self)
-                .type_id()
-                .cmp(&other.type_id())
-            {
+            match (self as &dyn Any).type_id().cmp(&other.type_id()) {
                 std::cmp::Ordering::Equal => {
-                    std::cmp::Ord::cmp(&self, other.downcast_ref().unwrap())
+                    std::cmp::Ord::cmp(self, other.downcast_ref::<Self>().unwrap())
                 }
                 ord => ord,
             }
@@ -1380,7 +1384,7 @@ impl InterfaceFilter for AllFilter {
     }
 }
 
-pub trait DynInterfaceFilterT: std::fmt::Debug + Send + Sync {
+pub trait DynInterfaceFilterT: std::fmt::Debug + Any + Send + Sync {
     fn filter(&self, id: &GatewayId, info: &NetworkInterfaceInfo) -> bool;
     fn eq(&self, other: &dyn Any) -> bool;
     fn cmp(&self, other: &dyn Any) -> std::cmp::Ordering;
@@ -1392,15 +1396,15 @@ impl<T: InterfaceFilter> DynInterfaceFilterT for T {
     }
     fn eq(&self, other: &dyn Any) -> bool {
         let simplified = self.simplify();
-        if std::ptr::eq(simplified, self) {
+        if (simplified as &dyn Any).is::<Self>() {
             InterfaceFilter::eq(self, other)
         } else {
-            simplified.eq(other)
+            dbg!(simplified.eq(other))
         }
     }
     fn cmp(&self, other: &dyn Any) -> std::cmp::Ordering {
         let simplified = self.simplify();
-        if std::ptr::eq(simplified, self) {
+        if (simplified as &dyn Any).is::<Self>() {
             InterfaceFilter::cmp(self, other)
         } else {
             simplified.cmp(other)
@@ -1408,7 +1412,7 @@ impl<T: InterfaceFilter> DynInterfaceFilterT for T {
     }
     fn as_any(&self) -> &dyn Any {
         let simplified = self.simplify();
-        if std::ptr::eq(simplified, self) {
+        if (simplified as &dyn Any).is::<Self>() {
             InterfaceFilter::as_any(self)
         } else {
             simplified.as_any()
@@ -1571,6 +1575,7 @@ impl NetworkInterfaceListener {
         self.listeners.port
     }
 
+    #[cfg_attr(feature = "unstable", inline(never))]
     pub fn poll_accept(
         &mut self,
         cx: &mut std::task::Context<'_>,
@@ -1580,7 +1585,7 @@ impl NetworkInterfaceListener {
             || !InterfaceFilter::eq(&self.listeners.prev_filter, filter)
         {
             self.ip_info
-                .peek(|ip_info| self.listeners.update(ip_info, filter))?;
+                .peek_and_mark_seen(|ip_info| self.listeners.update(ip_info, filter))?;
         }
         self.listeners.poll_accept(cx)
     }

@@ -15,8 +15,8 @@ use crate::db::model::public::NetworkInterfaceInfo;
 use crate::net::gateway::{DynInterfaceFilter, InterfaceFilter};
 use crate::net::utils::ipv6_is_link_local;
 use crate::prelude::*;
-use crate::util::sync::Watch;
 use crate::util::Invoke;
+use crate::util::sync::Watch;
 
 pub const START9_BRIDGE_IFACE: &str = "lxcbr0";
 pub const FIRST_DYNAMIC_PRIVATE_PORT: u16 = 49152;

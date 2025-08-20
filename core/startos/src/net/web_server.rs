@@ -23,7 +23,7 @@ use crate::net::static_server::{
 };
 use crate::prelude::*;
 use crate::util::actor::background::BackgroundJobQueue;
-use crate::util::sync::{SyncMutex, Watch};
+use crate::util::sync::{SyncMutex, SyncRwLock, Watch};
 
 pub struct Accepted {
     pub https_redirect: bool,
@@ -170,7 +170,7 @@ impl<A: Accept + Send + Sync + 'static> WebServer<A> {
         let thread = NonDetachingJoinHandle::from(tokio::spawn(async move {
             #[derive(Clone)]
             struct QueueRunner {
-                queue: Arc<SyncMutex<Option<BackgroundJobQueue>>>,
+                queue: Arc<SyncRwLock<Option<BackgroundJobQueue>>>,
             }
             impl<Fut> hyper::rt::Executor<Fut> for QueueRunner
             where
@@ -215,7 +215,7 @@ impl<A: Accept + Send + Sync + 'static> WebServer<A> {
                 }
             }
 
-            let queue_cell = Arc::new(SyncMutex::new(None));
+            let queue_cell = Arc::new(SyncRwLock::new(None));
             let graceful = hyper_util::server::graceful::GracefulShutdown::new();
             let mut server = hyper_util::server::conn::auto::Builder::new(QueueRunner {
                 queue: queue_cell.clone(),
@@ -231,7 +231,7 @@ impl<A: Accept + Send + Sync + 'static> WebServer<A> {
                 .keep_alive_interval(Duration::from_secs(60))
                 .keep_alive_timeout(Duration::from_secs(300));
             let (queue, mut runner) = BackgroundJobQueue::new();
-            queue_cell.mutate(|q| *q = Some(queue.clone()));
+            queue_cell.replace(Some(queue.clone()));
 
             let handler = async {
                 loop {
@@ -266,7 +266,7 @@ impl<A: Accept + Send + Sync + 'static> WebServer<A> {
             }
 
             drop(queue);
-            drop(queue_cell.mutate(|q| q.take()));
+            drop(queue_cell.replace(None));
 
             if !runner.is_empty() {
                 tokio::time::timeout(Duration::from_secs(60), runner)

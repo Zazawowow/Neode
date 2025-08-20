@@ -3909,8 +3909,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f37dccff2791ab604f9babef0ba14fbe0be30bd368dc541e2b08d07c8aa908f3"
 dependencies = [
  "bitflags 2.9.2",
+ "futures-core",
  "inotify-sys",
  "libc",
+ "tokio",
 ]
 
 [[package]]
@@ -7344,6 +7346,7 @@ dependencies = [
  "include_dir",
  "indexmap 2.10.0",
  "indicatif",
+ "inotify",
  "integer-encoding",
  "ipnet",
  "isocountry",

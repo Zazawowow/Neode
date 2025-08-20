@@ -2,7 +2,7 @@ use std::net::Ipv4Addr;
 
 use clap::Parser;
 use ipnet::Ipv4Net;
-use rpc_toolkit::{from_fn_async, Context, Empty, HandlerExt, ParentHandler};
+use rpc_toolkit::{Context, Empty, HandlerExt, ParentHandler, from_fn_async};
 use serde::{Deserialize, Serialize};
 
 use crate::context::CliContext;

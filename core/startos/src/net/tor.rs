@@ -357,7 +357,16 @@ pub enum OnionServiceState {
 }
 impl From<ArtiOnionServiceState> for OnionServiceState {
     fn from(value: ArtiOnionServiceState) -> Self {
-        todo!()
+        match value {
+            ArtiOnionServiceState::Shutdown => Self::Shutdown,
+            ArtiOnionServiceState::Bootstrapping => Self::Bootstrapping,
+            ArtiOnionServiceState::DegradedReachable => Self::DegradedReachable,
+            ArtiOnionServiceState::DegradedUnreachable => Self::DegradedUnreachable,
+            ArtiOnionServiceState::Running => Self::Running,
+            ArtiOnionServiceState::Recovering => Self::Recovering,
+            ArtiOnionServiceState::Broken => Self::Broken,
+            _ => unreachable!(),
+        }
     }
 }
 
@@ -369,7 +378,7 @@ pub async fn list_services(
 }
 
 pub struct TorController {
-    client: TorClient<TokioRustlsRuntime>,
+    client: Arc<SyncRwLock<TorClient<TokioRustlsRuntime>>>,
     services: SyncMutex<BTreeMap<OnionAddress, OnionService>>,
 }
 impl TorController {
@@ -381,10 +390,12 @@ impl TorController {
             .primary()
             .kind(ArtiKeystoreKind::Ephemeral.into());
         Ok(Self {
-            client: TorClient::with_runtime(TokioRustlsRuntime::current()?)
-                .config(config.build().with_kind(ErrorKind::Tor)?)
-                .create_unbootstrapped_async()
-                .await?,
+            client: Arc::new(SyncRwLock::new(
+                TorClient::with_runtime(TokioRustlsRuntime::current()?)
+                    .config(config.build().with_kind(ErrorKind::Tor)?)
+                    .create_unbootstrapped_async()
+                    .await?,
+            )),
             services: SyncMutex::new(BTreeMap::new()),
         })
     }
@@ -440,11 +451,14 @@ impl TorController {
     }
 
     pub async fn reset(&self, wipe_state: bool) -> Result<(), Error> {
-        todo!()
+        // todo!()
+        Ok(())
     }
 
     pub async fn list_services(&self) -> Result<BTreeMap<OnionAddress, OnionServiceState>, Error> {
-        todo!()
+        Ok(self
+            .services
+            .peek(|s| s.iter().map(|(a, s)| (a.clone(), s.state())).collect()))
     }
 }
 
@@ -456,7 +470,10 @@ struct OnionServiceData {
     _thread: NonDetachingJoinHandle<()>,
 }
 impl OnionService {
-    fn launch(client: TorClient<TokioRustlsRuntime>, key: TorSecretKey) -> Result<Self, Error> {
+    fn launch(
+        client: Arc<SyncRwLock<TorClient<TokioRustlsRuntime>>>,
+        key: TorSecretKey,
+    ) -> Result<Self, Error> {
         let service = Arc::new(SyncMutex::new(None));
         let bindings = Arc::new(SyncRwLock::new(BTreeMap::<
             u16,
@@ -471,8 +488,8 @@ impl OnionService {
                     .run_while(async {
                         loop {
                             if let Err(e) = async {
-                                let (new_service, mut stream) = client
-                                    .launch_onion_service_with_hsid(
+                                let (new_service, mut stream) = client.peek(|c| {
+                                    c.launch_onion_service_with_hsid(
                                         OnionServiceConfigBuilder::default()
                                             .nickname(
                                                 key.onion_address()
@@ -485,7 +502,8 @@ impl OnionService {
                                             .with_kind(ErrorKind::Tor)?,
                                         key.clone().0,
                                     )
-                                    .with_kind(ErrorKind::Tor)?;
+                                    .with_kind(ErrorKind::Tor)
+                                })?;
                                 service.replace(Some(new_service));
                                 while let Some(req) = stream.next().await {
                                     bg.add_job({
@@ -607,5 +625,12 @@ impl OnionService {
     pub async fn shutdown(self) -> Result<(), Error> {
         self.0._thread.abort();
         Ok(())
+    }
+
+    pub fn state(&self) -> OnionServiceState {
+        self.0
+            .service
+            .peek(|s| s.as_ref().map(|s| s.status().state().into()))
+            .unwrap_or(OnionServiceState::Bootstrapping)
     }
 }

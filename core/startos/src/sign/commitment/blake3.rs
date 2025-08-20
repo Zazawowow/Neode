@@ -4,13 +4,13 @@ use serde::{Deserialize, Serialize};
 use tokio::io::AsyncWrite;
 use ts_rs::TS;
 
+use crate::CAP_10_MiB;
 use crate::prelude::*;
-use crate::sign::commitment::{Commitment, Digestable};
 use crate::s9pk::merkle_archive::hash::VerifyingWriter;
 use crate::s9pk::merkle_archive::source::ArchiveSource;
+use crate::sign::commitment::{Commitment, Digestable};
 use crate::util::io::{ParallelBlake3Writer, TrackingIO};
 use crate::util::serde::Base64;
-use crate::CAP_10_MiB;
 
 #[derive(Clone, Debug, Deserialize, Serialize, HasModel, PartialEq, Eq, TS)]
 #[serde(rename_all = "camelCase")]

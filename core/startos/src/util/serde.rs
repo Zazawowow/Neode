@@ -686,7 +686,7 @@ impl std::str::FromStr for Duration {
                 return Err(Error::new(
                     eyre!("Invalid units for duration"),
                     crate::ErrorKind::Deserialization,
-                ))
+                ));
             }
         }))
     }

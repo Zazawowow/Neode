@@ -1,8 +1,8 @@
 use models::HealthCheckId;
 
 use crate::service::effects::prelude::*;
-use crate::status::health_check::NamedHealthCheckResult;
 use crate::status::MainStatus;
+use crate::status::health_check::NamedHealthCheckResult;
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[serde(rename_all = "camelCase")]

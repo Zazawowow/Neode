@@ -1,5 +1,5 @@
 use std::collections::{BTreeMap, BTreeSet};
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 
 use chrono::{DateTime, Utc};
 use exver::{Version, VersionRange};
@@ -19,8 +19,8 @@ use crate::account::AccountInfo;
 use crate::db::model::package::AllPackageData;
 use crate::net::acme::AcmeProvider;
 use crate::net::forward::START9_BRIDGE_IFACE;
-use crate::net::host::binding::{AddSslOptions, BindInfo, BindOptions, NetInfo};
 use crate::net::host::Host;
+use crate::net::host::binding::{AddSslOptions, BindInfo, BindOptions, NetInfo};
 use crate::net::utils::ipv6_is_local;
 use crate::net::vhost::AlpnInfo;
 use crate::prelude::*;
@@ -202,8 +202,8 @@ pub struct NetworkInfo {
 #[model = "Model<Self>"]
 #[ts(export)]
 pub struct DnsSettings {
-    pub dhcp_servers: Vec<IpAddr>,
-    pub static_servers: Option<Vec<IpAddr>>,
+    pub dhcp_servers: Vec<SocketAddr>,
+    pub static_servers: Option<Vec<SocketAddr>>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize, HasModel, TS)]

@@ -1,17 +1,19 @@
 use std::borrow::Borrow;
 use std::collections::BTreeMap;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::sync::{Arc, Weak};
 use std::time::Duration;
 
 use clap::Parser;
 use color_eyre::eyre::eyre;
-use futures::{FutureExt, TryStreamExt};
+use futures::future::BoxFuture;
+use futures::{FutureExt, StreamExt, TryStreamExt};
 use helpers::NonDetachingJoinHandle;
 use hickory_client::client::Client;
 use hickory_client::proto::runtime::TokioRuntimeProvider;
+use hickory_client::proto::tcp::TcpClientStream;
 use hickory_client::proto::udp::UdpClientStream;
-use hickory_client::proto::xfer::DnsRequestOptions;
+use hickory_client::proto::xfer::{DnsExchangeBackground, DnsRequestOptions};
 use hickory_client::proto::DnsHandle;
 use hickory_server::authority::MessageResponseBuilder;
 use hickory_server::proto::op::{Header, ResponseCode};
@@ -20,7 +22,7 @@ use hickory_server::server::{Request, RequestHandler, ResponseHandler, ResponseI
 use hickory_server::ServerFuture;
 use imbl::OrdMap;
 use imbl_value::InternedString;
-use models::{GatewayId, PackageId};
+use models::{GatewayId, OptionExt, PackageId};
 use rpc_toolkit::{
     from_fn_async, from_fn_blocking, Context, HandlerArgs, HandlerExt, ParentHandler,
 };
@@ -30,10 +32,12 @@ use tracing::instrument;
 
 use crate::context::RpcContext;
 use crate::db::model::public::NetworkInterfaceInfo;
+use crate::db::model::Database;
 use crate::net::gateway::NetworkInterfaceWatcher;
+use crate::prelude::*;
+use crate::util::io::file_string_stream;
 use crate::util::serde::{display_serializable, HandlerExtSerde};
 use crate::util::sync::{SyncRwLock, Watch};
-use crate::{Error, ErrorKind, ResultExt};
 
 pub fn dns_api<C: Context>() -> ParentHandler<C> {
     ParentHandler::new()
@@ -103,14 +107,35 @@ pub fn query_dns<C: Context>(
 
 #[derive(Deserialize, Serialize, Parser)]
 pub struct SetStaticDnsParams {
-    pub servers: Option<Vec<IpAddr>>,
+    pub servers: Option<Vec<String>>,
 }
 
 pub async fn set_static_dns(
     ctx: RpcContext,
     SetStaticDnsParams { servers }: SetStaticDnsParams,
 ) -> Result<(), Error> {
-    todo!()
+    ctx.db
+        .mutate(|db| {
+            db.as_public_mut()
+                .as_server_info_mut()
+                .as_network_mut()
+                .as_dns_mut()
+                .as_static_servers_mut()
+                .ser(
+                    &servers
+                        .map(|s| {
+                            s.into_iter()
+                                .map(|s| {
+                                    s.parse::<SocketAddr>()
+                                        .or_else(|_| s.parse::<IpAddr>().map(|a| (a, 53).into()))
+                                })
+                                .collect()
+                        })
+                        .transpose()?,
+                )
+        })
+        .await
+        .result
 }
 
 #[derive(Default)]
@@ -125,8 +150,120 @@ pub struct DnsController {
     dns_server: NonDetachingJoinHandle<()>,
 }
 
+struct DnsClient {
+    client: Arc<SyncRwLock<Vec<(SocketAddr, hickory_client::client::Client)>>>,
+    _thread: NonDetachingJoinHandle<()>,
+}
+impl DnsClient {
+    pub fn new(db: TypedPatchDb<Database>) -> Self {
+        let client = Arc::new(SyncRwLock::new(Vec::new()));
+        Self {
+            client: client.clone(),
+            _thread: tokio::spawn(async move {
+                loop {
+                    if let Err::<(), Error>(e) = async {
+                        let mut stream = file_string_stream("/run/systemd/resolve/resolv.conf")
+                            .filter_map(|a| futures::future::ready(a.transpose())).boxed();
+                        let mut conf = stream
+                            .next()
+                            .await
+                            .or_not_found("/run/systemd/resolve/resolv.conf")??;
+                        let mut prev_nameservers = Vec::new();
+                        let mut bg = BTreeMap::<SocketAddr, BoxFuture<_>>::new();
+                        loop {
+                            let nameservers = conf
+                                .lines()
+                                .map(|l| l.trim())
+                                .filter_map(|l| l.strip_prefix("nameserver "))
+                                .map(|n| {
+                                    n.parse::<SocketAddr>()
+                                        .or_else(|_| n.parse::<IpAddr>().map(|a| (a, 53).into()))
+                                })
+                                .collect::<Result<Vec<_>, _>>()?;
+                            let static_nameservers = db
+                                .mutate(|db| {
+                                    let dns = db
+                                        .as_public_mut()
+                                        .as_server_info_mut()
+                                        .as_network_mut()
+                                        .as_dns_mut();
+                                    dns.as_dhcp_servers_mut().ser(&nameservers)?;
+                                    dns.as_static_servers().de()
+                                })
+                                .await
+                                .result?;
+                            let nameservers = static_nameservers.unwrap_or(nameservers);
+                            if nameservers != prev_nameservers {
+                                let mut existing: BTreeMap<_, _> =
+                                    client.peek(|c| c.iter().cloned().collect());
+                                let mut new = Vec::with_capacity(nameservers.len());
+                                for addr in &nameservers {
+                                    if let Some(existing) = existing.remove(addr) {
+                                        new.push((*addr, existing));
+                                    } else {
+                                        let client = if let Ok((client, bg_thread)) =
+                                            Client::connect(
+                                                UdpClientStream::builder(
+                                                    *addr,
+                                                    TokioRuntimeProvider::new(),
+                                                )
+                                                .build(),
+                                            )
+                                            .await
+                                        {
+                                            bg.insert(*addr, bg_thread.boxed());
+                                            client
+                                        } else {
+                                            let (stream, sender) = TcpClientStream::new(
+                                                *addr,
+                                                None,
+                                                Some(Duration::from_secs(30)),
+                                                TokioRuntimeProvider::new(),
+                                            );
+                                            let (client, bg_thread) =
+                                                Client::new(stream, sender, None)
+                                                    .await
+                                                    .with_kind(ErrorKind::Network)?;
+                                            bg.insert(*addr, bg_thread.boxed());
+                                            client
+                                        };
+                                        new.push((*addr, client));
+                                    }
+                                }
+                                bg.retain(|n, _| nameservers.iter().any(|a| a == n));
+                                prev_nameservers = nameservers;
+                            }
+                            tokio::select! {
+                                c = stream.next() => conf = c.or_not_found("/run/systemd/resolve/resolv.conf")??,
+                                _ = futures::future::join_all(bg.values_mut()) => (),
+                            }
+                        }
+                    }
+                    .await
+                    {
+                        tracing::error!("{e}");
+                        tracing::debug!("{e:?}");
+                    }
+                }
+            })
+            .into(),
+        }
+    }
+    fn lookup(
+        &self,
+        query: hickory_client::proto::op::Query,
+        options: DnsRequestOptions,
+    ) -> Vec<hickory_client::proto::xfer::DnsExchangeSend> {
+        self.client.peek(|c| {
+            c.iter()
+                .map(|(_, c)| c.lookup(query.clone(), options.clone()))
+                .collect()
+        })
+    }
+}
+
 struct Resolver {
-    client: hickory_client::client::Client,
+    client: DnsClient,
     net_iface: Watch<OrdMap<GatewayId, NetworkInterfaceInfo>>,
     resolve: Arc<SyncRwLock<ResolveMap>>,
 }
@@ -271,29 +408,43 @@ impl RequestHandler for Resolver {
                 }
             } else {
                 let query = query.original().clone();
-                let mut stream = self.client.lookup(query, DnsRequestOptions::default());
-                let mut res = None;
-                while let Some(msg) = stream.try_next().await? {
-                    res = Some(
-                        response_handle
-                            .send_response(
-                                MessageResponseBuilder::from_message_request(&*request).build(
-                                    msg.header().clone(),
-                                    msg.answers(),
-                                    msg.name_servers(),
-                                    &msg.soa().map(|s| s.to_owned().into_record_of_rdata()),
-                                    msg.additionals(),
-                                ),
-                            )
-                            .await?,
-                    );
+                let mut streams = self.client.lookup(query, DnsRequestOptions::default());
+                let mut err = None;
+                for stream in streams.iter_mut() {
+                    match stream.next().await {
+                        None => (),
+                        Some(Err(e)) => err = Some(e),
+                        Some(Ok(msg)) => {
+                            return response_handle
+                                .send_response(
+                                    MessageResponseBuilder::from_message_request(&*request).build(
+                                        msg.header().clone(),
+                                        msg.answers(),
+                                        msg.name_servers(),
+                                        &msg.soa().map(|s| s.to_owned().into_record_of_rdata()),
+                                        msg.additionals(),
+                                    ),
+                                )
+                                .await;
+                        }
+                    }
                 }
-                res.ok_or_else(|| {
-                    std::io::Error::new(
-                        std::io::ErrorKind::NotFound,
-                        eyre!("no response from server"),
+                if let Some(e) = err {
+                    tracing::error!("{e}");
+                    tracing::debug!("{e:?}");
+                }
+                let res = Header::response_from_request(request.header());
+                response_handle
+                    .send_response(
+                        MessageResponseBuilder::from_message_request(&*request).build(
+                            res.into(),
+                            [],
+                            [],
+                            [],
+                            [],
+                        ),
                     )
-                })
+                    .await
             }
         }
         .await
@@ -309,50 +460,40 @@ impl RequestHandler for Resolver {
 
 impl DnsController {
     #[instrument(skip_all)]
-    pub async fn init(watcher: &NetworkInterfaceWatcher) -> Result<Self, Error> {
+    pub async fn init(
+        db: TypedPatchDb<Database>,
+        watcher: &NetworkInterfaceWatcher,
+    ) -> Result<Self, Error> {
         let resolve = Arc::new(SyncRwLock::new(ResolveMap::default()));
 
-        let stream =
-            UdpClientStream::builder(([127, 0, 0, 53], 5355).into(), TokioRuntimeProvider::new())
-                .build();
-        let (client, bg) = Client::connect(stream)
-            .await
-            .with_kind(ErrorKind::Network)?;
-
         let mut server = ServerFuture::new(Resolver {
-            client,
+            client: DnsClient::new(db),
             net_iface: watcher.subscribe(),
             resolve: resolve.clone(),
         });
 
         let dns_server = tokio::spawn(
-            futures::future::join(
-                async move {
-                    server.register_listener(
-                        TcpListener::bind((Ipv6Addr::UNSPECIFIED, 53))
-                            .await
-                            .with_kind(ErrorKind::Network)?,
-                        Duration::from_secs(30),
-                    );
-                    server.register_socket(
-                        UdpSocket::bind((Ipv6Addr::UNSPECIFIED, 53))
-                            .await
-                            .with_kind(ErrorKind::Network)?,
-                    );
-
-                    server
-                        .block_until_done()
+            async move {
+                server.register_listener(
+                    TcpListener::bind((Ipv6Addr::UNSPECIFIED, 53))
                         .await
-                        .with_kind(ErrorKind::Network)
-                }
-                .map(|r| {
-                    r.log_err();
-                }),
-                bg.map(|r| {
-                    r.log_err();
-                }),
-            )
-            .map(|_| ()),
+                        .with_kind(ErrorKind::Network)?,
+                    Duration::from_secs(30),
+                );
+                server.register_socket(
+                    UdpSocket::bind((Ipv6Addr::UNSPECIFIED, 53))
+                        .await
+                        .with_kind(ErrorKind::Network)?,
+                );
+
+                server
+                    .block_until_done()
+                    .await
+                    .with_kind(ErrorKind::Network)
+            }
+            .map(|r| {
+                r.log_err();
+            }),
         )
         .into();
 

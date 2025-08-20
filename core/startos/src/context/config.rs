@@ -8,11 +8,11 @@ use reqwest::Url;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
+use crate::MAIN_DATA;
 use crate::disk::OsPartitionInfo;
 use crate::prelude::*;
 use crate::util::serde::IoFormat;
 use crate::version::VersionT;
-use crate::MAIN_DATA;
 
 pub const DEVICE_CONFIG_PATH: &str = "/media/startos/config/config.yaml"; // "/media/startos/config/config.yaml";
 pub const CONFIG_PATH: &str = "/etc/startos/config.yaml";

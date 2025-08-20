@@ -1,13 +1,13 @@
 use std::path::{Path, PathBuf};
 
-use ed25519::pkcs8::EncodePrivateKey;
 use ed25519::PublicKeyBytes;
+use ed25519::pkcs8::EncodePrivateKey;
 use ed25519_dalek::{SigningKey, VerifyingKey};
 use tokio::io::AsyncWriteExt;
 use tracing::instrument;
 
-use crate::context::config::local_config_path;
 use crate::context::CliContext;
+use crate::context::config::local_config_path;
 use crate::prelude::*;
 use crate::util::io::create_file_mod;
 use crate::util::serde::Pem;

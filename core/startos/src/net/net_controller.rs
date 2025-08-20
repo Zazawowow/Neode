@@ -50,8 +50,8 @@ impl NetController {
         Ok(Self {
             db: db.clone(),
             tor: TorController::new().await?,
-            vhost: VHostController::new(db, net_iface.clone()),
-            dns: DnsController::init(&net_iface.watcher).await?,
+            vhost: VHostController::new(db.clone(), net_iface.clone()),
+            dns: DnsController::init(db, &net_iface.watcher).await?,
             forward: PortForwardController::new(net_iface.watcher.subscribe()),
             net_iface,
             server_hostnames: vec![

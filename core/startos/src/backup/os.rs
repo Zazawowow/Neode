@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use ssh_key::private::Ed25519Keypair;
 
 use crate::account::AccountInfo;
-use crate::hostname::{generate_hostname, generate_id, Hostname};
+use crate::hostname::{Hostname, generate_hostname, generate_id};
 use crate::net::tor::TorSecretKey;
 use crate::prelude::*;
 use crate::util::crypto::ed25519_expand_key;
@@ -36,7 +36,7 @@ impl<'de> Deserialize<'de> for OsBackup {
             v => {
                 return Err(serde::de::Error::custom(&format!(
                     "Unknown backup version {v}"
-                )))
+                )));
             }
         })
     }

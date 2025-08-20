@@ -5,14 +5,14 @@ use std::panic::{RefUnwindSafe, UnwindSafe};
 use color_eyre::eyre::eyre;
 use futures::future::BoxFuture;
 use futures::{Future, FutureExt};
-use imbl_value::{to_value, InternedString};
+use imbl_value::{InternedString, to_value};
 use patch_db::json_ptr::ROOT;
 
+use crate::Error;
 use crate::context::RpcContext;
 use crate::db::model::Database;
 use crate::prelude::*;
 use crate::progress::PhaseProgressTrackerHandle;
-use crate::Error;
 
 mod v0_3_5;
 mod v0_3_5_1;
@@ -183,7 +183,7 @@ impl Version {
                 return Err(Error::new(
                     eyre!("cannot migrate from versions before 0.3.5"),
                     ErrorKind::MigrationFailed,
-                ))
+                ));
             }
             Self::V0_3_5(v) => DynVersion(Box::new(v.0)),
             Self::V0_3_5_1(v) => DynVersion(Box::new(v.0)),
@@ -222,7 +222,7 @@ impl Version {
                 return Err(Error::new(
                     eyre!("unknown version {v}"),
                     ErrorKind::MigrationFailed,
-                ))
+                ));
             }
         })
     }
@@ -339,7 +339,7 @@ impl PreUps {
                             from.semver()
                         ),
                         crate::ErrorKind::MigrationFailed,
-                    ))
+                    ));
                 }
                 Ordering::Equal => None,
             };

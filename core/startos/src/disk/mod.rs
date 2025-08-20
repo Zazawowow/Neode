@@ -2,13 +2,13 @@ use std::path::{Path, PathBuf};
 
 use itertools::Itertools;
 use lazy_format::lazy_format;
-use rpc_toolkit::{from_fn_async, CallRemoteHandler, Context, Empty, HandlerExt, ParentHandler};
+use rpc_toolkit::{CallRemoteHandler, Context, Empty, HandlerExt, ParentHandler, from_fn_async};
 use serde::{Deserialize, Serialize};
 
+use crate::Error;
 use crate::context::{CliContext, RpcContext};
 use crate::disk::util::DiskInfo;
-use crate::util::serde::{display_serializable, HandlerExtSerde, WithIoFormat};
-use crate::Error;
+use crate::util::serde::{HandlerExtSerde, WithIoFormat, display_serializable};
 
 pub mod fsck;
 pub mod main;

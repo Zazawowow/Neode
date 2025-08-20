@@ -4,8 +4,8 @@ use std::future::Future;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use chrono::{TimeDelta, Utc};
@@ -18,18 +18,19 @@ use models::{ActionId, PackageId};
 use reqwest::{Client, Proxy};
 use rpc_toolkit::yajrc::RpcError;
 use rpc_toolkit::{CallRemote, Context, Empty};
-use tokio::sync::{broadcast, oneshot, watch, Mutex, RwLock};
+use tokio::sync::{Mutex, RwLock, broadcast, oneshot, watch};
 use tokio::time::Instant;
 use tracing::instrument;
 
 use super::setup::CURRENT_SECRET;
+use crate::DATA_DIR;
 use crate::account::AccountInfo;
 use crate::auth::Sessions;
 use crate::context::config::ServerConfig;
-use crate::db::model::package::TaskSeverity;
 use crate::db::model::Database;
+use crate::db::model::package::TaskSeverity;
 use crate::disk::OsPartitionInfo;
-use crate::init::{check_time_is_synchronized, InitResult};
+use crate::init::{InitResult, check_time_is_synchronized};
 use crate::install::PKG_ARCHIVE_DIR;
 use crate::lxc::{ContainerId, LxcContainer, LxcManager};
 use crate::net::net_controller::{NetController, NetService};
@@ -39,14 +40,13 @@ use crate::net::wifi::WpaCli;
 use crate::prelude::*;
 use crate::progress::{FullProgressTracker, PhaseProgressTrackerHandle};
 use crate::rpc_continuations::{Guid, OpenAuthedContinuations, RpcContinuations};
+use crate::service::ServiceMap;
 use crate::service::action::update_tasks;
 use crate::service::effects::callbacks::ServiceCallbacks;
-use crate::service::ServiceMap;
 use crate::shutdown::Shutdown;
 use crate::util::io::delete_file;
 use crate::util::lshw::LshwDevice;
 use crate::util::sync::{SyncMutex, Watch};
-use crate::DATA_DIR;
 
 pub struct RpcContextSeed {
     is_closed: AtomicBool,

@@ -1,6 +1,6 @@
 use imbl_value::InternedString;
 use lazy_format::lazy_format;
-use rand::{rng, Rng};
+use rand::{Rng, rng};
 use tokio::process::Command;
 use tracing::instrument;
 

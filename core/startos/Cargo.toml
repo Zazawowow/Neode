@@ -63,6 +63,7 @@ arti-client = { version = "0.33", features = [
   "rustls",
   "static",
   "tokio",
+  "ephemeral-keystore",
 ], default-features = false }
 aes = { version = "0.7.5", features = ["ctr"] }
 async-acme = { version = "0.6.0", git = "https://github.com/dr-bonez/async-acme.git", features = [
@@ -139,6 +140,7 @@ imbl-value = { version = "0.4.3", features = ["ts-rs"] }
 include_dir = { version = "0.7.3", features = ["metadata"] }
 indexmap = { version = "2.0.2", features = ["serde"] }
 indicatif = { version = "0.17.7", features = ["tokio"] }
+inotify = "0.11.0"
 integer-encoding = { version = "4.0.0", features = ["tokio_async"] }
 ipnet = { version = "2.8.0", features = ["serde"] }
 isocountry = "0.3.2"

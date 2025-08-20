@@ -14,8 +14,9 @@ use std::time::Duration;
 use bytes::{Buf, BytesMut};
 use clap::builder::ValueParserFactory;
 use futures::future::{BoxFuture, Fuse};
-use futures::{AsyncSeek, FutureExt, Stream, TryStreamExt};
+use futures::{AsyncSeek, FutureExt, Stream, StreamExt, TryStreamExt};
 use helpers::{AtomicFile, NonDetachingJoinHandle};
+use inotify::{EventMask, EventStream, Inotify, WatchMask};
 use models::FromStrParser;
 use nix::unistd::{Gid, Uid};
 use serde::{Deserialize, Serialize};
@@ -390,7 +391,7 @@ impl AsyncRead for BufferedWriteReader {
         match this.hdl.poll(cx) {
             Poll::Ready(Ok(Err(e))) => return Poll::Ready(Err(e)),
             Poll::Ready(Err(e)) => {
-                return Poll::Ready(Err(std::io::Error::new(std::io::ErrorKind::BrokenPipe, e)))
+                return Poll::Ready(Err(std::io::Error::new(std::io::ErrorKind::BrokenPipe, e)));
             }
             _ => res,
         }
@@ -1525,4 +1526,57 @@ impl ValueParserFactory for TermSize {
     fn value_parser() -> Self::Parser {
         FromStrParser::new()
     }
+}
+
+#[instrument(skip_all)]
+async fn wait_for_created(stream: &mut EventStream<[u8; 1024]>, path: &Path) -> Result<(), Error> {
+    let parent = stream
+        .watches()
+        .add(path.parent().unwrap_or("/".as_ref()), WatchMask::CREATE)?;
+    while let Some(e) = stream.try_next().await? {
+        if e.mask & EventMask::CREATE != EventMask::empty() && e.name.as_deref() == path.file_name()
+        {
+            break;
+        }
+    }
+    stream.watches().remove(parent)?;
+    Ok(())
+}
+
+#[instrument(skip_all)]
+pub fn file_string_stream(
+    path: impl Into<PathBuf>,
+) -> impl Stream<Item = Result<Option<String>, Error>> {
+    let path = path.into();
+    async_stream::try_stream! {
+        let mut stream = Inotify::init()?.into_event_stream([0; 1024])?;
+        loop {
+            stream.watches().add(
+                &path,
+                WatchMask::MODIFY | WatchMask::MOVE_SELF | WatchMask::MOVED_TO | WatchMask::DELETE_SELF,
+            )?;
+            if let Some(contents) = maybe_read_file_to_string(&path).await? {
+                yield Some(contents);
+            } else {
+                wait_for_created(&mut stream, &path).await?;
+            }
+            while let Some(e) = stream.try_next().await? {
+                yield maybe_read_file_to_string(&path).await?;
+                if e.mask & EventMask::DELETE_SELF != EventMask::empty() {
+                    break;
+                }
+            }
+        }
+    }
+}
+
+#[tokio::test]
+async fn test_wait_for_created() {
+    let mut stream = Inotify::init()
+        .unwrap()
+        .into_event_stream([0; 1024])
+        .unwrap();
+    wait_for_created(&mut stream, Path::new("/tmp/wait-for-me"))
+        .await
+        .unwrap();
 }

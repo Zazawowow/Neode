@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use std::ffi::{c_int, OsStr, OsString};
+use std::ffi::{OsStr, OsString, c_int};
 use std::fs::File;
 use std::io::{IsTerminal, Read};
 use std::os::unix::process::{CommandExt, ExitStatusExt};
@@ -13,10 +13,10 @@ use signal_hook::consts::signal::*;
 use termion::raw::IntoRawMode;
 use tokio::sync::oneshot;
 
-use crate::service::effects::prelude::*;
-use crate::service::effects::ContainerCliContext;
-use crate::util::io::TermSize;
 use crate::CAP_1_KiB;
+use crate::service::effects::ContainerCliContext;
+use crate::service::effects::prelude::*;
+use crate::util::io::TermSize;
 
 const FWD_SIGNALS: &[c_int] = &[
     SIGABRT, SIGALRM, SIGCONT, SIGHUP, SIGINT, SIGIO, SIGPIPE, SIGPROF, SIGQUIT, SIGTERM, SIGTRAP,

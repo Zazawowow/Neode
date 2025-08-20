@@ -1,7 +1,7 @@
 use clap::Parser;
 use imbl_value::InternedString;
 use models::GatewayId;
-use rpc_toolkit::{from_fn_async, Context, HandlerExt, ParentHandler};
+use rpc_toolkit::{Context, HandlerExt, ParentHandler, from_fn_async};
 use serde::{Deserialize, Serialize};
 use tokio::process::Command;
 use ts_rs::TS;
@@ -9,8 +9,8 @@ use ts_rs::TS;
 use crate::context::{CliContext, RpcContext};
 use crate::db::model::public::NetworkInterfaceType;
 use crate::prelude::*;
-use crate::util::io::{write_file_atomic, TmpDir};
 use crate::util::Invoke;
+use crate::util::io::{TmpDir, write_file_atomic};
 
 pub fn tunnel_api<C: Context>() -> ParentHandler<C> {
     ParentHandler::new()

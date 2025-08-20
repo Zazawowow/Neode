@@ -3,17 +3,17 @@ use std::collections::BTreeSet;
 use clap::Parser;
 use imbl_value::InternedString;
 use models::GatewayId;
-use rpc_toolkit::{from_fn_async, Context, Empty, HandlerArgs, HandlerExt, ParentHandler};
+use rpc_toolkit::{Context, Empty, HandlerArgs, HandlerExt, ParentHandler, from_fn_async};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::context::{CliContext, RpcContext};
 use crate::db::model::DatabaseModel;
 use crate::net::acme::AcmeProvider;
-use crate::net::host::{all_hosts, HostApiKind};
+use crate::net::host::{HostApiKind, all_hosts};
 use crate::net::tor::OnionAddress;
 use crate::prelude::*;
-use crate::util::serde::{display_serializable, HandlerExtSerde};
+use crate::util::serde::{HandlerExtSerde, display_serializable};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -73,8 +73,8 @@ fn check_duplicates(db: &DatabaseModel) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn address_api<C: Context, Kind: HostApiKind>(
-) -> ParentHandler<C, Kind::Params, Kind::InheritedParams> {
+pub fn address_api<C: Context, Kind: HostApiKind>()
+-> ParentHandler<C, Kind::Params, Kind::InheritedParams> {
     ParentHandler::<C, Kind::Params, Kind::InheritedParams>::new()
         .subcommand(
             "domain",

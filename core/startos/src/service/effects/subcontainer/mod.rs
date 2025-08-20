@@ -61,7 +61,9 @@ pub async fn destroy_subcontainer_fs(
         }
         overlay.overlay.unmount(true).await?;
     } else {
-        tracing::warn!("Could not find a subcontainer fs to destroy; assumming that it already is destroyed and will be skipping");
+        tracing::warn!(
+            "Could not find a subcontainer fs to destroy; assumming that it already is destroyed and will be skipping"
+        );
     }
     Ok(())
 }

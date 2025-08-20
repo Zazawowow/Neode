@@ -3,9 +3,9 @@ use std::str::FromStr;
 use clap::builder::ValueParserFactory;
 use models::{FromStrParser, PackageId};
 
+use crate::service::RebuildParams;
 use crate::service::effects::prelude::*;
 use crate::service::rpc::CallbackId;
-use crate::service::RebuildParams;
 use crate::status::MainStatus;
 
 pub async fn rebuild(context: EffectContext) -> Result<(), Error> {

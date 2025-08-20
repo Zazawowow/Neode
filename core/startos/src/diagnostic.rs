@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use rpc_toolkit::yajrc::RpcError;
 use rpc_toolkit::{
-    from_fn, from_fn_async, CallRemoteHandler, Context, Empty, HandlerExt, ParentHandler,
+    CallRemoteHandler, Context, Empty, HandlerExt, ParentHandler, from_fn, from_fn_async,
 };
 
 use crate::context::{CliContext, DiagnosticContext, RpcContext};

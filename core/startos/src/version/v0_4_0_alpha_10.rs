@@ -5,7 +5,7 @@ use exver::{PreReleaseSegment, VersionRange};
 use imbl_value::json;
 
 use super::v0_3_5::V0_3_0_COMPAT;
-use super::{v0_4_0_alpha_9, VersionT};
+use super::{VersionT, v0_4_0_alpha_9};
 use crate::prelude::*;
 
 lazy_static::lazy_static! {
@@ -39,6 +39,38 @@ impl VersionT for Version {
             .flatten()
             .find(|(_, i)| i["ipInfo"]["wanIp"].is_string())
             .map(|(g, _)| g.clone());
+        let fix_host = |host: &mut Value| {
+            let mut public = BTreeMap::new();
+            let mut private = BTreeSet::new();
+            for (domain, info) in host["domains"]
+                .as_object_mut()
+                .ok_or_else(|| {
+                    Error::new(
+                        eyre!("expected public.packageData[id].hosts[id].domains to be an object"),
+                        ErrorKind::Database,
+                    )
+                })?
+                .iter_mut()
+            {
+                let Some(info) = info.as_object_mut() else {
+                    continue;
+                };
+                if info["public"].as_bool().unwrap_or_default()
+                    && let Some(gateway) = &default_gateway
+                {
+                    info.insert(
+                        "gateway".into(),
+                        Value::String(Arc::new((&**gateway).to_owned())),
+                    );
+                    public.insert(domain.clone(), info.clone());
+                } else {
+                    private.insert(domain.clone());
+                }
+            }
+            host["publicDomains"] = to_value(&public)?;
+            host["privateDomains"] = to_value(&private)?;
+            Ok::<_, Error>(())
+        };
         for (_, package) in db["public"]["packageData"]
             .as_object_mut()
             .ok_or_else(|| {
@@ -59,43 +91,16 @@ impl VersionT for Version {
                 })?
                 .iter_mut()
             {
-                let mut public = BTreeMap::new();
-                let mut private = BTreeSet::new();
-                for (domain, info) in host["domains"]
-                    .as_object_mut()
-                    .ok_or_else(|| {
-                        Error::new(
-                            eyre!(
-                                "expected public.packageData[id].hosts[id].domains to be an object"
-                            ),
-                            ErrorKind::Database,
-                        )
-                    })?
-                    .iter_mut()
-                {
-                    let Some(info) = info.as_object_mut() else {
-                        continue;
-                    };
-                    if info["public"].as_bool().unwrap_or_default() && let Some(gateway) = &default_gateway {
-                        info.insert(
-                            "gateway".into(),
-                            Value::String(Arc::new((&**gateway).to_owned())),
-                        );
-                        public.insert(domain.clone(), info.clone());
-                    } else {
-                        private.insert(domain.clone());
-                    }
-                    
-                }
-                host["publicDomains"] = to_value(&public)?;
-                host["privateDomains"] = to_value(&private)?;
+                fix_host(host)?;
             }
         }
+        fix_host(&mut db["public"]["serverInfo"]["network"]["host"])?;
         let network = &mut db["public"]["serverInfo"]["network"];
         network["gateways"] = network["networkInterfaces"].clone();
         network["dns"] = json!({
-            "dhcp": [],
+            "dhcpServers": [],
         });
+        db["private"]["authPubkeys"] = json!([]);
 
         Ok(Value::Null)
     }
