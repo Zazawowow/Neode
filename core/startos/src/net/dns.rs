@@ -164,7 +164,8 @@ impl DnsClient {
                 loop {
                     if let Err::<(), Error>(e) = async {
                         let mut stream = file_string_stream("/run/systemd/resolve/resolv.conf")
-                            .filter_map(|a| futures::future::ready(a.transpose())).boxed();
+                            .filter_map(|a| futures::future::ready(a.transpose()))
+                            .boxed();
                         let mut conf: String = stream
                             .next()
                             .await
@@ -172,7 +173,7 @@ impl DnsClient {
                         let mut prev_nameservers = Vec::new();
                         let mut bg = BTreeMap::<SocketAddr, BoxFuture<_>>::new();
                         loop {
-                            let nameservers = conf
+                            let nameservers = dbg!(&conf)
                                 .lines()
                                 .map(|l| l.trim())
                                 .filter_map(|l| l.strip_prefix("nameserver "))
@@ -234,10 +235,14 @@ impl DnsClient {
                                 }
                                 bg.retain(|n, _| nameservers.iter().any(|a| a == n));
                                 prev_nameservers = nameservers;
+                                client.replace(new);
                             }
                             tokio::select! {
                                 c = stream.next() => conf = c.or_not_found("/run/systemd/resolve/resolv.conf")??,
-                                _ = futures::future::join_all(bg.values_mut()) => (),
+                                _ = futures::future::join(
+                                    futures::future::join_all(bg.values_mut()),
+                                    futures::future::pending::<()>(),
+                                ) => (),
                             }
                         }
                     }
@@ -258,6 +263,7 @@ impl DnsClient {
     ) -> Vec<hickory_client::proto::xfer::DnsExchangeSend> {
         self.client.peek(|c| {
             c.iter()
+                .map(|(k, v)| (dbg!(k), v))
                 .map(|(_, c)| c.lookup(query.clone(), options.clone()))
                 .collect()
         })
@@ -332,7 +338,7 @@ impl RequestHandler for Resolver {
         request: &Request,
         mut response_handle: R,
     ) -> ResponseInfo {
-        async {
+        match async {
             let req = request.request_info()?;
             let query = req.query;
             if let Some(ip) = self.resolve(query.name().borrow(), req.src.ip()) {
@@ -415,10 +421,9 @@ impl RequestHandler for Resolver {
                     .lookup(dbg!(query), DnsRequestOptions::default());
                 let mut err = None;
                 for stream in streams.iter_mut() {
-                    match dbg!(stream.next().await) {
-                        None => (),
-                        Some(Err(e)) => err = Some(e),
-                        Some(Ok(msg)) => {
+                    match dbg!(tokio::time::timeout(Duration::from_secs(5), stream.next()).await) {
+                        Ok(Some(Err(e))) => err = Some(e),
+                        Ok(Some(Ok(msg))) => {
                             return response_handle
                                 .send_response(
                                     MessageResponseBuilder::from_message_request(&*request).build(
@@ -431,6 +436,7 @@ impl RequestHandler for Resolver {
                                 )
                                 .await;
                         }
+                        _ => (),
                     }
                 }
                 if let Some(e) = err {
@@ -439,17 +445,41 @@ impl RequestHandler for Resolver {
                 }
                 let mut res = Header::response_from_request(request.header());
                 res.set_response_code(ResponseCode::ServFail);
-                Ok(res.into())
+                response_handle
+                    .send_response(
+                        MessageResponseBuilder::from_message_request(&*request).build(
+                            res,
+                            [],
+                            [],
+                            [],
+                            [],
+                        ),
+                    )
+                    .await
             }
         }
         .await
-        .unwrap_or_else(|e| {
-            tracing::error!("{}", e);
-            tracing::debug!("{:?}", e);
-            let mut res = Header::response_from_request(request.header());
-            res.set_response_code(ResponseCode::ServFail);
-            res.into()
-        })
+        {
+            Ok(a) => a,
+            Err(e) => {
+                tracing::error!("{}", e);
+                tracing::debug!("{:?}", e);
+                let mut res = Header::response_from_request(request.header());
+                res.set_response_code(ResponseCode::ServFail);
+                response_handle
+                    .send_response(
+                        MessageResponseBuilder::from_message_request(&*request).build(
+                            res,
+                            [],
+                            [],
+                            [],
+                            [],
+                        ),
+                    )
+                    .await
+                    .unwrap_or(res.into())
+            }
+        }
     }
 }
 
