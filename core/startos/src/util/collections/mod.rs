@@ -2,6 +2,7 @@ pub mod eq_map;
 pub mod eq_set;
 
 use std::marker::PhantomData;
+use std::ops::Bound;
 
 pub use eq_map::EqMap;
 pub use eq_set::EqSet;
@@ -26,15 +27,15 @@ impl<'a, K: Ord + Clone, V: Clone> Iterator for OrdMapIterMut<'a, K, V> {
     fn next(&mut self) -> Option<Self::Item> {
         unsafe {
             let map: &'a mut OrdMap<K, V> = self.map.as_mut().unwrap();
-            let res = if let Some(k) = self.prev.take() {
-                map.get_next_mut(k)
+            let Some((k, _)) = (if let Some(k) = self.prev.take() {
+                map.range((Bound::Excluded(k), Bound::Unbounded)).next()
             } else {
-                let Some((k, _)) = map.get_min() else {
-                    return None;
-                };
-                let k = k.clone(); // hate that I have to do this but whatev
-                map.get_key_value_mut(&k)
+                map.get_min().map(|(k, v)| (k, v))
+            }) else {
+                return None;
             };
+            let k = k.clone(); // hate that I have to do this but whatev
+            let res = map.get_key_value_mut(&k);
             if let Some((k, _)) = &res {
                 self.prev = Some(*k);
             }

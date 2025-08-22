@@ -22,6 +22,7 @@ use hickory_server::server::{Request, RequestHandler, ResponseHandler, ResponseI
 use hickory_server::ServerFuture;
 use imbl::OrdMap;
 use imbl_value::InternedString;
+use itertools::Itertools;
 use models::{GatewayId, OptionExt, PackageId};
 use rpc_toolkit::{
     from_fn_async, from_fn_blocking, Context, HandlerArgs, HandlerExt, ParentHandler,
@@ -164,7 +165,7 @@ impl DnsClient {
                     if let Err::<(), Error>(e) = async {
                         let mut stream = file_string_stream("/run/systemd/resolve/resolv.conf")
                             .filter_map(|a| futures::future::ready(a.transpose())).boxed();
-                        let mut conf = stream
+                        let mut conf: String = stream
                             .next()
                             .await
                             .or_not_found("/run/systemd/resolve/resolv.conf")??;
@@ -175,6 +176,7 @@ impl DnsClient {
                                 .lines()
                                 .map(|l| l.trim())
                                 .filter_map(|l| l.strip_prefix("nameserver "))
+                                .skip(2)
                                 .map(|n| {
                                     n.parse::<SocketAddr>()
                                         .or_else(|_| n.parse::<IpAddr>().map(|a| (a, 53).into()))
@@ -408,10 +410,12 @@ impl RequestHandler for Resolver {
                 }
             } else {
                 let query = query.original().clone();
-                let mut streams = self.client.lookup(query, DnsRequestOptions::default());
+                let mut streams = self
+                    .client
+                    .lookup(dbg!(query), DnsRequestOptions::default());
                 let mut err = None;
                 for stream in streams.iter_mut() {
-                    match stream.next().await {
+                    match dbg!(stream.next().await) {
                         None => (),
                         Some(Err(e)) => err = Some(e),
                         Some(Ok(msg)) => {
@@ -433,18 +437,9 @@ impl RequestHandler for Resolver {
                     tracing::error!("{e}");
                     tracing::debug!("{e:?}");
                 }
-                let res = Header::response_from_request(request.header());
-                response_handle
-                    .send_response(
-                        MessageResponseBuilder::from_message_request(&*request).build(
-                            res.into(),
-                            [],
-                            [],
-                            [],
-                            [],
-                        ),
-                    )
-                    .await
+                let mut res = Header::response_from_request(request.header());
+                res.set_response_code(ResponseCode::ServFail);
+                Ok(res.into())
             }
         }
         .await

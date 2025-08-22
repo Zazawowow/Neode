@@ -1,4 +1,5 @@
 ls-files = $(shell git ls-files --cached --others --exclude-standard $1) 
+PROFILE = release
 
 PLATFORM_FILE := $(shell ./check-platform.sh)
 ENVIRONMENT_FILE := $(shell ./check-environment.sh)
@@ -23,7 +24,7 @@ WEB_INSTALL_WIZARD_SRC := $(call ls-files, web/projects/install-wizard)
 PATCH_DB_CLIENT_SRC := $(shell git ls-files --recurse-submodules patch-db/client)
 GZIP_BIN := $(shell which pigz || which gzip)
 TAR_BIN := $(shell which gtar || which tar)
-COMPILED_TARGETS := core/target/$(ARCH)-unknown-linux-musl/release/startbox core/target/$(ARCH)-unknown-linux-musl/release/containerbox container-runtime/rootfs.$(ARCH).squashfs
+COMPILED_TARGETS := core/target/$(ARCH)-unknown-linux-musl/$(PROFILE)/startbox core/target/$(ARCH)-unknown-linux-musl/release/containerbox container-runtime/rootfs.$(ARCH).squashfs
 ALL_TARGETS := $(STARTD_SRC) $(ENVIRONMENT_FILE) $(GIT_HASH_FILE) $(VERSION_FILE) $(COMPILED_TARGETS) cargo-deps/$(ARCH)-unknown-linux-musl/release/startos-backup-fs $(PLATFORM_FILE) \
 	$(shell if [ "$(PLATFORM)" = "raspberrypi" ]; then \
 		echo cargo-deps/aarch64-unknown-linux-musl/release/pi-beep; \
@@ -133,7 +134,7 @@ results/$(BASENAME).$(IMAGE_TYPE) results/$(BASENAME).squashfs: $(IMAGE_RECIPE_S
 install: $(ALL_TARGETS) 
 	$(call mkdir,$(DESTDIR)/usr/bin)
 	$(call mkdir,$(DESTDIR)/usr/sbin)
-	$(call cp,core/target/$(ARCH)-unknown-linux-musl/release/startbox,$(DESTDIR)/usr/bin/startbox)
+	$(call cp,core/target/$(ARCH)-unknown-linux-musl/$(PROFILE)/startbox,$(DESTDIR)/usr/bin/startbox)
 	$(call ln,/usr/bin/startbox,$(DESTDIR)/usr/bin/startd)
 	$(call ln,/usr/bin/startbox,$(DESTDIR)/usr/bin/start-cli)
 	if [ "$(PLATFORM)" = "raspberrypi" ]; then $(call cp,cargo-deps/aarch64-unknown-linux-musl/release/pi-beep,$(DESTDIR)/usr/bin/pi-beep); fi
@@ -169,10 +170,10 @@ update-overlay: $(ALL_TARGETS)
 	$(MAKE) install REMOTE=$(REMOTE) SSHPASS=$(SSHPASS) PLATFORM=$(PLATFORM)
 	$(call ssh,"sudo systemctl start startd")
 
-wormhole: core/target/$(ARCH)-unknown-linux-musl/release/startbox
+wormhole: core/target/$(ARCH)-unknown-linux-musl/$(PROFILE)/startbox
 	@echo "Paste the following command into the shell of your StartOS server:"
 	@echo
-	@wormhole send core/target/$(ARCH)-unknown-linux-musl/release/startbox 2>&1 | awk -Winteractive '/wormhole receive/ { printf "sudo /usr/lib/startos/scripts/chroot-and-upgrade \"cd /usr/bin && rm startbox && wormhole receive --accept-file %s && chmod +x startbox\"\n", $$3 }'
+	@wormhole send core/target/$(ARCH)-unknown-linux-musl/$(PROFILE)/startbox 2>&1 | awk -Winteractive '/wormhole receive/ { printf "sudo /usr/lib/startos/scripts/chroot-and-upgrade \"cd /usr/bin && rm startbox && wormhole receive --accept-file %s && chmod +x startbox\"\n", $$3 }'
 
 wormhole-deb: results/$(BASENAME).deb
 	@echo "Paste the following command into the shell of your StartOS server:"
@@ -192,10 +193,10 @@ update: $(ALL_TARGETS)
 	$(MAKE) install REMOTE=$(REMOTE) SSHPASS=$(SSHPASS) DESTDIR=/media/startos/next PLATFORM=$(PLATFORM)
 	$(call ssh,'sudo /media/startos/next/usr/lib/startos/scripts/chroot-and-upgrade --no-sync "apt-get install -y $(shell cat ./build/lib/depends)"')
 
-update-startbox: core/target/$(ARCH)-unknown-linux-musl/release/startbox # only update binary (faster than full update)
+update-startbox: core/target/$(ARCH)-unknown-linux-musl/$(PROFILE)/startbox # only update binary (faster than full update)
 	@if [ -z "$(REMOTE)" ]; then >&2 echo "Must specify REMOTE" && false; fi
 	$(call ssh,'sudo /usr/lib/startos/scripts/chroot-and-upgrade --create')
-	$(call cp,core/target/$(ARCH)-unknown-linux-musl/release/startbox,/media/startos/next/usr/bin/startbox)
+	$(call cp,core/target/$(ARCH)-unknown-linux-musl/$(PROFILE)/startbox,/media/startos/next/usr/bin/startbox)
 	$(call ssh,'sudo /media/startos/next/usr/lib/startos/scripts/chroot-and-upgrade --no-sync true')
 
 update-deb: results/$(BASENAME).deb # better than update, but only available from debian
@@ -269,9 +270,9 @@ build/lib/depends build/lib/conflicts: build/dpkg-deps/*
 $(FIRMWARE_ROMS): build/lib/firmware.json download-firmware.sh $(PLATFORM_FILE)
 	./download-firmware.sh $(PLATFORM)
 
-core/target/$(ARCH)-unknown-linux-musl/release/startbox: $(CORE_SRC) $(COMPRESSED_WEB_UIS) web/patchdb-ui-seed.json $(ENVIRONMENT_FILE)
-	ARCH=$(ARCH) ./core/build-startbox.sh
-	touch core/target/$(ARCH)-unknown-linux-musl/release/startbox
+core/target/$(ARCH)-unknown-linux-musl/$(PROFILE)/startbox: $(CORE_SRC) $(COMPRESSED_WEB_UIS) web/patchdb-ui-seed.json $(ENVIRONMENT_FILE)
+	ARCH=$(ARCH) PROFILE=$(PROFILE) ./core/build-startbox.sh
+	touch core/target/$(ARCH)-unknown-linux-musl/$(PROFILE)/startbox
 
 core/target/$(ARCH)-unknown-linux-musl/release/containerbox: $(CORE_SRC) $(ENVIRONMENT_FILE)
 	ARCH=$(ARCH) ./core/build-containerbox.sh

@@ -25,6 +25,7 @@ use ts_rs::TS;
 use zbus::proxy::{PropertyChanged, PropertyStream, SignalStream};
 use zbus::zvariant::{
     DeserializeDict, Dict, OwnedObjectPath, OwnedValue, Type as ZType, Value as ZValue,
+    DICT_ENTRY_SIG_END_STR,
 };
 use zbus::{proxy, Connection};
 
@@ -1185,17 +1186,10 @@ impl ListenerMap {
 }
 
 pub trait InterfaceFilter: Any + Clone + std::fmt::Debug + Eq + Ord + Send + Sync {
-    #[cfg_attr(feature = "unstable", inline(never))]
     fn filter(&self, id: &GatewayId, info: &NetworkInterfaceInfo) -> bool;
-    #[cfg_attr(feature = "unstable", inline(never))]
-    fn simplify(&self) -> &dyn DynInterfaceFilterT {
-        self
-    }
-    #[cfg_attr(feature = "unstable", inline(never))]
     fn eq(&self, other: &dyn Any) -> bool {
         Some(self) == other.downcast_ref::<Self>()
     }
-    #[cfg_attr(feature = "unstable", inline(never))]
     fn cmp(&self, other: &dyn Any) -> std::cmp::Ordering {
         match (self as &dyn Any).type_id().cmp(&other.type_id()) {
             std::cmp::Ordering::Equal => {
@@ -1204,20 +1198,10 @@ pub trait InterfaceFilter: Any + Clone + std::fmt::Debug + Eq + Ord + Send + Syn
             ord => ord,
         }
     }
-    #[cfg_attr(feature = "unstable", inline(never))]
     fn as_any(&self) -> &dyn Any {
         self
     }
     fn into_dyn(self) -> DynInterfaceFilter {
-        #[cfg(feature = "unstable")]
-        {
-            let res = DynInterfaceFilter::new(self.clone());
-            if !DynInterfaceFilterT::eq(&self, &res) || !DynInterfaceFilterT::eq(&res, &self) {
-                panic!("self != self")
-            }
-            res
-        }
-        #[cfg(not(feature = "unstable"))]
         DynInterfaceFilter::new(self)
     }
 }
@@ -1262,47 +1246,6 @@ impl<A: InterfaceFilter, B: InterfaceFilter> InterfaceFilter for AndFilter<A, B>
     fn filter(&self, id: &GatewayId, info: &NetworkInterfaceInfo) -> bool {
         self.0.filter(id, info) && self.1.filter(id, info)
     }
-    fn simplify(&self) -> &dyn DynInterfaceFilterT {
-        if InterfaceFilter::eq(&self.0, &self.1) {
-            &self.0
-        } else {
-            self
-        }
-    }
-    fn eq(&self, other: &dyn Any) -> bool {
-        if let Some(other) = other.downcast_ref::<Self>() {
-            (InterfaceFilter::eq(&self.0, other.0.as_any())
-                && InterfaceFilter::eq(&self.1, other.1.as_any()))
-                || (InterfaceFilter::eq(&self.0, other.1.as_any())
-                    && InterfaceFilter::eq(&self.1, other.0.as_any()))
-        } else {
-            false
-        }
-    }
-    fn cmp(&self, other: &dyn Any) -> std::cmp::Ordering {
-        if let Some(other) = other.downcast_ref::<Self>() {
-            let mut lhs: [&dyn DynInterfaceFilterT; 2] = [&self.0, &self.1];
-            lhs.sort_by(|a, b| a.cmp(b.as_any()));
-            let mut rhs: [&dyn DynInterfaceFilterT; 2] = [&other.0, &other.1];
-            rhs.sort_by(|a, b| a.cmp(b.as_any()));
-            lhs.iter()
-                .zip_eq(rhs)
-                .fold_while(std::cmp::Ordering::Equal, |acc, (a, b)| {
-                    match a.cmp(b.as_any()) {
-                        std::cmp::Ordering::Equal => itertools::FoldWhile::Continue(acc),
-                        ord => itertools::FoldWhile::Done(ord),
-                    }
-                })
-                .into_inner()
-        } else {
-            match (self as &dyn Any).type_id().cmp(&other.type_id()) {
-                std::cmp::Ordering::Equal => {
-                    std::cmp::Ord::cmp(self, other.downcast_ref::<Self>().unwrap())
-                }
-                ord => ord,
-            }
-        }
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -1310,47 +1253,6 @@ pub struct OrFilter<A, B>(pub A, pub B);
 impl<A: InterfaceFilter, B: InterfaceFilter> InterfaceFilter for OrFilter<A, B> {
     fn filter(&self, id: &GatewayId, info: &NetworkInterfaceInfo) -> bool {
         self.0.filter(id, info) || self.1.filter(id, info)
-    }
-    fn simplify(&self) -> &dyn DynInterfaceFilterT {
-        if InterfaceFilter::eq(&self.0, &self.1) {
-            &self.0
-        } else {
-            self
-        }
-    }
-    fn eq(&self, other: &dyn Any) -> bool {
-        if let Some(other) = other.downcast_ref::<Self>() {
-            (InterfaceFilter::eq(&self.0, other.0.as_any())
-                && InterfaceFilter::eq(&self.1, other.1.as_any()))
-                || (InterfaceFilter::eq(&self.0, other.1.as_any())
-                    && InterfaceFilter::eq(&self.1, other.0.as_any()))
-        } else {
-            false
-        }
-    }
-    fn cmp(&self, other: &dyn Any) -> std::cmp::Ordering {
-        if let Some(other) = other.downcast_ref::<Self>() {
-            let mut lhs: [&dyn DynInterfaceFilterT; 2] = [&self.0, &self.1];
-            lhs.sort_by(|a, b| a.cmp(b.as_any()));
-            let mut rhs: [&dyn DynInterfaceFilterT; 2] = [&other.0, &other.1];
-            rhs.sort_by(|a, b| a.cmp(b.as_any()));
-            lhs.iter()
-                .zip_eq(rhs)
-                .fold_while(std::cmp::Ordering::Equal, |acc, (a, b)| {
-                    match a.cmp(b.as_any()) {
-                        std::cmp::Ordering::Equal => itertools::FoldWhile::Continue(acc),
-                        ord => itertools::FoldWhile::Done(ord),
-                    }
-                })
-                .into_inner()
-        } else {
-            match (self as &dyn Any).type_id().cmp(&other.type_id()) {
-                std::cmp::Ordering::Equal => {
-                    std::cmp::Ord::cmp(self, other.downcast_ref::<Self>().unwrap())
-                }
-                ord => ord,
-            }
-        }
     }
 }
 
@@ -1360,13 +1262,6 @@ impl InterfaceFilter for AnyFilter {
     fn filter(&self, id: &GatewayId, info: &NetworkInterfaceInfo) -> bool {
         self.0.iter().any(|f| InterfaceFilter::filter(f, id, info))
     }
-    fn simplify(&self) -> &dyn DynInterfaceFilterT {
-        match self.0.len() {
-            0 => &false,
-            1 => self.0.first().unwrap(),
-            _ => self,
-        }
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -1374,13 +1269,6 @@ pub struct AllFilter(pub BTreeSet<DynInterfaceFilter>);
 impl InterfaceFilter for AllFilter {
     fn filter(&self, id: &GatewayId, info: &NetworkInterfaceInfo) -> bool {
         self.0.iter().all(|f| InterfaceFilter::filter(f, id, info))
-    }
-    fn simplify(&self) -> &dyn DynInterfaceFilterT {
-        match self.0.len() {
-            0 => &true,
-            1 => self.0.first().unwrap(),
-            _ => self,
-        }
     }
 }
 
@@ -1395,29 +1283,23 @@ impl<T: InterfaceFilter> DynInterfaceFilterT for T {
         InterfaceFilter::filter(self, id, info)
     }
     fn eq(&self, other: &dyn Any) -> bool {
-        let simplified = self.simplify();
-        if (simplified as &dyn Any).is::<Self>() {
-            InterfaceFilter::eq(self, other)
-        } else {
-            dbg!(simplified.eq(other))
-        }
+        InterfaceFilter::eq(self, other)
     }
     fn cmp(&self, other: &dyn Any) -> std::cmp::Ordering {
-        let simplified = self.simplify();
-        if (simplified as &dyn Any).is::<Self>() {
-            InterfaceFilter::cmp(self, other)
-        } else {
-            simplified.cmp(other)
-        }
+        InterfaceFilter::cmp(self, other)
     }
     fn as_any(&self) -> &dyn Any {
-        let simplified = self.simplify();
-        if (simplified as &dyn Any).is::<Self>() {
-            InterfaceFilter::as_any(self)
-        } else {
-            simplified.as_any()
-        }
+        InterfaceFilter::as_any(self)
     }
+}
+
+#[test]
+fn test_interface_filter_eq() {
+    let dyn_t = true.into_dyn();
+    assert!(DynInterfaceFilterT::eq(
+        &dyn_t,
+        DynInterfaceFilterT::as_any(&true),
+    ))
 }
 
 #[derive(Clone, Debug)]
@@ -1582,7 +1464,7 @@ impl NetworkInterfaceListener {
         filter: &impl InterfaceFilter,
     ) -> Poll<Result<Accepted, Error>> {
         while self.ip_info.poll_changed(cx).is_ready()
-            || !InterfaceFilter::eq(&self.listeners.prev_filter, filter)
+            || !DynInterfaceFilterT::eq(&self.listeners.prev_filter, filter.as_any())
         {
             self.ip_info
                 .peek_and_mark_seen(|ip_info| self.listeners.update(ip_info, filter))?;
