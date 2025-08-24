@@ -576,4 +576,5 @@ export default {
   609: 'Subdomains von',
   610: 'Dynamisches DNS',
   611: 'Keine Service-Schnittstellen',
+  612: 'Grund',
 } satisfies i18n

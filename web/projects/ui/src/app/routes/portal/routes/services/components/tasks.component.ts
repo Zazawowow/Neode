@@ -20,7 +20,7 @@ import { i18nPipe } from '@start9labs/shared'
           <th tuiTh>{{ 'Service' | i18n }}</th>
           <th tuiTh>{{ 'Action' }}</th>
           <th tuiTh>{{ 'Severity' }}</th>
-          <th tuiTh>{{ 'Description' | i18n }}</th>
+          <th tuiTh>{{ 'Reason' | i18n }}</th>
           <th tuiTh></th>
         </tr>
       </thead>

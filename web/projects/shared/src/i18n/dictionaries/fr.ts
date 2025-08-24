@@ -576,4 +576,5 @@ export default {
   609: 'Sous-domaines de',
   610: 'DNS dynamique',
   611: 'Aucune interface de service',
+  612: 'Raison',
 } satisfies i18n

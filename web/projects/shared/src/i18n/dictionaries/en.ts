@@ -575,4 +575,5 @@ export const ENGLISH = {
   'subdomains of': 609, // this is a partial sentence. A domain name will be added after "of" to complete the sentence.
   'Dynamic DNS': 610,
   'No service interfaces': 611, // as in, there are no available interfaces (API, UI, etc) for this software application
+  'Reason': 612, // as in, an explanation for something
 } as const
