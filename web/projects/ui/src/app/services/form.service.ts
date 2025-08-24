@@ -140,6 +140,8 @@ export class FormService {
       case 'multiselect':
         value = currentValue === undefined ? spec.default : currentValue
         return this.formBuilder.control(value, multiselectValidators(spec))
+      case 'hidden':
+        return this.formBuilder.control(currentValue || null)
       case 'file':
         return this.formBuilder.control(null, fileValidators(spec))
       default:
