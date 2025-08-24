@@ -115,7 +115,6 @@ export class MarketplaceService {
     flavor: string | null,
     registryUrl?: string,
   ): Observable<MarketplacePkg> {
-    console.log('HERE')
     return this.currentRegistry$.pipe(
       switchMap(registry => {
         const url = registryUrl || registry.url
