@@ -450,15 +450,6 @@ export namespace RR {
   export type GetRegistryPackagesRes = GetPackagesRes
 }
 
-export type Breakages = {
-  [id: string]: TaggedDependencyError
-}
-
-export type TaggedDependencyError = {
-  dependency: string
-  error: DependencyError
-}
-
 interface MetricData {
   value: string
   unit: string
@@ -620,41 +611,6 @@ declare global {
 
 export type Encrypted = {
   encrypted: string
-}
-
-export type DependencyError =
-  | DependencyErrorNotInstalled
-  | DependencyErrorNotRunning
-  | DependencyErrorIncorrectVersion
-  | DependencyErrorActionRequired
-  | DependencyErrorHealthChecksFailed
-  | DependencyErrorTransitive
-
-export type DependencyErrorNotInstalled = {
-  type: 'notInstalled'
-}
-
-export type DependencyErrorNotRunning = {
-  type: 'notRunning'
-}
-
-export type DependencyErrorIncorrectVersion = {
-  type: 'incorrectVersion'
-  expected: string // version range
-  received: string // version
-}
-
-export interface DependencyErrorActionRequired {
-  type: 'actionRequired'
-}
-
-export type DependencyErrorHealthChecksFailed = {
-  type: 'healthChecksFailed'
-  check: T.NamedHealthCheckResult
-}
-
-export type DependencyErrorTransitive = {
-  type: 'transitive'
 }
 
 // @TODO 041
