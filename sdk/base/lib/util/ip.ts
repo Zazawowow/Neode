@@ -31,6 +31,9 @@ export class IpAddress {
       throw new Error("invalid ip address")
     }
   }
+  static parse(address: string): IpAddress {
+    return new IpAddress(address)
+  }
   isIpv4(): boolean {
     return this.octets.length === 4
   }
@@ -48,6 +51,9 @@ export class IpNet extends IpAddress {
     const [address, prefixStr] = ipnet.split("/", 2)
     super(address)
     this.prefix = Number(prefixStr)
+  }
+  static parse(ipnet: string): IpNet {
+    return new IpNet(ipnet)
   }
   contains(address: string | IpAddress): boolean {
     if (typeof address === "string") address = new IpAddress(address)
@@ -75,3 +81,5 @@ export const PRIVATE_IPV4_RANGES = [
 ]
 
 export const IPV6_LINK_LOCAL = new IpNet("fe80::/10")
+
+export const CGNAT = new IpNet("100.64.0.0/10")

@@ -863,6 +863,16 @@ impl NetworkInterfaceController {
     ) -> Result<(), Error> {
         tracing::debug!("syncronizing {info:?} to db");
 
+        db.mutate(|db| {
+            db.as_public_mut()
+                .as_server_info_mut()
+                .as_network_mut()
+                .as_gateways_mut()
+                .ser(info)
+        })
+        .await
+        .result?;
+
         let ntp: BTreeSet<_> = info
             .values()
             .filter_map(|i| i.ip_info.as_ref())

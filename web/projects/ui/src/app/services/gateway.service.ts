@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core'
 import { PatchDB } from 'patch-db-client'
-import { T } from '@start9labs/start-sdk'
+import { T, utils } from '@start9labs/start-sdk'
 import { map } from 'rxjs/operators'
 import { DataModel } from './patch-db/data-model'
 import { toSignal } from '@angular/core/rxjs-interop'
@@ -8,7 +8,10 @@ import { toSignal } from '@angular/core/rxjs-interop'
 export type GatewayPlus = T.NetworkInterfaceInfo & {
   id: string
   ipInfo: T.IpInfo
+  subnets: utils.IpNet[]
   lanIpv4: string[]
+  wanIp?: utils.IpAddress
+  public: boolean
 }
 
 @Injectable()
@@ -20,16 +23,20 @@ export class GatewayService {
         map(gateways =>
           Object.entries(gateways)
             .filter(([_, val]) => !!val?.ipInfo)
-            .map(
-              ([id, val]) =>
-                ({
-                  ...val,
-                  id,
-                  lanIpv4: val?.ipInfo?.subnets
-                    .filter(s => !s.includes('::'))
-                    .map(s => s.split('/')[0]),
-                }) as GatewayPlus,
-            ),
+            .map(([id, val]) => {
+              const subnets =
+                val?.ipInfo?.subnets.map(s => utils.IpNet.parse(s)) ?? []
+              return {
+                ...val,
+                id,
+                subnets,
+                lanIpv4: subnets.filter(s => s.isIpv4()).map(s => s.address),
+                public: val?.public ?? subnets.some(s => s.isPublic()),
+                wanIp:
+                  val?.ipInfo?.wanIp &&
+                  utils.IpAddress.parse(val?.ipInfo?.wanIp),
+              } as GatewayPlus
+            }),
         ),
       ),
   )

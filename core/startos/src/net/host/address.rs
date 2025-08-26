@@ -3,17 +3,17 @@ use std::collections::BTreeSet;
 use clap::Parser;
 use imbl_value::InternedString;
 use models::GatewayId;
-use rpc_toolkit::{Context, Empty, HandlerArgs, HandlerExt, ParentHandler, from_fn_async};
+use rpc_toolkit::{from_fn_async, Context, Empty, HandlerArgs, HandlerExt, ParentHandler};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 use crate::context::{CliContext, RpcContext};
 use crate::db::model::DatabaseModel;
 use crate::net::acme::AcmeProvider;
-use crate::net::host::{HostApiKind, all_hosts};
+use crate::net::host::{all_hosts, HostApiKind};
 use crate::net::tor::OnionAddress;
 use crate::prelude::*;
-use crate::util::serde::{HandlerExtSerde, display_serializable};
+use crate::util::serde::{display_serializable, HandlerExtSerde};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -73,8 +73,8 @@ fn check_duplicates(db: &DatabaseModel) -> Result<(), Error> {
     Ok(())
 }
 
-pub fn address_api<C: Context, Kind: HostApiKind>()
--> ParentHandler<C, Kind::Params, Kind::InheritedParams> {
+pub fn address_api<C: Context, Kind: HostApiKind>(
+) -> ParentHandler<C, Kind::Params, Kind::InheritedParams> {
     ParentHandler::<C, Kind::Params, Kind::InheritedParams>::new()
         .subcommand(
             "domain",
@@ -200,7 +200,7 @@ pub fn address_api<C: Context, Kind: HostApiKind>()
 
 #[derive(Deserialize, Serialize, Parser)]
 pub struct AddPublicDomainParams {
-    pub domain: InternedString,
+    pub fqdn: InternedString,
     #[arg(long)]
     pub acme: Option<AcmeProvider>,
     pub gateway: GatewayId,
@@ -209,7 +209,7 @@ pub struct AddPublicDomainParams {
 pub async fn add_public_domain<Kind: HostApiKind>(
     ctx: RpcContext,
     AddPublicDomainParams {
-        ref domain,
+        ref fqdn,
         acme,
         gateway,
     }: AddPublicDomainParams,
@@ -231,7 +231,7 @@ pub async fn add_public_domain<Kind: HostApiKind>(
 
             Kind::host_for(&inheritance, db)?
                 .as_public_domains_mut()
-                .insert(domain, &PublicDomainConfig { acme, gateway })?;
+                .insert(fqdn, &PublicDomainConfig { acme, gateway })?;
             check_duplicates(db)
         })
         .await
@@ -266,19 +266,19 @@ pub async fn remove_public_domain<Kind: HostApiKind>(
 
 #[derive(Deserialize, Serialize, Parser)]
 pub struct AddPrivateDomainParams {
-    pub domain: InternedString,
+    pub fqdn: InternedString,
 }
 
 pub async fn add_private_domain<Kind: HostApiKind>(
     ctx: RpcContext,
-    AddPrivateDomainParams { domain }: AddPrivateDomainParams,
+    AddPrivateDomainParams { fqdn }: AddPrivateDomainParams,
     inheritance: Kind::Inheritance,
 ) -> Result<(), Error> {
     ctx.db
         .mutate(|db| {
             Kind::host_for(&inheritance, db)?
                 .as_private_domains_mut()
-                .mutate(|d| Ok(d.insert(domain)))?;
+                .mutate(|d| Ok(d.insert(fqdn)))?;
             check_duplicates(db)
         })
         .await

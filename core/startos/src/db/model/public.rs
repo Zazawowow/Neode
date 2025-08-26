@@ -19,8 +19,8 @@ use crate::account::AccountInfo;
 use crate::db::model::package::AllPackageData;
 use crate::net::acme::AcmeProvider;
 use crate::net::forward::START9_BRIDGE_IFACE;
-use crate::net::host::Host;
 use crate::net::host::binding::{AddSslOptions, BindInfo, BindOptions, NetInfo};
+use crate::net::host::Host;
 use crate::net::utils::ipv6_is_local;
 use crate::net::vhost::AlpnInfo;
 use crate::prelude::*;
@@ -283,11 +283,9 @@ impl NetworkInterfaceInfo {
                     })
                     .collect::<BTreeSet<_>>();
                 if !ip4s.is_empty() {
-                    return ip4s.iter().all(|ip4| {
-                        ip4.is_loopback()
-                    // || (ip4.is_private() && !ip4.octets().starts_with(&[10, 59])) // reserving 10.59 for public wireguard configurations
-                    || ip4.is_link_local()
-                    });
+                    return ip4s
+                        .iter()
+                        .all(|ip4| ip4.is_loopback() || ip4.is_private() || ip4.is_link_local());
                 }
                 ip_info.subnets.iter().all(|ipnet| {
                     if let IpAddr::V6(ip6) = ipnet.addr() {

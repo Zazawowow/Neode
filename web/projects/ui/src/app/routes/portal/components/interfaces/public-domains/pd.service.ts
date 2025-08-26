@@ -241,7 +241,7 @@ export class PublicDomainService {
         default: '',
         disabled: data.gateways
           .filter(
-            g => !g.ipInfo.wanIp || g.ipInfo.wanIp.split('.').at(-1) === '100',
+            g => !g.ipInfo?.wanIp || utils.CGNAT.contains(g.ipInfo?.wanIp),
           )
           .map(g => g.id),
       })),

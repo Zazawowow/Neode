@@ -1,11 +1,11 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
 
-use clap::Parser;
 use clap::builder::ValueParserFactory;
+use clap::Parser;
 use imbl::OrdSet;
 use models::{FromStrParser, GatewayId, HostId};
-use rpc_toolkit::{Context, Empty, HandlerArgs, HandlerExt, ParentHandler, from_fn_async};
+use rpc_toolkit::{from_fn_async, Context, Empty, HandlerArgs, HandlerExt, ParentHandler};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
@@ -16,7 +16,7 @@ use crate::net::gateway::InterfaceFilter;
 use crate::net::host::HostApiKind;
 use crate::net::vhost::AlpnInfo;
 use crate::prelude::*;
-use crate::util::serde::{HandlerExtSerde, display_serializable};
+use crate::util::serde::{display_serializable, HandlerExtSerde};
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, TS)]
 #[ts(export)]
@@ -136,9 +136,9 @@ impl BindInfo {
 impl InterfaceFilter for NetInfo {
     fn filter(&self, id: &GatewayId, info: &NetworkInterfaceInfo) -> bool {
         if info.public() {
-            self.public_enabled.contains(id)
+            dbg!(self.public_enabled.contains(id))
         } else {
-            !self.private_disabled.contains(id)
+            dbg!(!self.private_disabled.contains(id))
         }
     }
 }
@@ -169,8 +169,8 @@ pub struct AddSslOptions {
     pub alpn: Option<AlpnInfo>,
 }
 
-pub fn binding<C: Context, Kind: HostApiKind>()
--> ParentHandler<C, Kind::Params, Kind::InheritedParams> {
+pub fn binding<C: Context, Kind: HostApiKind>(
+) -> ParentHandler<C, Kind::Params, Kind::InheritedParams> {
     ParentHandler::<C, Kind::Params, Kind::InheritedParams>::new()
         .subcommand(
             "list",
