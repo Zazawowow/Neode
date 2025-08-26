@@ -157,7 +157,7 @@ export class PublicDomainService {
     gatewayId: string,
     authority: 'local' | string,
   ) {
-    const gateway = this.data()!.gateways.find(g => (g.id = gatewayId))!
+    const gateway = this.data()!.gateways.find(g => g.id === gatewayId)!
 
     const loader = this.loader.open('Saving').subscribe()
     const params = {
@@ -178,6 +178,7 @@ export class PublicDomainService {
       }
 
       const wanIp = gateway.ipInfo.wanIp
+
       let message = this.i18n.transform(
         'Create one of the DNS records below.',
       ) as i18nKey

@@ -123,7 +123,7 @@ export class DnsComponent {
       ]
     }
 
-    const segments = subdomain.split('.')
+    const segments = subdomain.split('.').slice(1)
 
     const subdomains = this.i18n.transform('subdomains of')
 
@@ -133,7 +133,7 @@ export class DnsComponent {
         purpose: `only ${subdomain}`,
       },
       ...segments.map((_, i) => {
-        const parent = segments.slice(i + 1).join('.')
+        const parent = segments.slice(i).join('.')
         return {
           host: `*.${parent}`,
           purpose: `${subdomains} ${parent}`,
