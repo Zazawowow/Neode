@@ -95,7 +95,7 @@ export class ServiceDependenciesComponent {
         return 'Incorrect version'
       case 'notRunning':
         return 'Not running'
-      case 'actionRequired':
+      case 'taskRequired':
         return 'Task Required'
       case 'healthChecksFailed':
         return 'Required health check not passing'

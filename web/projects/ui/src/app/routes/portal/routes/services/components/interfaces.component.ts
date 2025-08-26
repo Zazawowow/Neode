@@ -9,6 +9,7 @@ import { tuiDefaultSort } from '@taiga-ui/cdk'
 import { PackageDataEntry } from 'src/app/services/patch-db/data-model'
 import { ServiceInterfaceItemComponent } from './interface-item.component'
 import { i18nPipe } from '@start9labs/shared'
+import { PlaceholderComponent } from '../../../components/placeholder.component'
 
 @Component({
   selector: 'service-interfaces',
@@ -31,6 +32,10 @@ import { i18nPipe } from '@start9labs/shared'
             [pkg]="pkg()"
             [disabled]="disabled()"
           ></tr>
+        } @empty {
+          <app-placeholder icon="@tui.monitor-x">
+            {{ 'No service interfaces' | i18n }}
+          </app-placeholder>
         }
       </tbody>
     </table>
@@ -42,7 +47,12 @@ import { i18nPipe } from '@start9labs/shared'
   `,
   host: { class: 'g-card' },
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ServiceInterfaceItemComponent, TuiTable, i18nPipe],
+  imports: [
+    ServiceInterfaceItemComponent,
+    TuiTable,
+    i18nPipe,
+    PlaceholderComponent,
+  ],
 })
 export class ServiceInterfacesComponent {
   readonly pkg = input.required<PackageDataEntry>()

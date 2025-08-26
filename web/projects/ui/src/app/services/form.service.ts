@@ -84,7 +84,6 @@ export class FormService {
     currentValue?: any,
   ): UntypedFormGroup | UntypedFormArray | UntypedFormControl {
     let value: any
-    console.log(spec)
     switch (spec.type) {
       case 'text':
         if (currentValue !== undefined) {
@@ -140,6 +139,8 @@ export class FormService {
       case 'multiselect':
         value = currentValue === undefined ? spec.default : currentValue
         return this.formBuilder.control(value, multiselectValidators(spec))
+      case 'hidden':
+        return this.formBuilder.control(currentValue || null)
       case 'file':
         return this.formBuilder.control(null, fileValidators(spec))
       default:

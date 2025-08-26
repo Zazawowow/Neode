@@ -28,7 +28,7 @@ export function getInstalledPrimaryStatus({
   return Object.values(tasks)
     .filter(t => !!t)
     .some(t => t.active && t.task.severity === 'critical')
-    ? 'actionRequired'
+    ? 'taskRequired'
     : status.main
 }
 
@@ -71,7 +71,7 @@ export type PrimaryStatus =
   | 'restarting'
   | 'stopped'
   | 'backingUp'
-  | 'actionRequired'
+  | 'taskRequired'
   | 'error'
 
 export type DependencyStatus = 'warning' | 'satisfied'
@@ -127,7 +127,7 @@ export const PrimaryRendering: Record<PrimaryStatus, StatusRendering> = {
     color: 'success',
     showDots: false,
   },
-  actionRequired: {
+  taskRequired: {
     display: 'Task Required',
     color: 'warning',
     showDots: false,

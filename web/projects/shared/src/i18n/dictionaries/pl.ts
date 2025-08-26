@@ -575,4 +575,5 @@ export default {
   608: 'Cel',
   609: 'Subdomeny',
   610: 'Dynamiczny DNS',
+  611: 'Brak interfejsów usług',
 } satisfies i18n

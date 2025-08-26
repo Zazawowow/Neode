@@ -10,10 +10,45 @@ import {
 import deepEqual from 'fast-deep-equal'
 import { Observable } from 'rxjs'
 import { isInstalled } from 'src/app/utils/get-package-data'
-import { DependencyError } from './api/api.types'
+import { T } from '@start9labs/start-sdk'
 
 export type AllDependencyErrors = Record<string, PkgDependencyErrors>
 export type PkgDependencyErrors = Record<string, DependencyError | null>
+
+export type DependencyError =
+  | DependencyErrorNotInstalled
+  | DependencyErrorNotRunning
+  | DependencyErrorIncorrectVersion
+  | DependencyErrorTaskRequired
+  | DependencyErrorHealthChecksFailed
+  | DependencyErrorTransitive
+
+export type DependencyErrorNotInstalled = {
+  type: 'notInstalled'
+}
+
+export type DependencyErrorNotRunning = {
+  type: 'notRunning'
+}
+
+export type DependencyErrorIncorrectVersion = {
+  type: 'incorrectVersion'
+  expected: string // version range
+  received: string // version
+}
+
+export interface DependencyErrorTaskRequired {
+  type: 'taskRequired'
+}
+
+export type DependencyErrorHealthChecksFailed = {
+  type: 'healthChecksFailed'
+  check: T.NamedHealthCheckResult
+}
+
+export type DependencyErrorTransitive = {
+  type: 'transitive'
+}
 
 @Injectable({
   providedIn: 'root',
@@ -113,7 +148,7 @@ export class DepErrorService {
         )
     ) {
       return {
-        type: 'actionRequired',
+        type: 'taskRequired',
       }
     }
 
