@@ -27,6 +27,9 @@ import { i18nPipe } from '@start9labs/shared'
               <th tuiTh [requiredSort]="true" [sorter]="name">
                 {{ 'Name' | i18n }}
               </th>
+              <th tuiTh [requiredSort]="true" [sorter]="status">
+                {{ 'Status' | i18n }}
+              </th>
               <th tuiTh>{{ 'Version' | i18n }}</th>
               <th
                 tuiTh
@@ -35,9 +38,6 @@ import { i18nPipe } from '@start9labs/shared'
                 [style.width.rem]="10"
               >
                 {{ 'Uptime' | i18n }}
-              </th>
-              <th tuiTh [requiredSort]="true" [sorter]="status">
-                {{ 'Status' | i18n }}
               </th>
               <th [style.width.rem]="8" [style.text-indent.rem]="1.5"></th>
             </tr>
