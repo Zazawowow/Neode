@@ -325,7 +325,10 @@ export namespace RR {
   }
   export type OsUiRemovePrivateDomainRes = null
 
-  export type PkgBindingToggleGatewayReq = ServerBindingToggleGatewayReq & {
+  export type PkgBindingToggleGatewayReq = Omit<
+    ServerBindingToggleGatewayReq,
+    'internalPort'
+  > & {
     // package.host.binding.set-gateway-enabled
     internalPort: number
     package: T.PackageId // string

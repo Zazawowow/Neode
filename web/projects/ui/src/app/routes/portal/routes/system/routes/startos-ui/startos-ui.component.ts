@@ -98,7 +98,6 @@ export default class StartOsUiComponent {
       torDomains: network.host.onions.map(o => `${o}.onion`),
       publicDomains: getPublicDomains(network.host.publicDomains, gateways),
       privateDomains: network.host.privateDomains,
-      isOs: true,
     }
   })
 }

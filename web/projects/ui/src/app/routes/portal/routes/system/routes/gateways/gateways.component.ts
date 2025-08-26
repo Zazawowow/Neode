@@ -131,6 +131,13 @@ export default class GatewaysComponent {
             handler: async (input: typeof spec._TYPE) => {
               const loader = this.loader.open('Saving').subscribe()
 
+              console.log('FILE', input.config.value.file)
+
+              console.log(
+                'FILE STRINGIFIED',
+                JSON.stringify(input.config.value.file),
+              )
+
               try {
                 await this.api.addTunnel({
                   name: input.name,

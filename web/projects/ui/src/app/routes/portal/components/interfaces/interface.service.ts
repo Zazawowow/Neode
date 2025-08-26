@@ -488,7 +488,6 @@ export type MappedServiceInterface = T.ServiceInterface & {
     common: DisplayAddress[]
     uncommon: DisplayAddress[]
   }
-  isOs: boolean
 }
 
 export type InterfaceGateway = GatewayPlus & {

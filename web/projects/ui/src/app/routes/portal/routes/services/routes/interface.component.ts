@@ -135,7 +135,6 @@ export default class ServiceInterfaceRoute {
       torDomains: host.onions.map(o => `${o}.onion`),
       publicDomains: getPublicDomains(host.publicDomains, gateways),
       privateDomains: host.privateDomains,
-      isOs: false,
     }
   })
 

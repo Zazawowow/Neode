@@ -1,11 +1,18 @@
 import { CommonModule } from '@angular/common'
-import { ChangeDetectionStrategy, Component, input } from '@angular/core'
+import {
+  ChangeDetectionStrategy,
+  Component,
+  input,
+  inject,
+} from '@angular/core'
 import { TuiTitle } from '@taiga-ui/core'
 import { TuiSkeleton, TuiSwitch } from '@taiga-ui/kit'
 import { FormsModule } from '@angular/forms'
-import { i18nPipe } from '@start9labs/shared'
+import { i18nPipe, LoadingService, ErrorService } from '@start9labs/shared'
 import { TuiCell } from '@taiga-ui/layout'
 import { InterfaceGateway } from './interface.service'
+import { ApiService } from 'src/app/services/api/embassy-api.service'
+import { InterfaceComponent } from './interface.component'
 
 @Component({
   selector: 'section[gateways]',
@@ -21,7 +28,7 @@ import { InterfaceGateway } from './interface.service'
           [showIcons]="false"
           [ngModel]="gateway.enabled"
           (ngModelChange)="onToggle(gateway)"
-          [disabled]="isOs() && !gateway.public"
+          [disabled]="!interface.packageId() && !gateway.public"
         />
       </label>
     } @empty {
@@ -54,8 +61,39 @@ import { InterfaceGateway } from './interface.service'
   ],
 })
 export class InterfaceGatewaysComponent {
-  readonly gateways = input.required<InterfaceGateway[] | undefined>()
-  readonly isOs = input.required<boolean>()
+  private readonly loader = inject(LoadingService)
+  private readonly errorService = inject(ErrorService)
+  private readonly api = inject(ApiService)
+  readonly interface = inject(InterfaceComponent)
 
-  async onToggle(gateway: InterfaceGateway) {}
+  readonly gateways = input.required<InterfaceGateway[] | undefined>()
+
+  async onToggle(gateway: InterfaceGateway) {
+    const addressInfo = this.interface.value()!.addressInfo
+    const pkgId = this.interface.packageId()
+
+    const loader = this.loader.open().subscribe()
+
+    try {
+      if (pkgId) {
+        await this.api.pkgBindingToggleGateway({
+          gateway: gateway.id,
+          enabled: !gateway.enabled,
+          internalPort: addressInfo.internalPort,
+          host: addressInfo.hostId,
+          package: pkgId,
+        })
+      } else {
+        await this.api.serverBindingToggleGateway({
+          gateway: gateway.id,
+          enabled: !gateway.enabled,
+          internalPort: 80,
+        })
+      }
+    } catch (e: any) {
+      this.errorService.handleError(e)
+    } finally {
+      loader.unsubscribe()
+    }
+  }
 }

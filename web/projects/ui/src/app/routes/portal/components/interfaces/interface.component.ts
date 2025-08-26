@@ -11,10 +11,7 @@ import { InterfaceAddressesComponent } from './addresses/addresses.component'
   selector: 'service-interface',
   template: `
     <div>
-      <section
-        [gateways]="value()?.gateways"
-        [isOs]="!!value()?.isOs"
-      ></section>
+      <section [gateways]="value()?.gateways"></section>
       <section [publicDomains]="value()?.publicDomains"></section>
       <section [torDomains]="value()?.torDomains"></section>
       <section [privateDomains]="value()?.privateDomains"></section>
