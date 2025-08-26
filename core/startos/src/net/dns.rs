@@ -173,7 +173,7 @@ impl DnsClient {
                         let mut prev_nameservers = Vec::new();
                         let mut bg = BTreeMap::<SocketAddr, BoxFuture<_>>::new();
                         loop {
-                            let nameservers = dbg!(&conf)
+                            let nameservers = conf
                                 .lines()
                                 .map(|l| l.trim())
                                 .filter_map(|l| l.strip_prefix("nameserver "))
@@ -263,7 +263,6 @@ impl DnsClient {
     ) -> Vec<hickory_client::proto::xfer::DnsExchangeSend> {
         self.client.peek(|c| {
             c.iter()
-                .map(|(k, v)| (dbg!(k), v))
                 .map(|(_, c)| c.lookup(query.clone(), options.clone()))
                 .collect()
         })
@@ -418,16 +417,16 @@ impl RequestHandler for Resolver {
                 let query = query.original().clone();
                 let mut streams = self
                     .client
-                    .lookup(dbg!(query), DnsRequestOptions::default());
+                    .lookup(query, DnsRequestOptions::default());
                 let mut err = None;
                 for stream in streams.iter_mut() {
-                    match dbg!(tokio::time::timeout(Duration::from_secs(5), stream.next()).await) {
+                    match tokio::time::timeout(Duration::from_secs(5), stream.next()).await {
                         Ok(Some(Err(e))) => err = Some(e),
                         Ok(Some(Ok(msg))) => {
                             return response_handle
                                 .send_response(
                                     MessageResponseBuilder::from_message_request(&*request).build(
-                                        msg.header().clone(),
+                                        Header::response_from_request(request.header()),
                                         msg.answers(),
                                         msg.name_servers(),
                                         &msg.soa().map(|s| s.to_owned().into_record_of_rdata()),
