@@ -25,9 +25,9 @@ export function getInstalledPrimaryStatus({
   tasks,
   status,
 }: T.PackageDataEntry): PrimaryStatus {
-  return Object.values(tasks)
-    .filter(t => !!t)
-    .some(t => t.active && t.task.severity === 'critical')
+  return Object.values(tasks).some(
+    t => t.active && t.task.severity === 'critical',
+  )
     ? 'taskRequired'
     : status.main
 }
