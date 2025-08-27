@@ -1339,12 +1339,12 @@ export class MockApiService extends ApiService {
 
   async addTorKey(params: RR.AddTorKeyReq): Promise<RR.AddTorKeyRes> {
     await pauseFor(2000)
-    return 'vanityabcdefghijklmnop'
+    return 'vanityabcdefghijklmnop.onion'
   }
 
   async generateTorKey(params: RR.GenerateTorKeyReq): Promise<RR.AddTorKeyRes> {
     await pauseFor(2000)
-    return 'abcdefghijklmnopqrstuv'
+    return 'abcdefghijklmnopqrstuv.onion'
   }
 
   async serverBindingToggleGateway(

@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-arti-client = { version = "0.33", features = ["full"] }
+arti-client = { version = "0.33", default-features = false, git = "https://github.com/Start9Labs/arti.git", branch = "patch/disable-exit" }
 axum = "0.8.4"
 base64 = "0.22.1"
 color-eyre = "0.6.2"

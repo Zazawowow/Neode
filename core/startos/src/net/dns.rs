@@ -10,34 +10,34 @@ use futures::future::BoxFuture;
 use futures::{FutureExt, StreamExt, TryStreamExt};
 use helpers::NonDetachingJoinHandle;
 use hickory_client::client::Client;
+use hickory_client::proto::DnsHandle;
 use hickory_client::proto::runtime::TokioRuntimeProvider;
 use hickory_client::proto::tcp::TcpClientStream;
 use hickory_client::proto::udp::UdpClientStream;
 use hickory_client::proto::xfer::{DnsExchangeBackground, DnsRequestOptions};
-use hickory_client::proto::DnsHandle;
+use hickory_server::ServerFuture;
 use hickory_server::authority::MessageResponseBuilder;
 use hickory_server::proto::op::{Header, ResponseCode};
 use hickory_server::proto::rr::{Name, Record, RecordType};
 use hickory_server::server::{Request, RequestHandler, ResponseHandler, ResponseInfo};
-use hickory_server::ServerFuture;
 use imbl::OrdMap;
 use imbl_value::InternedString;
 use itertools::Itertools;
 use models::{GatewayId, OptionExt, PackageId};
 use rpc_toolkit::{
-    from_fn_async, from_fn_blocking, Context, HandlerArgs, HandlerExt, ParentHandler,
+    Context, HandlerArgs, HandlerExt, ParentHandler, from_fn_async, from_fn_blocking,
 };
 use serde::{Deserialize, Serialize};
 use tokio::net::{TcpListener, UdpSocket};
 use tracing::instrument;
 
 use crate::context::RpcContext;
-use crate::db::model::public::NetworkInterfaceInfo;
 use crate::db::model::Database;
+use crate::db::model::public::NetworkInterfaceInfo;
 use crate::net::gateway::NetworkInterfaceWatcher;
 use crate::prelude::*;
 use crate::util::io::file_string_stream;
-use crate::util::serde::{display_serializable, HandlerExtSerde};
+use crate::util::serde::{HandlerExtSerde, display_serializable};
 use crate::util::sync::{SyncRwLock, Watch};
 
 pub fn dns_api<C: Context>() -> ParentHandler<C> {
@@ -349,11 +349,7 @@ impl RequestHandler for Resolver {
                                     Header::response_from_request(request.header()),
                                     &ip.into_iter()
                                         .filter_map(|a| {
-                                            if let IpAddr::V4(a) = a {
-                                                Some(a)
-                                            } else {
-                                                None
-                                            }
+                                            if let IpAddr::V4(a) = a { Some(a) } else { None }
                                         })
                                         .map(|ip| {
                                             Record::from_rdata(
@@ -377,11 +373,7 @@ impl RequestHandler for Resolver {
                                     Header::response_from_request(request.header()),
                                     &ip.into_iter()
                                         .filter_map(|a| {
-                                            if let IpAddr::V6(a) = a {
-                                                Some(a)
-                                            } else {
-                                                None
-                                            }
+                                            if let IpAddr::V6(a) = a { Some(a) } else { None }
                                         })
                                         .map(|ip| {
                                             Record::from_rdata(
@@ -415,9 +407,7 @@ impl RequestHandler for Resolver {
                 }
             } else {
                 let query = query.original().clone();
-                let mut streams = self
-                    .client
-                    .lookup(query, DnsRequestOptions::default());
+                let mut streams = self.client.lookup(query, DnsRequestOptions::default());
                 let mut err = None;
                 for stream in streams.iter_mut() {
                     match tokio::time::timeout(Duration::from_secs(5), stream.next()).await {

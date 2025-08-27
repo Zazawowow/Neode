@@ -114,13 +114,15 @@ export default class ServiceInterfaceRoute {
 
     const { serviceInterfaces, hosts } = pkg
     const iFace = serviceInterfaces[this.interfaceId()]
-    const key = iFace?.addressInfo.hostId || ''
+    const key = iFace!.addressInfo.hostId || ''
     const host = hosts[key]
-    const port = iFace?.addressInfo.internalPort
+    const port = iFace!.addressInfo.internalPort
 
     if (!host || !iFace || !port) {
       return
     }
+
+    const binding = host.bindings[port]
 
     const gateways = this.gatewayService.gateways() || []
 
@@ -129,10 +131,13 @@ export default class ServiceInterfaceRoute {
       addresses: this.interfaceService.getAddresses(iFace, host, gateways),
       gateways:
         gateways.map(g => ({
-          enabled: true,
+          enabled:
+            (g.public
+              ? binding?.net.publicEnabled.includes(g.id)
+              : !binding?.net.privateDisabled.includes(g.id)) ?? false,
           ...g,
         })) || [],
-      torDomains: host.onions.map(o => `${o}.onion`),
+      torDomains: host.onions,
       publicDomains: getPublicDomains(host.publicDomains, gateways),
       privateDomains: host.privateDomains,
     }

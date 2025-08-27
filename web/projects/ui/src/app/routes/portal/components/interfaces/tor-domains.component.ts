@@ -167,10 +167,9 @@ export class InterfaceTorDomainsComponent {
     const loader = this.loader.open('Saving').subscribe()
 
     try {
-      let onion = key
+      const onion = key
         ? await this.api.addTorKey({ key })
         : await this.api.generateTorKey({})
-      onion = `${onion}.onion`
 
       if (this.interface.packageId) {
         await this.api.pkgAddOnion({

@@ -84,6 +84,8 @@ export default class StartOsUiComponent {
 
     if (!network || !gateways) return
 
+    const binding = network.host.bindings['80']
+
     return {
       ...this.iface,
       addresses: this.interfaceService.getAddresses(
@@ -92,10 +94,13 @@ export default class StartOsUiComponent {
         gateways,
       ),
       gateways: gateways.map(g => ({
-        enabled: true,
+        enabled:
+          (g.public
+            ? binding?.net.publicEnabled.includes(g.id)
+            : !binding?.net.privateDisabled.includes(g.id)) ?? false,
         ...g,
       })),
-      torDomains: network.host.onions.map(o => `${o}.onion`),
+      torDomains: network.host.onions,
       publicDomains: getPublicDomains(network.host.publicDomains, gateways),
       privateDomains: network.host.privateDomains,
     }

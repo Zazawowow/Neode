@@ -9,24 +9,19 @@ use arti_client::{TorClient, TorClientConfig};
 use base64::Engine;
 use clap::Parser;
 use color_eyre::eyre::eyre;
-use futures::{FutureExt, Stream, StreamExt};
+use futures::StreamExt;
 use helpers::NonDetachingJoinHandle;
 use imbl_value::InternedString;
-use itertools::Itertools;
-use lazy_static::lazy_static;
-use regex::Regex;
 use rpc_toolkit::{from_fn_async, Context, Empty, HandlerExt, ParentHandler};
-use safelog::DisplayRedacted;
 use serde::{Deserialize, Serialize};
 use tokio::io::AsyncWriteExt;
 use tokio::net::TcpStream;
-use tokio::sync::oneshot;
 use tor_cell::relaycell::msg::Connected;
 use tor_hscrypto::pk::{HsId, HsIdKeypair};
 use tor_hsservice::status::State as ArtiOnionServiceState;
-use tor_hsservice::{HsNickname, RendRequest, RunningOnionService};
+use tor_hsservice::{HsNickname, RunningOnionService};
 use tor_keymgr::config::ArtiKeystoreKind;
-use tor_proto::stream::IncomingStreamRequest;
+use tor_proto::client::stream::IncomingStreamRequest;
 use tor_rtcompat::tokio::TokioRustlsRuntime;
 use ts_rs::TS;
 
@@ -39,13 +34,11 @@ use crate::util::serde::{
 };
 use crate::util::sync::{SyncMutex, SyncRwLock};
 
-const STARTING_HEALTH_TIMEOUT: u64 = 120; // 2min
-
 #[derive(Debug, Clone, Copy)]
 pub struct OnionAddress(pub HsId);
 impl std::fmt::Display for OnionAddress {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt_unredacted(f)
+        safelog::DisplayRedacted::fmt_unredacted(&self.0, f)
     }
 }
 impl FromStr for OnionAddress {
@@ -201,7 +194,7 @@ impl std::fmt::Debug for OnionStore {
         impl<'a> std::fmt::Debug for OnionStoreMap<'a> {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 #[derive(Debug)]
-                struct KeyFor(OnionAddress);
+                struct KeyFor(#[allow(unused)] OnionAddress);
                 let mut map = f.debug_map();
                 for (k, v) in self.0 {
                     map.key(k);
@@ -451,7 +444,6 @@ impl TorController {
     }
 
     pub async fn reset(&self, wipe_state: bool) -> Result<(), Error> {
-        // todo!()
         Ok(())
     }
 
@@ -488,7 +480,7 @@ impl OnionService {
                     .run_while(async {
                         loop {
                             if let Err(e) = async {
-                                let (new_service, mut stream) = client.peek(|c| {
+                                let (new_service, stream) = client.peek(|c| {
                                     c.launch_onion_service_with_hsid(
                                         OnionServiceConfigBuilder::default()
                                             .nickname(
@@ -504,68 +496,81 @@ impl OnionService {
                                     )
                                     .with_kind(ErrorKind::Tor)
                                 })?;
+                                let addr = new_service.onion_address().map(|a| safelog::DisplayRedacted::display_unredacted(&a).to_string());
+                                let mut status_stream = new_service.status_events();
+                                bg.add_job(async move {
+                                    while let Some(status) = status_stream.next().await {
+                                        tracing::debug!("{addr:?} status: {status:?}");
+                                        if let Some(err) = status.current_problem() {
+                                            tracing::error!("{err:?}");
+                                        }
+                                    }
+                                });
                                 service.replace(Some(new_service));
+                                let mut stream = tor_hsservice::handle_rend_requests(stream);
                                 while let Some(req) = stream.next().await {
                                     bg.add_job({
                                         let bg = bg.clone();
                                         let bindings = bindings.clone();
                                         async move {
                                             if let Err(e) = async {
-                                                let mut stream =
-                                                    req.accept().await.with_kind(ErrorKind::Tor)?;
-                                                while let Some(req) = stream.next().await {
-                                                    let IncomingStreamRequest::Begin(begin) =
-                                                        req.request()
-                                                    else {
-                                                        continue; // TODO: reject instead?
-                                                    };
-                                                    let Some(target) = bindings.peek(|b| {
-                                                        b.get(&begin.port()).and_then(|a| {
-                                                            a.iter()
-                                                                .find(|(_, rc)| {
-                                                                    rc.strong_count() > 0
-                                                                })
-                                                                .map(|(addr, _)| *addr)
-                                                        })
-                                                    }) else {
-                                                        continue; // TODO: reject instead?
-                                                    };
-                                                    bg.add_job(async move {
-                                                        if let Err(e) = async {
-                                                            let mut outgoing =
-                                                                TcpStream::connect(target)
-                                                                    .await
-                                                                    .with_kind(
-                                                                        ErrorKind::Network,
-                                                                    )?;
-                                                            let mut incoming = req
-                                                                .accept(Connected::new_empty())
-                                                                .await
-                                                                .with_kind(ErrorKind::Tor)?;
-                                                            if let Err(e) =
-                                                                tokio::io::copy_bidirectional(
-                                                                    &mut outgoing,
-                                                                    &mut incoming,
-                                                                )
-                                                                .await
-                                                            {
-                                                                tracing::error!("{e}");
-                                                                tracing::debug!("{e:?}");
-                                                            }
-                                                            incoming.flush().await?;
-                                                            outgoing.flush().await?;
-                                                            incoming.shutdown().await?;
-                                                            outgoing.shutdown().await?;
-
-                                                            Ok::<_, Error>(())
-                                                        }
+                                                let IncomingStreamRequest::Begin(begin) =
+                                                    req.request()
+                                                else {
+                                                    return req
+                                                        .reject(tor_cell::relaycell::msg::End::new_with_reason(
+                                                            tor_cell::relaycell::msg::EndReason::DONE,
+                                                        ))
                                                         .await
+                                                        .with_kind(ErrorKind::Tor);
+                                                };
+                                                let Some(target) = bindings.peek(|b| {
+                                                    b.get(&begin.port()).and_then(|a| {
+                                                        a.iter()
+                                                            .find(|(_, rc)| rc.strong_count() > 0)
+                                                            .map(|(addr, _)| *addr)
+                                                    })
+                                                }) else {
+                                                    return req
+                                                        .reject(tor_cell::relaycell::msg::End::new_with_reason(
+                                                            tor_cell::relaycell::msg::EndReason::DONE,
+                                                        ))
+                                                        .await
+                                                        .with_kind(ErrorKind::Tor);
+                                                };
+                                                bg.add_job(async move {
+                                                    if let Err(e) = async {
+                                                        let mut outgoing =
+                                                            TcpStream::connect(target)
+                                                                .await
+                                                                .with_kind(ErrorKind::Network)?;
+                                                        let mut incoming = req
+                                                            .accept(Connected::new_empty())
+                                                            .await
+                                                            .with_kind(ErrorKind::Tor)?;
+                                                        if let Err(e) =
+                                                            tokio::io::copy_bidirectional(
+                                                                &mut outgoing,
+                                                                &mut incoming,
+                                                            )
+                                                            .await
                                                         {
                                                             tracing::error!("{e}");
                                                             tracing::debug!("{e:?}");
                                                         }
-                                                    });
-                                                }
+                                                        incoming.flush().await?;
+                                                        outgoing.flush().await?;
+                                                        incoming.shutdown().await?;
+                                                        outgoing.shutdown().await?;
+
+                                                        Ok::<_, Error>(())
+                                                    }
+                                                    .await
+                                                    {
+                                                        tracing::error!("{e}");
+                                                        tracing::debug!("{e:?}");
+                                                    }
+                                                });
                                                 Ok::<_, Error>(())
                                             }
                                             .await
@@ -623,6 +628,7 @@ impl OnionService {
     }
 
     pub async fn shutdown(self) -> Result<(), Error> {
+        self.0.service.replace(None);
         self.0._thread.abort();
         Ok(())
     }

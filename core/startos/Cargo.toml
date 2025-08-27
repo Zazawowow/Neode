@@ -64,7 +64,9 @@ arti-client = { version = "0.33", features = [
   "static",
   "tokio",
   "ephemeral-keystore",
-], default-features = false }
+  "onion-service-client",
+  "onion-service-service",
+], default-features = false, git = "https://github.com/Start9Labs/arti.git", branch = "patch/disable-exit" }
 aes = { version = "0.7.5", features = ["ctr"] }
 async-acme = { version = "0.6.0", git = "https://github.com/dr-bonez/async-acme.git", features = [
   "use_rustls",
@@ -195,7 +197,7 @@ rpassword = "7.2.0"
 rpc-toolkit = { git = "https://github.com/Start9Labs/rpc-toolkit.git", branch = "master" }
 rust-argon2 = "2.0.0"
 rustyline-async = "0.4.1"
-safelog = "0.4.8"
+safelog = { version = "0.4.8", git = "https://github.com/Start9Labs/arti.git", branch = "patch/disable-exit" }
 semver = { version = "1.0.20", features = ["serde"] }
 serde = { version = "1.0", features = ["derive", "rc"] }
 serde_cbor = { package = "ciborium", version = "0.2.1" }
@@ -227,13 +229,22 @@ tokio-stream = { version = "0.1.14", features = ["io-util", "sync", "net"] }
 tokio-tar = { git = "https://github.com/dr-bonez/tokio-tar.git" }
 tokio-tungstenite = { version = "0.26.2", features = ["native-tls", "url"] }
 tokio-util = { version = "0.7.9", features = ["io"] }
-tor-cell = { version = "0.33" }
-tor-hscrypto = { version = "0.33", features = ["full"] }
-tor-hsservice = { version = "0.33" }
-tor-keymgr = { version = "0.33", features = ["ephemeral-keystore"] }
-tor-llcrypto = { version = "0.33", features = ["full"] }
-tor-proto = { version = "0.33" }
-tor-rtcompat = { version = "0.33", features = ["tokio", "rustls"] }
+tor-cell = { version = "0.33", git = "https://github.com/Start9Labs/arti.git", branch = "patch/disable-exit" }
+tor-hscrypto = { version = "0.33", features = [
+  "full",
+], git = "https://github.com/Start9Labs/arti.git", branch = "patch/disable-exit" }
+tor-hsservice = { version = "0.33", git = "https://github.com/Start9Labs/arti.git", branch = "patch/disable-exit" }
+tor-keymgr = { version = "0.33", features = [
+  "ephemeral-keystore",
+], git = "https://github.com/Start9Labs/arti.git", branch = "patch/disable-exit" }
+tor-llcrypto = { version = "0.33", features = [
+  "full",
+], git = "https://github.com/Start9Labs/arti.git", branch = "patch/disable-exit" }
+tor-proto = { version = "0.33", git = "https://github.com/Start9Labs/arti.git", branch = "patch/disable-exit" }
+tor-rtcompat = { version = "0.33", features = [
+  "tokio",
+  "rustls",
+], git = "https://github.com/Start9Labs/arti.git", branch = "patch/disable-exit" }
 tower-service = "0.3.3"
 tracing = "0.1.39"
 tracing-error = "0.2.0"

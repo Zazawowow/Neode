@@ -6,8 +6,8 @@ use std::task::Poll;
 use std::time::Duration;
 
 use axum::Router;
-use futures::future::Either;
 use futures::FutureExt;
+use futures::future::Either;
 use helpers::NonDetachingJoinHandle;
 use hyper_util::rt::{TokioIo, TokioTimer};
 use tokio::net::{TcpListener, TcpStream};
@@ -15,7 +15,7 @@ use tokio::sync::oneshot;
 
 use crate::context::{DiagnosticContext, InitContext, InstallContext, RpcContext, SetupContext};
 use crate::net::gateway::{
-    lookup_info_by_addr, NetworkInterfaceListener, SelfContainedNetworkInterfaceListener,
+    NetworkInterfaceListener, SelfContainedNetworkInterfaceListener, lookup_info_by_addr,
 };
 use crate::net::static_server::{
     diagnostic_ui_router, init_ui_router, install_ui_router, main_ui_router, redirecter, refresher,

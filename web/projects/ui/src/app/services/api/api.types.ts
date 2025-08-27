@@ -280,7 +280,7 @@ export namespace RR {
     key: string
   }
   export type GenerateTorKeyReq = {} // net.tor.key.generate
-  export type AddTorKeyRes = string // onion address without .onion suffix
+  export type AddTorKeyRes = string // onion address *with* .onion suffix
 
   export type ServerBindingToggleGatewayReq = {
     // server.host.binding.set-gateway-enabled

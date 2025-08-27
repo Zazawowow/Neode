@@ -18,7 +18,7 @@ use models::{ActionId, PackageId};
 use reqwest::{Client, Proxy};
 use rpc_toolkit::yajrc::RpcError;
 use rpc_toolkit::{CallRemote, Context, Empty};
-use tokio::sync::{Mutex, RwLock, broadcast, oneshot, watch};
+use tokio::sync::{RwLock, broadcast, oneshot, watch};
 use tokio::time::Instant;
 use tracing::instrument;
 
@@ -32,7 +32,7 @@ use crate::db::model::package::TaskSeverity;
 use crate::disk::OsPartitionInfo;
 use crate::init::{InitResult, check_time_is_synchronized};
 use crate::install::PKG_ARCHIVE_DIR;
-use crate::lxc::{ContainerId, LxcContainer, LxcManager};
+use crate::lxc::LxcManager;
 use crate::net::net_controller::{NetController, NetService};
 use crate::net::utils::{find_eth_iface, find_wifi_iface};
 use crate::net::web_server::{UpgradableListener, WebServerAcceptorSetter};
@@ -74,12 +74,6 @@ pub struct RpcContextSeed {
     pub client: Client,
     pub start_time: Instant,
     pub crons: SyncMutex<BTreeMap<Guid, NonDetachingJoinHandle<()>>>,
-    // #[cfg(feature = "dev")]
-    pub dev: Dev,
-}
-
-pub struct Dev {
-    pub lxc: Mutex<BTreeMap<ContainerId, LxcContainer>>,
 }
 
 pub struct Hardware {
@@ -262,10 +256,6 @@ impl RpcContext {
                 .with_kind(crate::ErrorKind::ParseUrl)?,
             start_time: Instant::now(),
             crons,
-            // #[cfg(feature = "dev")]
-            dev: Dev {
-                lxc: Mutex::new(BTreeMap::new()),
-            },
         });
 
         let res = Self(seed.clone());

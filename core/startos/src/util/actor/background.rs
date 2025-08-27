@@ -82,7 +82,7 @@ impl BackgroundJobRunner {
                 cx: &mut std::task::Context<'_>,
             ) -> std::task::Poll<Self::Output> {
                 let this = self.project();
-                this.runner.poll(cx);
+                let _ = this.runner.poll(cx);
                 this.fut.poll(cx)
             }
         }

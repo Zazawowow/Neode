@@ -193,7 +193,7 @@ export class PublicDomainService {
             ),
           250,
         )
-      } else if (ip === wanIp) {
+      } else if (ip !== wanIp) {
         setTimeout(
           () =>
             this.showDns(

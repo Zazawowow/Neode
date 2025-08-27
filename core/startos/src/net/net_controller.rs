@@ -3,7 +3,7 @@ use std::net::{Ipv4Addr, SocketAddr};
 use std::sync::{Arc, Weak};
 
 use color_eyre::eyre::eyre;
-use imbl::{vector, OrdMap};
+use imbl::{OrdMap, vector};
 use imbl_value::InternedString;
 use ipnet::IpNet;
 use models::{HostId, OptionExt, PackageId};
@@ -11,8 +11,9 @@ use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
 use tracing::instrument;
 
-use crate::db::model::public::NetworkInterfaceInfo;
+use crate::HOST_IP;
 use crate::db::model::Database;
+use crate::db::model::public::NetworkInterfaceInfo;
 use crate::error::ErrorCollection;
 use crate::hostname::Hostname;
 use crate::net::dns::DnsController;
@@ -23,7 +24,7 @@ use crate::net::gateway::{
 };
 use crate::net::host::address::HostAddress;
 use crate::net::host::binding::{AddSslOptions, BindId, BindOptions};
-use crate::net::host::{host_for, Host, Hosts};
+use crate::net::host::{Host, Hosts, host_for};
 use crate::net::service_interface::{HostnameInfo, IpHostname, OnionHostname};
 use crate::net::tor::{OnionAddress, TorController, TorSecretKey};
 use crate::net::utils::ipv6_is_local;
@@ -31,7 +32,6 @@ use crate::net::vhost::{AlpnInfo, TargetInfo, VHostController};
 use crate::prelude::*;
 use crate::service::effects::callbacks::ServiceCallbacks;
 use crate::util::serde::MaybeUtf8String;
-use crate::HOST_IP;
 
 pub struct NetController {
     pub(crate) db: TypedPatchDb<Database>,

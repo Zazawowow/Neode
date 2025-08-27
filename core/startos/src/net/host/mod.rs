@@ -127,14 +127,16 @@ pub fn host_for<'a>(
     })
 }
 
-pub fn all_hosts(db: &DatabaseModel) -> impl Iterator<Item = Result<&Model<Host>, Error>> {
-    [Ok(db.as_public().as_server_info().as_network().as_host())]
+pub fn all_hosts(db: &mut DatabaseModel) -> impl Iterator<Item = Result<&mut Model<Host>, Error>> {
+    use patch_db::DestructureMut;
+    let destructured = db.as_public_mut().destructure_mut();
+    [Ok(destructured.server_info.as_network_mut().as_host_mut())]
         .into_iter()
         .chain(
-            [db.as_public().as_package_data().as_entries()]
+            [destructured.package_data.as_entries_mut()]
                 .into_iter()
                 .flatten_ok()
-                .map(|entry| entry.and_then(|(_, v)| v.as_hosts().as_entries()))
+                .map(|entry| entry.and_then(|(_, v)| v.as_hosts_mut().as_entries_mut()))
                 .flatten_ok()
                 .map_ok(|(_, v)| v),
         )
