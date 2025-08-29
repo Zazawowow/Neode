@@ -6,8 +6,8 @@ use std::task::Poll;
 use std::time::Duration;
 
 use axum::Router;
-use futures::FutureExt;
 use futures::future::Either;
+use futures::FutureExt;
 use helpers::NonDetachingJoinHandle;
 use hyper_util::rt::{TokioIo, TokioTimer};
 use tokio::net::{TcpListener, TcpStream};
@@ -15,7 +15,7 @@ use tokio::sync::oneshot;
 
 use crate::context::{DiagnosticContext, InitContext, InstallContext, RpcContext, SetupContext};
 use crate::net::gateway::{
-    NetworkInterfaceListener, SelfContainedNetworkInterfaceListener, lookup_info_by_addr,
+    lookup_info_by_addr, NetworkInterfaceListener, SelfContainedNetworkInterfaceListener,
 };
 use crate::net::static_server::{
     diagnostic_ui_router, init_ui_router, install_ui_router, main_ui_router, redirecter, refresher,
@@ -23,7 +23,7 @@ use crate::net::static_server::{
 };
 use crate::prelude::*;
 use crate::util::actor::background::BackgroundJobQueue;
-use crate::util::sync::{SyncMutex, SyncRwLock, Watch};
+use crate::util::sync::{SyncRwLock, Watch};
 
 pub struct Accepted {
     pub https_redirect: bool,
@@ -235,23 +235,34 @@ impl<A: Accept + Send + Sync + 'static> WebServer<A> {
 
             let handler = async {
                 loop {
-                    if let Err(e) = async {
-                        let accepted = acceptor.accept().await?;
-                        queue.add_job(
-                            graceful.watch(
-                                server
-                                    .serve_connection_with_upgrades(
-                                        TokioIo::new(accepted.stream),
-                                        SwappableRouter(service.clone(), accepted.https_redirect),
-                                    )
-                                    .into_owned(),
-                            ),
-                        );
+                    let mut err = None;
+                    for _ in 0..5 {
+                        if let Err(e) = async {
+                            let accepted = acceptor.accept().await?;
+                            queue.add_job(
+                                graceful.watch(
+                                    server
+                                        .serve_connection_with_upgrades(
+                                            TokioIo::new(accepted.stream),
+                                            SwappableRouter(
+                                                service.clone(),
+                                                accepted.https_redirect,
+                                            ),
+                                        )
+                                        .into_owned(),
+                                ),
+                            );
 
-                        Ok::<_, Error>(())
+                            Ok::<_, Error>(())
+                        }
+                        .await
+                        {
+                            err = Some(e);
+                        } else {
+                            break;
+                        }
                     }
-                    .await
-                    {
+                    if let Some(e) = err {
                         tracing::error!("Error accepting HTTP connection: {e}");
                         tracing::debug!("{e:?}");
                     }

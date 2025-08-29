@@ -5,8 +5,8 @@ use std::sync::atomic::AtomicUsize;
 use std::sync::{Arc, Weak};
 use std::task::{Poll, Waker};
 
-use futures::Stream;
 use futures::stream::BoxStream;
+use futures::Stream;
 
 use crate::prelude::*;
 
@@ -51,7 +51,7 @@ where
         panic!("lock {id} is already locked on this thread");
     }
     let tracer: helpers::NonDetachingJoinHandle<()> = {
-        let bt = std::backtrace::Backtrace::capture();
+        let bt = std::backtrace::Backtrace::force_capture();
         tokio::spawn(async move {
             use std::time::Duration;
 
