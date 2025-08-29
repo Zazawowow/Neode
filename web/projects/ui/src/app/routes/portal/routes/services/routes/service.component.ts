@@ -50,11 +50,11 @@ import { ServiceUptimeComponent } from '../components/uptime.component'
         </service-status>
 
         @if (status() !== 'backingUp') {
+          <service-health-checks [checks]="health()" />
           <service-uptime
             class="g-card"
             [started]="$any(pkg.status)?.started"
           />
-          <service-interfaces [pkg]="pkg" [disabled]="status() !== 'running'" />
 
           @if (errors() | async; as errors) {
             <service-dependencies
@@ -63,8 +63,8 @@ import { ServiceUptimeComponent } from '../components/uptime.component'
               [errors]="errors"
             />
           }
+          <service-interfaces [pkg]="pkg" [disabled]="status() !== 'running'" />
 
-          <service-health-checks [checks]="health()" />
           <service-tasks
             #tasks="elementRef"
             tuiElement
@@ -109,7 +109,7 @@ import { ServiceUptimeComponent } from '../components/uptime.component'
 
     :host {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(10, 1fr);
       grid-auto-rows: max-content;
       gap: 1rem;
     }
