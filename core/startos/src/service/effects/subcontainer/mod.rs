@@ -11,14 +11,14 @@ use crate::service::effects::prelude::*;
 use crate::service::persistent_container::Subcontainer;
 use crate::util::Invoke;
 
-#[cfg(feature = "start-container")]
+#[cfg(feature = "cli-container")]
 mod sync;
 
-#[cfg(not(feature = "start-container"))]
+#[cfg(not(feature = "cli-container"))]
 mod sync_dummy;
 
 pub use sync::*;
-#[cfg(not(feature = "start-container"))]
+#[cfg(not(feature = "cli-container"))]
 use sync_dummy as sync;
 
 #[derive(Debug, Deserialize, Serialize, Parser, TS)]

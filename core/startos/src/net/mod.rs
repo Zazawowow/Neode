@@ -9,6 +9,7 @@ pub mod keys;
 pub mod mdns;
 pub mod net_controller;
 pub mod service_interface;
+pub mod socks;
 pub mod ssl;
 pub mod static_server;
 pub mod tor;

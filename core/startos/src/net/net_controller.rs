@@ -3,7 +3,7 @@ use std::net::{Ipv4Addr, SocketAddr};
 use std::sync::{Arc, Weak};
 
 use color_eyre::eyre::eyre;
-use imbl::{OrdMap, vector};
+use imbl::{vector, OrdMap};
 use imbl_value::InternedString;
 use ipnet::IpNet;
 use models::{HostId, OptionExt, PackageId};
@@ -11,9 +11,8 @@ use tokio::sync::Mutex;
 use tokio::task::JoinHandle;
 use tracing::instrument;
 
-use crate::HOST_IP;
-use crate::db::model::Database;
 use crate::db::model::public::NetworkInterfaceInfo;
+use crate::db::model::Database;
 use crate::error::ErrorCollection;
 use crate::hostname::Hostname;
 use crate::net::dns::DnsController;
@@ -24,14 +23,16 @@ use crate::net::gateway::{
 };
 use crate::net::host::address::HostAddress;
 use crate::net::host::binding::{AddSslOptions, BindId, BindOptions};
-use crate::net::host::{Host, Hosts, host_for};
+use crate::net::host::{host_for, Host, Hosts};
 use crate::net::service_interface::{HostnameInfo, IpHostname, OnionHostname};
+use crate::net::socks::SocksController;
 use crate::net::tor::{OnionAddress, TorController, TorSecretKey};
 use crate::net::utils::ipv6_is_local;
 use crate::net::vhost::{AlpnInfo, TargetInfo, VHostController};
 use crate::prelude::*;
 use crate::service::effects::callbacks::ServiceCallbacks;
 use crate::util::serde::MaybeUtf8String;
+use crate::HOST_IP;
 
 pub struct NetController {
     pub(crate) db: TypedPatchDb<Database>,
@@ -40,20 +41,28 @@ pub struct NetController {
     pub(crate) net_iface: Arc<NetworkInterfaceController>,
     pub(super) dns: DnsController,
     pub(super) forward: PortForwardController,
+    pub(super) socks: SocksController,
     pub(super) server_hostnames: Vec<Option<InternedString>>,
     pub(crate) callbacks: Arc<ServiceCallbacks>,
 }
 
 impl NetController {
-    pub async fn init(db: TypedPatchDb<Database>, hostname: &Hostname) -> Result<Self, Error> {
+    pub async fn init(
+        db: TypedPatchDb<Database>,
+        hostname: &Hostname,
+        socks_listen: SocketAddr,
+    ) -> Result<Self, Error> {
         let net_iface = Arc::new(NetworkInterfaceController::new(db.clone()));
+        let tor = TorController::new()?;
+        let socks = SocksController::new(socks_listen, tor.clone())?;
         Ok(Self {
             db: db.clone(),
-            tor: TorController::new().await?,
+            tor,
             vhost: VHostController::new(db.clone(), net_iface.clone()),
             dns: DnsController::init(db, &net_iface.watcher).await?,
             forward: PortForwardController::new(net_iface.watcher.subscribe()),
             net_iface,
+            socks,
             server_hostnames: vec![
                 // LAN IP
                 None,

@@ -212,6 +212,7 @@ shell-words = "1"
 signal-hook = "0.3.17"
 simple-logging = "2.0.2"
 socket2 = { version = "0.6.0", features = ["all"] }
+socks5-impl = { version = "0.7.2", features = ["server"] }
 sqlx = { version = "0.8.6", features = [
   "runtime-tokio-rustls",
   "postgres",
@@ -224,7 +225,6 @@ thiserror = "2.0.12"
 textwrap = "0.16.1"
 tokio = { version = "1.38.1", features = ["full"] }
 tokio-rustls = "0.26.0"
-tokio-socks = "0.5.1"
 tokio-stream = { version = "0.1.14", features = ["io-util", "sync", "net"] }
 tokio-tar = { git = "https://github.com/dr-bonez/tokio-tar.git" }
 tokio-tungstenite = { version = "0.26.2", features = ["native-tls", "url"] }

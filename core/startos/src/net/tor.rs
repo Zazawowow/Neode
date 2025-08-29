@@ -3,19 +3,22 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::net::SocketAddr;
 use std::str::FromStr;
 use std::sync::{Arc, Weak};
+use std::time::{Duration, Instant};
 
 use arti_client::config::onion_service::OnionServiceConfigBuilder;
-use arti_client::{TorClient, TorClientConfig};
+use arti_client::{DataStream, TorClient, TorClientConfig};
 use base64::Engine;
 use clap::Parser;
 use color_eyre::eyre::eyre;
-use futures::StreamExt;
+use futures::{FutureExt, StreamExt};
 use helpers::NonDetachingJoinHandle;
 use imbl_value::InternedString;
+use itertools::Itertools;
 use rpc_toolkit::{from_fn_async, Context, Empty, HandlerExt, ParentHandler};
 use serde::{Deserialize, Serialize};
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream;
+use tokio::sync::Notify;
 use tor_cell::relaycell::msg::Connected;
 use tor_hscrypto::pk::{HsId, HsIdKeypair};
 use tor_hsservice::status::State as ArtiOnionServiceState;
@@ -28,11 +31,19 @@ use ts_rs::TS;
 use crate::context::{CliContext, RpcContext};
 use crate::prelude::*;
 use crate::util::actor::background::BackgroundJobQueue;
+use crate::util::future::Until;
+use crate::util::io::ReadWriter;
 use crate::util::serde::{
     deserialize_from_str, display_serializable, serialize_display, Base64, HandlerExtSerde,
     WithIoFormat, BASE64,
 };
-use crate::util::sync::{SyncMutex, SyncRwLock};
+use crate::util::sync::{SyncMutex, SyncRwLock, Watch};
+
+const BOOTSTRAP_PROGRESS_TIMEOUT: Duration = Duration::from_secs(300);
+const HS_BOOTSTRAP_TIMEOUT: Duration = Duration::from_secs(300);
+const RETRY_COOLDOWN: Duration = Duration::from_secs(15);
+const HEALTH_CHECK_FAILURE_ALLOWANCE: usize = 5;
+const HEALTH_CHECK_COOLDOWN: Duration = Duration::from_secs(120);
 
 #[derive(Debug, Clone, Copy)]
 pub struct OnionAddress(pub HsId);
@@ -320,7 +331,7 @@ pub async fn reset(ctx: RpcContext, ResetParams { wipe_state }: ResetParams) -> 
 
 pub fn display_services(
     params: WithIoFormat<Empty>,
-    services: BTreeMap<OnionAddress, OnionServiceState>,
+    services: BTreeMap<OnionAddress, OnionServiceInfo>,
 ) -> Result<(), Error> {
     use prettytable::*;
 
@@ -329,8 +340,17 @@ pub fn display_services(
     }
 
     let mut table = Table::new();
-    for (service, status) in services {
-        let row = row![&service.to_string(), &format!("{status:?}")];
+    table.add_row(row![bc => "ADDRESS", "STATE", "BINDINGS"]);
+    for (service, info) in services {
+        let row = row![
+            &service.to_string(),
+            &format!("{:?}", info.state),
+            &info
+                .bindings
+                .into_iter()
+                .map(|(port, addr)| lazy_format!("{port} -> {addr}"))
+                .join("; ")
+        ];
         table.add_row(row);
     }
     table.print_tty(false)?;
@@ -363,44 +383,233 @@ impl From<ArtiOnionServiceState> for OnionServiceState {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OnionServiceInfo {
+    pub state: OnionServiceState,
+    pub bindings: BTreeMap<u16, SocketAddr>,
+}
+
 pub async fn list_services(
     ctx: RpcContext,
     _: Empty,
-) -> Result<BTreeMap<OnionAddress, OnionServiceState>, Error> {
+) -> Result<BTreeMap<OnionAddress, OnionServiceInfo>, Error> {
     ctx.net_controller.tor.list_services().await
 }
 
-pub struct TorController {
-    client: Arc<SyncRwLock<TorClient<TokioRustlsRuntime>>>,
+#[derive(Clone)]
+pub struct TorController(Arc<TorControllerInner>);
+struct TorControllerInner {
+    client: Watch<(usize, TorClient<TokioRustlsRuntime>)>,
+    _bootstrapper: NonDetachingJoinHandle<()>,
     services: SyncMutex<BTreeMap<OnionAddress, OnionService>>,
+    reset: Arc<Notify>,
 }
 impl TorController {
-    pub async fn new() -> Result<Self, Error> {
+    pub fn new() -> Result<Self, Error> {
         let mut config = TorClientConfig::builder();
         config
             .storage()
             .keystore()
             .primary()
             .kind(ArtiKeystoreKind::Ephemeral.into());
-        Ok(Self {
-            client: Arc::new(SyncRwLock::new(
-                TorClient::with_runtime(TokioRustlsRuntime::current()?)
-                    .config(config.build().with_kind(ErrorKind::Tor)?)
-                    .create_unbootstrapped_async()
-                    .await?,
-            )),
-            services: SyncMutex::new(BTreeMap::new()),
+        let client = Watch::new((
+            0,
+            TorClient::with_runtime(TokioRustlsRuntime::current()?)
+                .config(config.build().with_kind(ErrorKind::Tor)?)
+                .create_unbootstrapped()?,
+        ));
+        let reset = Arc::new(Notify::new());
+        let bootstrapper_reset = reset.clone();
+        let bootstrapper_client = client.clone();
+        let bootstrapper = tokio::spawn(async move {
+            loop {
+                if let Err(e) = Until::new()
+                    .with_async_fn(|| bootstrapper_reset.notified().map(Ok))
+                    .run(async {
+                        let (epoch, client): (usize, _) = bootstrapper_client.read();
+                        let mut events = client.bootstrap_events();
+                        let bootstrap_fut =
+                            client.bootstrap().map(|res| res.with_kind(ErrorKind::Tor));
+                        let failure_fut = async {
+                            let mut prev_frac = 0_f32;
+                            let mut prev_inst = Instant::now();
+                            while let Some(event) =
+                                tokio::time::timeout(BOOTSTRAP_PROGRESS_TIMEOUT, events.next())
+                                    .await
+                                    .with_kind(ErrorKind::Tor)?
+                            {
+                                if event.ready_for_traffic() {
+                                    return Ok::<_, Error>(());
+                                }
+                                let frac = event.as_frac();
+                                if frac == prev_frac {
+                                    if prev_inst.elapsed() > BOOTSTRAP_PROGRESS_TIMEOUT {
+                                        return Err(Error::new(
+                                            eyre!(
+                                                "Bootstrap has not made progress for {}",
+                                                crate::util::serde::Duration::from(
+                                                    BOOTSTRAP_PROGRESS_TIMEOUT
+                                                )
+                                            ),
+                                            ErrorKind::Tor,
+                                        ));
+                                    }
+                                } else {
+                                    prev_frac = frac;
+                                    prev_inst = Instant::now();
+                                }
+                            }
+                            futures::future::pending().await
+                        };
+                        if let Err::<(), Error>(e) = tokio::select! {
+                            res = bootstrap_fut => res,
+                            res = failure_fut => res,
+                        } {
+                            tracing::error!("Tor Bootstrap Error: {e}");
+                            tracing::debug!("{e:?}");
+                        } else {
+                            bootstrapper_client.send_modify(|_| ());
+
+                            for _ in 0..HEALTH_CHECK_FAILURE_ALLOWANCE {
+                                if let Err::<(), Error>(e) = async {
+                                    loop {
+                                        let (bg, mut runner) = BackgroundJobQueue::new();
+                                        runner
+                                            .run_while(async {
+                                                const PING_BUF_LEN: usize = 8;
+                                                let key = TorSecretKey::generate();
+                                                let onion = key.onion_address();
+                                                let (hs, stream) = client
+                                                    .launch_onion_service_with_hsid(
+                                                        OnionServiceConfigBuilder::default()
+                                                            .nickname(
+                                                                onion
+                                                                    .to_string()
+                                                                    .trim_end_matches(".onion")
+                                                                    .parse::<HsNickname>()
+                                                                    .with_kind(ErrorKind::Tor)?,
+                                                            )
+                                                            .build()
+                                                            .with_kind(ErrorKind::Tor)?,
+                                                        key.clone().0,
+                                                    )
+                                                    .with_kind(ErrorKind::Tor)?;
+                                                bg.add_job(async move {
+                                                    if let Err(e) = async {
+                                                        let mut stream =
+                                                            tor_hsservice::handle_rend_requests(
+                                                                stream,
+                                                            );
+                                                        while let Some(req) = stream.next().await {
+                                                            let mut stream = req
+                                                                .accept(Connected::new_empty())
+                                                                .await
+                                                                .with_kind(ErrorKind::Tor)?;
+                                                            let mut buf = [0; PING_BUF_LEN];
+                                                            stream.read_exact(&mut buf).await?;
+                                                            stream.write_all(&buf).await?;
+                                                            stream.flush().await?;
+                                                            stream.shutdown().await?;
+                                                        }
+                                                        Ok::<_, Error>(())
+                                                    }
+                                                    .await
+                                                    {
+                                                        tracing::error!("Tor Health Error: {e}");
+                                                        tracing::debug!("{e:?}");
+                                                    }
+                                                });
+
+                                                tokio::time::timeout(HS_BOOTSTRAP_TIMEOUT, async {
+                                                    let mut status = hs.status_events();
+                                                    while let Some(status) = status.next().await {
+                                                        if status.state().is_fully_reachable() {
+                                                            return Ok(());
+                                                        }
+                                                    }
+                                                    Err(Error::new(
+                                                        eyre!("status event stream ended"),
+                                                        ErrorKind::Tor,
+                                                    ))
+                                                })
+                                                .await
+                                                .with_kind(ErrorKind::Tor)??;
+
+                                                let mut stream = client
+                                                    .connect((onion.to_string(), 8080))
+                                                    .await?;
+                                                let mut ping_buf = [0; PING_BUF_LEN];
+                                                rand::fill(&mut ping_buf);
+                                                stream.write_all(&ping_buf).await?;
+                                                stream.flush().await?;
+                                                let mut ping_res = [0; PING_BUF_LEN];
+                                                stream.read_exact(&mut ping_res).await?;
+                                                ensure_code!(
+                                                    ping_buf == ping_res,
+                                                    ErrorKind::Tor,
+                                                    "ping buffer mismatch"
+                                                );
+                                                stream.shutdown().await?;
+
+                                                Ok::<_, Error>(())
+                                            })
+                                            .await?;
+                                        tokio::time::sleep(HEALTH_CHECK_COOLDOWN).await;
+                                    }
+                                }
+                                .await
+                                {
+                                    tracing::error!("Tor Client Creation Error: {e}");
+                                    tracing::debug!("{e:?}");
+                                }
+                            }
+                            tracing::error!(
+                                "Client failed health check {} times, recycling",
+                                HEALTH_CHECK_FAILURE_ALLOWANCE
+                            );
+                        }
+                        if let Err::<(), Error>(e) = async {
+                            tokio::time::sleep(RETRY_COOLDOWN).await;
+                            bootstrapper_client.send((
+                                epoch.wrapping_add(1),
+                                TorClient::with_runtime(TokioRustlsRuntime::current()?)
+                                    .config(config.build().with_kind(ErrorKind::Tor)?)
+                                    .create_unbootstrapped()?,
+                            ));
+                            Ok(())
+                        }
+                        .await
+                        {
+                            tracing::error!("Tor Client Creation Error: {e}");
+                            tracing::debug!("{e:?}");
+                        }
+                        Ok(())
+                    })
+                    .await
+                {
+                    tracing::error!("Tor Bootstrapper Error: {e}");
+                    tracing::debug!("{e:?}");
+                }
+            }
         })
+        .into();
+        Ok(Self(Arc::new(TorControllerInner {
+            client,
+            _bootstrapper: bootstrapper,
+            services: SyncMutex::new(BTreeMap::new()),
+            reset,
+        })))
     }
 
     pub fn service(&self, key: TorSecretKey) -> Result<OnionService, Error> {
-        self.services.mutate(|s| {
+        self.0.services.mutate(|s| {
             use std::collections::btree_map::Entry;
             let addr = key.onion_address();
             match s.entry(addr) {
                 Entry::Occupied(e) => Ok(e.get().clone()),
                 Entry::Vacant(e) => Ok(e
-                    .insert(OnionService::launch(self.client.clone(), key)?)
+                    .insert(OnionService::launch(self.0.client.clone(), key)?)
                     .clone()),
             }
         })
@@ -408,7 +617,7 @@ impl TorController {
 
     pub async fn gc(&self, addr: Option<OnionAddress>) -> Result<(), Error> {
         if let Some(addr) = addr {
-            if let Some(s) = self.services.mutate(|s| {
+            if let Some(s) = self.0.services.mutate(|s| {
                 let rm = if let Some(s) = s.get(&addr) {
                     !s.gc()
                 } else {
@@ -425,7 +634,7 @@ impl TorController {
                 Ok(())
             }
         } else {
-            for s in self.services.mutate(|s| {
+            for s in self.0.services.mutate(|s| {
                 let mut rm = Vec::new();
                 s.retain(|_, s| {
                     if s.gc() {
@@ -444,13 +653,51 @@ impl TorController {
     }
 
     pub async fn reset(&self, wipe_state: bool) -> Result<(), Error> {
+        self.0.reset.notify_waiters();
         Ok(())
     }
 
-    pub async fn list_services(&self) -> Result<BTreeMap<OnionAddress, OnionServiceState>, Error> {
+    pub async fn list_services(&self) -> Result<BTreeMap<OnionAddress, OnionServiceInfo>, Error> {
         Ok(self
+            .0
             .services
-            .peek(|s| s.iter().map(|(a, s)| (a.clone(), s.state())).collect()))
+            .peek(|s| s.iter().map(|(a, s)| (a.clone(), s.info())).collect()))
+    }
+
+    pub async fn connect_onion(
+        &self,
+        addr: &OnionAddress,
+        port: u16,
+    ) -> Result<Box<dyn ReadWriter + Unpin + Send + Sync + 'static>, Error> {
+        if let Some(target) = self.0.services.peek(|s| {
+            s.get(addr).and_then(|s| {
+                s.0.bindings.peek(|b| {
+                    b.get(&port).and_then(|b| {
+                        b.iter()
+                            .find(|(_, rc)| rc.strong_count() > 0)
+                            .map(|(a, _)| *a)
+                    })
+                })
+            })
+        }) {
+            Ok(Box::new(
+                TcpStream::connect(target)
+                    .await
+                    .with_kind(ErrorKind::Network)?,
+            ))
+        } else {
+            let mut client = self.0.client.clone();
+            client
+                .wait_for(|(_, c)| c.bootstrap_status().ready_for_traffic())
+                .await;
+            let stream = client
+                .read()
+                .1
+                .connect((addr.to_string(), port))
+                .await
+                .with_kind(ErrorKind::Tor)?;
+            Ok(Box::new(stream))
+        }
     }
 }
 
@@ -463,7 +710,7 @@ struct OnionServiceData {
 }
 impl OnionService {
     fn launch(
-        client: Arc<SyncRwLock<TorClient<TokioRustlsRuntime>>>,
+        mut client: Watch<(usize, TorClient<TokioRustlsRuntime>)>,
         key: TorSecretKey,
     ) -> Result<Self, Error> {
         let service = Arc::new(SyncMutex::new(None));
@@ -480,7 +727,12 @@ impl OnionService {
                     .run_while(async {
                         loop {
                             if let Err(e) = async {
-                                let (new_service, stream) = client.peek(|c| {
+                                client.wait_for(|(_,c)| c.bootstrap_status().ready_for_traffic()).await;
+                                let epoch = client.peek(|(e, c)| {
+                                    ensure_code!(c.bootstrap_status().ready_for_traffic(), ErrorKind::Tor, "client recycled");
+                                    Ok::<_, Error>(*e)
+                                })?;
+                                let (new_service, stream) = client.peek(|(_, c)| {
                                     c.launch_onion_service_with_hsid(
                                         OnionServiceConfigBuilder::default()
                                             .nickname(
@@ -496,19 +748,18 @@ impl OnionService {
                                     )
                                     .with_kind(ErrorKind::Tor)
                                 })?;
-                                let addr = new_service.onion_address().map(|a| safelog::DisplayRedacted::display_unredacted(&a).to_string());
                                 let mut status_stream = new_service.status_events();
                                 bg.add_job(async move {
                                     while let Some(status) = status_stream.next().await {
-                                        tracing::debug!("{addr:?} status: {status:?}");
-                                        if let Some(err) = status.current_problem() {
-                                            tracing::error!("{err:?}");
-                                        }
+                                        // TODO: health daemon?
                                     }
                                 });
                                 service.replace(Some(new_service));
                                 let mut stream = tor_hsservice::handle_rend_requests(stream);
-                                while let Some(req) = stream.next().await {
+                                while let Some(req) = tokio::select! {
+                                    req = stream.next() => req,
+                                    _ = client.wait_for(|(e, _)| *e != epoch) => None
+                                } {
                                     bg.add_job({
                                         let bg = bg.clone();
                                         let bindings = bindings.clone();
@@ -555,28 +806,24 @@ impl OnionService {
                                                             )
                                                             .await
                                                         {
-                                                            tracing::error!("{e}");
+                                                            tracing::error!("Tor Stream Error: {e}");
                                                             tracing::debug!("{e:?}");
                                                         }
-                                                        incoming.flush().await?;
-                                                        outgoing.flush().await?;
-                                                        incoming.shutdown().await?;
-                                                        outgoing.shutdown().await?;
 
                                                         Ok::<_, Error>(())
                                                     }
                                                     .await
                                                     {
-                                                        tracing::error!("{e}");
-                                                        tracing::debug!("{e:?}");
+                                                        tracing::trace!("Tor Stream Error: {e}");
+                                                        tracing::trace!("{e:?}");
                                                     }
                                                 });
                                                 Ok::<_, Error>(())
                                             }
                                             .await
                                             {
-                                                tracing::error!("{e}");
-                                                tracing::debug!("{e:?}");
+                                                tracing::trace!("Tor Request Error: {e}");
+                                                tracing::trace!("{e:?}");
                                             }
                                         }
                                     });
@@ -585,7 +832,7 @@ impl OnionService {
                             }
                             .await
                             {
-                                tracing::error!("{e}");
+                                tracing::error!("Tor Client Error: {e}");
                                 tracing::debug!("{e:?}");
                             }
                         }
@@ -638,5 +885,20 @@ impl OnionService {
             .service
             .peek(|s| s.as_ref().map(|s| s.status().state().into()))
             .unwrap_or(OnionServiceState::Bootstrapping)
+    }
+
+    pub fn info(&self) -> OnionServiceInfo {
+        OnionServiceInfo {
+            state: self.state(),
+            bindings: self.0.bindings.peek(|b| {
+                b.iter()
+                    .filter_map(|(port, b)| {
+                        b.iter()
+                            .find(|(_, rc)| rc.strong_count() > 0)
+                            .map(|(addr, _)| (*port, *addr))
+                    })
+                    .collect()
+            }),
+        }
     }
 }

@@ -6,8 +6,8 @@ use std::os::unix::prelude::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::pin::Pin;
 use std::str::FromStr;
-use std::sync::Arc;
 use std::sync::atomic::AtomicU64;
+use std::sync::Arc;
 use std::task::{Poll, Waker};
 use std::time::Duration;
 
@@ -22,7 +22,7 @@ use nix::unistd::{Gid, Uid};
 use serde::{Deserialize, Serialize};
 use tokio::fs::{File, OpenOptions};
 use tokio::io::{
-    AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, DuplexStream, ReadBuf, WriteHalf, duplex,
+    duplex, AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt, DuplexStream, ReadBuf, WriteHalf,
 };
 use tokio::net::TcpStream;
 use tokio::sync::{Notify, OwnedMutexGuard};
@@ -1527,6 +1527,9 @@ impl ValueParserFactory for TermSize {
         FromStrParser::new()
     }
 }
+
+pub trait ReadWriter: AsyncRead + AsyncWrite {}
+impl<T: AsyncRead + AsyncWrite> ReadWriter for T {}
 
 #[instrument(skip_all)]
 async fn wait_for_created(stream: &mut EventStream<[u8; 1024]>, path: &Path) -> Result<(), Error> {
