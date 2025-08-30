@@ -275,7 +275,7 @@ export default {
   293: 'Erneut versuchen',
   294: '.s9pk-Paketdatei hochladen',
   295: 'Warnung: Der Upload über Tor ist langsam.',
-  296: 'Hochladen',
+  296: 'Auswählen',
   297: 'Version 1 s9pk erkannt. Dieses Format ist veraltet. Falls nötig, kann ein V1 s9pk über start-cli installiert werden.',
   298: 'Ungültige Paketdatei',
   300: 'Anleitung anzeigen',
@@ -585,4 +585,9 @@ export default {
   618: 'Statische Server',
   619: 'Warnung. StartOS verwendet derzeit das folgende Gateway für DNS',
   620: 'Wenn Sie dieses Gateway für die Auflösung privater Domains verwenden möchten, legen Sie alternative statische DNS-Server mit dem obigen Formular fest.',
+  621: 'Einen Dienst paketieren',
+  622: 'Veröffentlicht',
+  623: 'Alternative Implementierungen',
+  624: 'Versionen',
+  625: 'Eine andere Version auswählen',
 } satisfies i18n

@@ -275,7 +275,7 @@ export default {
   293: 'Réessayer',
   294: 'Téléverser un fichier .s9pk',
   295: 'Attention : le téléversement du paquet sera lent via Tor.',
-  296: 'Téléverser',
+  296: 'Sélectionner',
   297: 'Version 1 de s9pk détectée. Ce format de paquet est obsolète. Vous pouvez installer manuellement un s9pk V1 via start-cli si nécessaire.',
   298: 'Fichier paquet invalide',
   300: 'Voir les instructions',
@@ -585,4 +585,9 @@ export default {
   618: 'Serveurs statiques',
   619: 'Avertissement. StartOS utilise actuellement la passerelle suivante pour le DNS',
   620: 'Si vous souhaitez utiliser cette passerelle pour la résolution de domaines privés, définissez des serveurs DNS statiques alternatifs à l’aide du formulaire ci-dessus.',
+  621: 'Emballer un service',
+  622: 'Publié',
+  623: 'Implémentations alternatives',
+  624: 'Versions',
+  625: 'Sélectionner une autre version',
 } satisfies i18n

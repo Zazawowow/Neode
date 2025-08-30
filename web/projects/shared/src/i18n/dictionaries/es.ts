@@ -275,7 +275,7 @@ export default {
   293: 'Intentar de nuevo',
   294: 'Subir archivo de paquete .s9pk',
   295: 'Advertencia: la carga del paquete será lenta a través de Tor.',
-  296: 'Subir',
+  296: 'Seleccionar',
   297: 'Se detectó un paquete s9pk de versión 1. Este formato está obsoleto. Puedes instalarlo manualmente con start-cli si es necesario.',
   298: 'Archivo de paquete inválido',
   300: 'Ver instrucciones',
@@ -585,4 +585,9 @@ export default {
   618: 'Servidores estáticos',
   619: 'Advertencia. StartOS está utilizando actualmente la siguiente puerta de enlace para DNS',
   620: 'Si deseas usar esta puerta de enlace para la resolución de dominios privados, configura servidores DNS estáticos alternativos usando el formulario anterior.',
+  621: 'Empaquetar un servicio',
+  622: 'Publicado',
+  623: 'Implementaciones alternativas',
+  624: 'Versiones',
+  625: 'Seleccionar otra versión',
 } satisfies i18n

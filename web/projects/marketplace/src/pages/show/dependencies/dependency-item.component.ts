@@ -1,7 +1,7 @@
 import { KeyValue } from '@angular/common'
 import { ChangeDetectionStrategy, Component, Input } from '@angular/core'
 import { RouterModule } from '@angular/router'
-import { ExverPipesModule } from '@start9labs/shared'
+import { ExverPipesModule, i18nPipe } from '@start9labs/shared'
 import { T } from '@start9labs/start-sdk'
 import { TuiAvatar, TuiLineClamp } from '@taiga-ui/kit'
 import { MarketplacePkgBase } from '../../../types'
@@ -20,9 +20,9 @@ import { MarketplacePkgBase } from '../../../types'
             </span>
             <p>
               @if (dep.value.optional) {
-                <span>(optional)</span>
+                <span>({{ 'Optional' | i18n }})</span>
               } @else {
-                <span>(required)</span>
+                <span>({{ 'Required' | i18n }})</span>
               }
             </p>
           </div>
@@ -88,7 +88,7 @@ import { MarketplacePkgBase } from '../../../types'
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterModule, TuiAvatar, ExverPipesModule, TuiLineClamp],
+  imports: [RouterModule, TuiAvatar, ExverPipesModule, TuiLineClamp, i18nPipe],
 })
 export class MarketplaceDepItemComponent {
   @Input({ required: true })

@@ -107,8 +107,8 @@ export default class GatewaysComponent {
               }),
             }),
           },
-          upload: {
-            name: this.i18n.transform('Upload'),
+          select: {
+            name: this.i18n.transform('Select'),
             spec: ISB.InputSpec.of({
               file: ISB.Value.file({
                 name: this.i18n.transform('File'),

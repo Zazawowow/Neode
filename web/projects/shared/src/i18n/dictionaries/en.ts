@@ -274,7 +274,7 @@ export const ENGLISH = {
   'Try again': 293,
   'Upload .s9pk package file': 294,
   'Warning: package upload will be slow over Tor.': 295,
-  'Upload': 296,
+  'Select': 296,
   'Version 1 s9pk detected. This package format is deprecated. You can sideload a V1 s9pk via start-cli if necessary.': 297,
   'Invalid package file': 298,
   'View instructions': 300,
@@ -584,4 +584,9 @@ export const ENGLISH = {
   'Static Servers': 618, // as in, servers that do not change
   'Warning. StartOS is currently using the following gateway for DNS': 619,
   'If you intend to use this gateway for private domain resolution, set alternative static DNS servers using the form above.': 620,
+  'Package a service': 621, // as in, package a software application for an operating system
+  'Released': 622, // as in, the date something became available
+  'Alternative Implementations': 623,
+  'Versions': 624,
+  'Select another version': 625,
 } as const

@@ -275,7 +275,7 @@ export default {
   293: 'Spróbuj ponownie',
   294: 'Prześlij plik pakietu .s9pk',
   295: 'Uwaga: przesyłanie pakietu przez Tor będzie powolne.',
-  296: 'Prześlij',
+  296: 'Wybierz',
   297: 'Wykryto pakiet s9pk w wersji 1. Ten format pakietu jest przestarzały. Możesz zainstalować pakiet s9pk V1 przez start-cli, jeśli to konieczne.',
   298: 'Nieprawidłowy plik pakietu',
   300: 'Zobacz instrukcje',
@@ -585,4 +585,9 @@ export default {
   618: 'Serwery statyczne',
   619: 'Ostrzeżenie. StartOS obecnie używa następującej bramy do DNS',
   620: 'Jeśli zamierzasz używać tej bramy do rozwiązywania domen prywatnych, ustaw alternatywne statyczne serwery DNS za pomocą powyższego formularza.',
+  621: 'Spakietuj usługę',
+  622: 'Wydano',
+  623: 'Alternatywne implementacje',
+  624: 'Wersje',
+  625: 'Wybierz inną wersję',
 } satisfies i18n
