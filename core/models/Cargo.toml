@@ -13,6 +13,7 @@ color-eyre = "0.6.2"
 ed25519-dalek = { version = "2.0.0", features = ["serde"] }
 gpt = "4.1.0"
 lazy_static = "1.4"
+lettre = { version = "0.11", default-features = false }
 mbrman = "0.6.0"
 exver = { version = "0.2.0", git = "https://github.com/Start9Labs/exver-rs.git", features = [
   "serde",

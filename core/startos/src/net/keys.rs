@@ -2,14 +2,17 @@ use serde::{Deserialize, Serialize};
 
 use crate::account::AccountInfo;
 use crate::net::acme::AcmeCertStore;
+use crate::net::iroh::IrohKeyStore;
 use crate::net::ssl::CertStore;
-use crate::net::tor::OnionStore;
+use crate::net::tor::OnionKeyStore;
 use crate::prelude::*;
 
 #[derive(Debug, Deserialize, Serialize, HasModel)]
 #[model = "Model<Self>"]
 pub struct KeyStore {
-    pub onion: OnionStore,
+    pub onion: OnionKeyStore,
+    #[serde(default)]
+    pub iroh: IrohKeyStore,
     pub local_certs: CertStore,
     #[serde(default)]
     pub acme: AcmeCertStore,
@@ -17,7 +20,8 @@ pub struct KeyStore {
 impl KeyStore {
     pub fn new(account: &AccountInfo) -> Result<Self, Error> {
         let mut res = Self {
-            onion: OnionStore::new(),
+            onion: OnionKeyStore::new(),
+            iroh: IrohKeyStore::new(),
             local_certs: CertStore::new(account)?,
             acme: AcmeCertStore::new(),
         };

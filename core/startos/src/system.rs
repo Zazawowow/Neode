@@ -9,7 +9,7 @@ use color_eyre::eyre::eyre;
 use futures::{FutureExt, TryStreamExt};
 use imbl::vector;
 use imbl_value::InternedString;
-use rpc_toolkit::{Context, Empty, HandlerExt, ParentHandler, from_fn_async};
+use rpc_toolkit::{from_fn_async, Context, Empty, HandlerExt, ParentHandler};
 use rustls::RootCertStore;
 use rustls_pki_types::CertificateDer;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -24,12 +24,12 @@ use crate::logs::{LogSource, LogsParams, SYSTEM_UNIT};
 use crate::prelude::*;
 use crate::rpc_continuations::{Guid, RpcContinuation, RpcContinuations};
 use crate::shutdown::Shutdown;
-use crate::util::Invoke;
-use crate::util::cpupower::{Governor, get_available_governors, set_governor};
+use crate::util::cpupower::{get_available_governors, set_governor, Governor};
 use crate::util::io::open_file;
 use crate::util::net::WebSocketExt;
-use crate::util::serde::{HandlerExtSerde, WithIoFormat, display_serializable};
+use crate::util::serde::{display_serializable, HandlerExtSerde, WithIoFormat};
 use crate::util::sync::Watch;
+use crate::util::Invoke;
 use crate::{MAIN_DATA, PACKAGE_DATA};
 
 pub fn experimental<C: Context>() -> ParentHandler<C> {
@@ -1024,7 +1024,7 @@ pub struct TestSmtpParams {
     #[arg(long)]
     pub login: String,
     #[arg(long)]
-    pub password: Option<String>,
+    pub password: String,
 }
 pub async fn test_smtp(
     _: RpcContext,
@@ -1037,74 +1037,23 @@ pub async fn test_smtp(
         password,
     }: TestSmtpParams,
 ) -> Result<(), Error> {
-    #[cfg(feature = "mail-send")]
-    {
-        use mail_send::SmtpClientBuilder;
-        use mail_send::mail_builder::{self, MessageBuilder};
-        use rustls_pki_types::pem::PemObject;
+    use lettre::message::header::ContentType;
+    use lettre::transport::smtp::authentication::Credentials;
+    use lettre::{AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor};
 
-        let Some(pass_val) = password else {
-            return Err(Error::new(
-                eyre!("mail-send requires a password"),
-                ErrorKind::InvalidRequest,
-            ));
-        };
-
-        let mut root_cert_store = RootCertStore::empty();
-        let pem = tokio::fs::read("/etc/ssl/certs/ca-certificates.crt").await?;
-        for cert in CertificateDer::pem_slice_iter(&pem) {
-            root_cert_store.add_parsable_certificates([cert.with_kind(ErrorKind::OpenSsl)?]);
-        }
-
-        let cfg = Arc::new(
-            rustls::ClientConfig::builder_with_provider(Arc::new(
-                rustls::crypto::ring::default_provider(),
-            ))
-            .with_safe_default_protocol_versions()?
-            .with_root_certificates(root_cert_store)
-            .with_no_client_auth(),
-        );
-        let client = SmtpClientBuilder::new_with_tls_config(server, port, cfg)
-            .implicit_tls(false)
-            .credentials((login.split("@").next().unwrap().to_owned(), pass_val));
-
-        fn parse_address<'a>(addr: &'a str) -> mail_builder::headers::address::Address<'a> {
-            if addr.find("<").map_or(false, |start| {
-                addr.find(">").map_or(false, |end| start < end)
-            }) {
-                addr.split_once("<")
-                    .map(|(name, addr)| (name.trim(), addr.strip_suffix(">").unwrap_or(addr)))
-                    .unwrap()
-                    .into()
-            } else {
-                addr.into()
-            }
-        }
-
-        let message = MessageBuilder::new()
-            .from(parse_address(&from))
-            .to(parse_address(&to))
-            .subject("StartOS Test Email")
-            .text_body("This is a test email sent from your StartOS Server");
-        client
-            .connect()
-            .await
-            .map_err(|e| {
-                Error::new(
-                    eyre!("mail-send connection error: {:?}", e),
-                    ErrorKind::Unknown,
-                )
-            })?
-            .send(message)
-            .await
-            .map_err(|e| Error::new(eyre!("mail-send send error: {:?}", e), ErrorKind::Unknown))?;
-        Ok(())
-    }
-    #[cfg(not(feature = "mail-send"))]
-    Err(Error::new(
-        eyre!("test-smtp requires mail-send feature to be enabled"),
-        ErrorKind::InvalidRequest,
-    ))
+    AsyncSmtpTransport::<Tokio1Executor>::relay(&server)?
+        .credentials(Credentials::new(login, password))
+        .build()
+        .send(
+            Message::builder()
+                .from(from.parse()?)
+                .to(to.parse()?)
+                .subject("StartOS Test Email")
+                .header(ContentType::TEXT_PLAIN)
+                .body("This is a test email sent from your StartOS Server".to_owned())?,
+        )
+        .await?;
+    Ok(())
 }
 
 #[tokio::test]

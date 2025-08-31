@@ -24,6 +24,7 @@ use crate::net::gateway::{
 use crate::net::host::address::HostAddress;
 use crate::net::host::binding::{AddSslOptions, BindId, BindOptions};
 use crate::net::host::{host_for, Host, Hosts};
+use crate::net::iroh::IrohController;
 use crate::net::service_interface::{HostnameInfo, IpHostname, OnionHostname};
 use crate::net::socks::SocksController;
 use crate::net::tor::{OnionAddress, TorController, TorSecretKey};
@@ -37,6 +38,7 @@ use crate::HOST_IP;
 pub struct NetController {
     pub(crate) db: TypedPatchDb<Database>,
     pub(super) tor: TorController,
+    pub(super) iroh: IrohController,
     pub(super) vhost: VHostController,
     pub(crate) net_iface: Arc<NetworkInterfaceController>,
     pub(super) dns: DnsController,
@@ -54,10 +56,12 @@ impl NetController {
     ) -> Result<Self, Error> {
         let net_iface = Arc::new(NetworkInterfaceController::new(db.clone()));
         let tor = TorController::new()?;
+        let iroh = IrohController::new()?;
         let socks = SocksController::new(socks_listen, tor.clone())?;
         Ok(Self {
             db: db.clone(),
             tor,
+            iroh,
             vhost: VHostController::new(db.clone(), net_iface.clone()),
             dns: DnsController::init(db, &net_iface.watcher).await?,
             forward: PortForwardController::new(net_iface.watcher.subscribe()),

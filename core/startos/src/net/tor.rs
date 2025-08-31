@@ -6,7 +6,7 @@ use std::sync::{Arc, Weak};
 use std::time::{Duration, Instant};
 
 use arti_client::config::onion_service::OnionServiceConfigBuilder;
-use arti_client::{DataStream, TorClient, TorClientConfig};
+use arti_client::{TorClient, TorClientConfig};
 use base64::Engine;
 use clap::Parser;
 use color_eyre::eyre::eyre;
@@ -62,7 +62,7 @@ impl FromStr for OnionAddress {
                 Cow::Owned(format!("{s}.onion"))
             }
             .parse::<HsId>()
-            .with_kind(ErrorKind::Tor)?,
+            .with_kind(ErrorKind::ParseNetAddress)?,
         ))
     }
 }
@@ -165,8 +165,8 @@ impl<'de> Deserialize<'de> for TorSecretKey {
 }
 
 #[derive(Default, Deserialize, Serialize)]
-pub struct OnionStore(BTreeMap<OnionAddress, TorSecretKey>);
-impl Map for OnionStore {
+pub struct OnionKeyStore(BTreeMap<OnionAddress, TorSecretKey>);
+impl Map for OnionKeyStore {
     type Key = OnionAddress;
     type Value = TorSecretKey;
     fn key_str(key: &Self::Key) -> Result<impl AsRef<str>, Error> {
@@ -176,7 +176,7 @@ impl Map for OnionStore {
         Ok(InternedString::from_display(key))
     }
 }
-impl OnionStore {
+impl OnionKeyStore {
     pub fn new() -> Self {
         Self::default()
     }
@@ -184,7 +184,7 @@ impl OnionStore {
         self.0.insert(key.onion_address(), key);
     }
 }
-impl Model<OnionStore> {
+impl Model<OnionKeyStore> {
     pub fn new_key(&mut self) -> Result<TorSecretKey, Error> {
         let key = TorSecretKey::generate();
         self.insert(&key.onion_address(), &key)?;
@@ -199,7 +199,7 @@ impl Model<OnionStore> {
             .de()
     }
 }
-impl std::fmt::Debug for OnionStore {
+impl std::fmt::Debug for OnionKeyStore {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         struct OnionStoreMap<'a>(&'a BTreeMap<OnionAddress, TorSecretKey>);
         impl<'a> std::fmt::Debug for OnionStoreMap<'a> {
@@ -227,7 +227,7 @@ pub fn tor_api<C: Context>() -> ParentHandler<C> {
             from_fn_async(list_services)
                 .with_display_serializable()
                 .with_custom_display_fn(|handle, result| display_services(handle.params, result))
-                .with_about("Display Tor V3 Onion Addresses")
+                .with_about("Show the status of running onion services")
                 .with_call_remote::<CliContext>(),
         )
         .subcommand(
