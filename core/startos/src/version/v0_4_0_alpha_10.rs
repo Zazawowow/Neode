@@ -67,6 +67,7 @@ impl VersionT for Version {
                     private.insert(domain.clone());
                 }
             }
+            host["hostnameInfo"] = json!({});
             host["publicDomains"] = to_value(&public)?;
             host["privateDomains"] = to_value(&private)?;
             Ok::<_, Error>(())
