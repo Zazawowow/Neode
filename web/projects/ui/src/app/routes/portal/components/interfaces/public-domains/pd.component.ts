@@ -59,7 +59,7 @@ import { PublicDomain, PublicDomainService } from './pd.service'
   `,
   styles: `
     :host {
-      grid-column: span 4;
+      grid-column: span 7;
     }
   `,
   host: { class: 'g-card' },

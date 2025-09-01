@@ -78,7 +78,8 @@ import { InterfaceComponent } from './interface.component'
   `,
   styles: `
     :host {
-      grid-column: span 3;
+      grid-column: span 4;
+      overflow-wrap: break-word;
     }
   `,
   host: { class: 'g-card' },

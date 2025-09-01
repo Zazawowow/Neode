@@ -82,7 +82,8 @@ type OnionForm = {
   `,
   styles: `
     :host {
-      grid-column: span 3;
+      grid-column: span 6;
+      overflow-wrap: break-word;
     }
   `,
   host: { class: 'g-card' },

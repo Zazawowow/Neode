@@ -48,7 +48,7 @@ import { InterfaceComponent } from './interface.component'
   `,
   styles: `
     :host {
-      grid-column: span 2;
+      grid-column: span 3;
 
       &:has(+ section table) header {
         background: transparent;

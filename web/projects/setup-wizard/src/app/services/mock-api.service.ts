@@ -8,7 +8,7 @@ import {
 } from '@start9labs/shared'
 import { T } from '@start9labs/start-sdk'
 import * as jose from 'node-jose'
-import { interval, map, Observable } from 'rxjs'
+import { first, interval, map, Observable } from 'rxjs'
 import { ApiService } from './api.service'
 
 @Injectable({
@@ -119,6 +119,7 @@ export class MockApiService extends ApiService {
     } else if (guid === 'progress-guid') {
       // @TODO Matt mock progress
       return interval(1000).pipe(
+        first(),
         map(() => ({
           overall: true,
           phases: [

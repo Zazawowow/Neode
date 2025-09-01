@@ -29,7 +29,7 @@ import { InterfaceAddressesComponent } from './addresses/addresses.component'
 
       div {
         display: grid;
-        grid-template-columns: repeat(6, 1fr);
+        grid-template-columns: repeat(10, 1fr);
         gap: inherit;
         flex-direction: column;
       }
