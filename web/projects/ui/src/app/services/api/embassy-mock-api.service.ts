@@ -303,17 +303,6 @@ export class MockApiService extends ApiService {
     }
   }
 
-  async getTorLogs(params: RR.GetServerLogsReq): Promise<RR.GetServerLogsRes> {
-    await pauseFor(2000)
-    const entries = this.randomLogs(params.limit)
-
-    return {
-      entries,
-      startCursor: 'startCursor',
-      endCursor: 'end-cursor',
-    }
-  }
-
   async followServerLogs(
     params: RR.FollowServerLogsReq,
   ): Promise<RR.FollowServerLogsRes> {
@@ -325,16 +314,6 @@ export class MockApiService extends ApiService {
   }
 
   async followKernelLogs(
-    params: RR.FollowServerLogsReq,
-  ): Promise<RR.FollowServerLogsRes> {
-    await pauseFor(2000)
-    return {
-      startCursor: 'start-cursor',
-      guid: 'logs-guid',
-    }
-  }
-
-  async followTorLogs(
     params: RR.FollowServerLogsReq,
   ): Promise<RR.FollowServerLogsRes> {
     await pauseFor(2000)

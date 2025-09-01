@@ -125,7 +125,6 @@ export default {
   137: 'Tor-Logs',
   138: 'Rohdatenprotokolle des Betriebssystems ohne Filter',
   139: 'Diagnose für Treiber und andere Kernel-Prozesse',
-  140: 'Diagnose-Logs des Tor-Daemons unter StartOS',
   141: 'Downgrade',
   142: 'Neu installieren',
   143: 'Installierte',

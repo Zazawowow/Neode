@@ -125,7 +125,6 @@ export default {
   137: 'Logi Tor',
   138: 'Surowe, nieprzefiltrowane logi systemu operacyjnego',
   139: 'Diagnostyka sterowników i innych procesów jądra',
-  140: 'Logi diagnostyczne usługi Tor w StartOS',
   141: 'Przywróć starszą wersję',
   142: 'Zainstaluj ponownie',
   143: 'Zainstalowane',

@@ -125,7 +125,6 @@ export default {
   137: 'Registros de Tor',
   138: 'Registros sin filtrar del sistema operativo',
   139: 'Diagnóstico de controladores y otros procesos del kernel',
-  140: 'Registros de diagnóstico del servicio Tor en StartOS',
   141: 'Retroceder versión',
   142: 'Reinstalar',
   143: 'Instalados',

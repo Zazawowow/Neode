@@ -124,7 +124,6 @@ export const ENGLISH = {
   'Tor Logs': 137,
   'Raw, unfiltered operating system logs': 138,
   'Diagnostics for drivers and other kernel processes': 139,
-  'Diagnostic logs for the Tor daemon on StartOS': 140,
   'Downgrade': 141,
   'Reinstall': 142,
   'Installed': 143,

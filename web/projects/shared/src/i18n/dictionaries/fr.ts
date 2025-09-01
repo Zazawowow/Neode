@@ -125,7 +125,6 @@ export default {
   137: 'Journaux Tor',
   138: 'Journaux système bruts et non filtrés',
   139: 'Diagnostics des pilotes et autres processus du noyau',
-  140: 'Journaux de diagnostic pour le service Tor sur StartOS',
   141: 'Rétrograder',
   142: 'Réinstaller',
   143: 'Installé',
