@@ -12,7 +12,8 @@ const {
   gitHash,
   useMocks,
   ui: { api, marketplace, mocks },
-} = require('../../../../../config.json') as WorkspaceConfig
+  enableDidFlow,
+} = require('../../../../../config.json') as WorkspaceConfig & { enableDidFlow?: boolean }
 
 @Injectable({
   providedIn: 'root',
@@ -31,6 +32,7 @@ export class ConfigService {
   gitHash = gitHash
   api = api
   marketplace = marketplace
+  enableDidFlow = !!enableDidFlow
   skipStartupAlerts = useMocks && mocks.skipStartupAlerts
   isConsulate = (window as any)['platform'] === 'ios'
   supportsWebSockets = !!window.WebSocket || this.isConsulate

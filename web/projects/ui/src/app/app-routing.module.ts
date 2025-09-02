@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core'
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router'
 import { AuthGuard } from './guards/auth.guard'
 import { UnauthGuard } from './guards/unauth.guard'
+import { IdentityFeatureGuard } from './guards/identity-feature.guard'
 
 const routes: Routes = [
   {
@@ -14,6 +15,13 @@ const routes: Routes = [
     canActivate: [UnauthGuard],
     loadChildren: () =>
       import('./pages/login/login.module').then(m => m.LoginPageModule),
+  },
+
+  {
+    path: 'setup',
+    canActivate: [UnauthGuard, IdentityFeatureGuard],
+    loadChildren: () =>
+      import('./pages/identity/identity.module').then(m => m.IdentityModule),
   },
   {
     path: 'home',

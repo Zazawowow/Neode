@@ -1,0 +1,38 @@
+.with-bg { position: relative; min-height: 100vh; }
+
+.bg { position: fixed; inset: 0; background: url('/assets/img/welcome.png') center/cover no-repeat fixed; z-index: 0; }
+
+.wizard-wrap {
+  position: relative; z-index: 1;
+  max-width: 540px; margin: 0 auto; padding: 24px;
+  min-height: 16rem;
+  display: flex; flex-direction: column; justify-content: center; align-items: stretch;
+  /* center vertically using viewport height */
+  margin-top: calc((100vh - 16rem) / 2);
+  border-radius: 24px;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+h1, h2, p { color: rgba(255,255,255,0.96); text-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+ion-button { align-self: center; margin-top: 16px; }
+
+/* Match login button glass style */
+.setup-button {
+  --background: rgba(0, 0, 0, 0.6);
+  --background-hover: rgba(0, 0, 0, 0.68);
+  --background-activated: rgba(0, 0, 0, 0.72);
+  --color: #f2f2f2;
+  --border-color: rgba(255,255,255,0.85);
+  --border-width: 1px;
+  --border-style: solid;
+  --box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  height: 45px;
+  width: 180px;
+  --border-radius: 50px;
+}
+
+

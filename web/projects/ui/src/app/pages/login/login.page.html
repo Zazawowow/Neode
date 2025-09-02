@@ -79,6 +79,9 @@
               </form>
             </ion-card-content>
           </ion-card>
+          <div *ngIf="config.enableDidFlow" class="did-link ion-text-center ion-margin-top">
+            <a routerLink="/setup">Set up your Decentralized ID</a>
+          </div>
         </div>
       </ion-col>
     </ion-row>

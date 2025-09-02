@@ -65,7 +65,12 @@ export class AppComponent implements OnDestroy {
       document.body.classList.add('splash-complete')
       this.authService.isVerified$.pipe(take(1)).subscribe(verified => {
         if (!verified) {
-          this.router.navigate(['/login'], { replaceUrl: true })
+          const config = require('../../../../config.json')
+          if (config.enableDidFlow) {
+            this.router.navigate(['/setup'], { replaceUrl: true })
+          } else {
+            this.router.navigate(['/login'], { replaceUrl: true })
+          }
         }
       })
     }, 2000)

@@ -17,6 +17,21 @@ ion-alert {
   }
 }
 
+/* Shared glass button style (matches login) */
+.setup-button {
+  --background: rgba(0, 0, 0, 0.6);
+  --background-hover: rgba(0, 0, 0, 0.68);
+  --background-activated: rgba(0, 0, 0, 0.72);
+  --color: #f2f2f2;
+  --border-color: rgba(255,255,255,0.85);
+  --border-width: 1px;
+  --border-style: solid;
+  --box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  height: 45px;
+  width: 180px;
+  --border-radius: 50px;
+}
+
 .swiper {
   .swiper-slide {
     display: unset;

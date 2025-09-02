@@ -25,6 +25,7 @@ import { SplitPaneTracker } from 'src/app/services/split-pane.service'
 import { Emver, THEME } from '@start9labs/shared'
 import { ConnectionService } from 'src/app/services/connection.service'
 import { ConfigService } from 'src/app/services/config.service'
+import { DidStateService } from 'src/app/services/did-state.service'
 
 @Component({
   selector: 'app-menu',
@@ -113,6 +114,8 @@ export class MenuComponent {
   readonly sidebarOpen$ = this.splitPane.sidebarOpen$
 
   readonly theme$ = inject(THEME)
+  readonly did$ = this.didState.did$
+
 
   readonly warning$ = merge(
     of(this.config.isTorHttp()),
@@ -128,5 +131,10 @@ export class MenuComponent {
     private readonly emver: Emver,
     private readonly connectionService: ConnectionService,
     private readonly config: ConfigService,
+    private readonly didState: DidStateService,
   ) {}
+
+  copy(value: string) {
+    navigator.clipboard?.writeText(value).catch(() => {})
+  }
 }

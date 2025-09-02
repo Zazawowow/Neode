@@ -52,6 +52,26 @@
     </ion-item>
   </ion-menu-toggle>
 </ion-item-group>
+<ion-item-group class="menu" *ngIf="(did$ | async) as did">
+  <ion-item lines="full" color="transparent">
+    <ion-icon slot="start" name="finger-print-outline"></ion-icon>
+    <ion-label>
+      <div class="label montserrat">Decentralized ID</div>
+      <div class="did mono">{{ did.did }}</div>
+    </ion-label>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="copy(did.did)" [title]="'Copy DID'">
+        <ion-icon slot="icon-only" name="copy-outline"></ion-icon>
+      </ion-button>
+      <ion-button fill="clear" routerLink="/setup" [title]="'Manage'">
+        <ion-icon slot="icon-only" name="settings-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-item>
+  <ion-item lines="none" color="transparent">
+    <ion-button size="small" class="setup-button" routerLink="/setup">Manage DID</ion-button>
+  </ion-item>
+</ion-item-group>
 <img
   appSnek
   class="snek"
