@@ -11,11 +11,34 @@ tui-root {
   --side-max-width: 280px;
 
   .menu {
-    --background: rgba(0, 0, 0, 0.35);
+    /* neutralize Ionic color background */
+    --background: transparent !important;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-right: 1px solid rgba(255,255,255,0.18);
+      box-shadow: 6px 0 18px rgba(0,0,0,0.35);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* stack actual menu content above overlay */
+    > * { position: relative; z-index: 1; }
+  }
+
+  /* Also style ion-content shadow parts to guarantee effect */
+  ion-content::part(background) {
+    background: rgba(0, 0, 0, 0.35) !important;
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     border-right: 1px solid rgba(255,255,255,0.18);
-    box-shadow: 6px 0 18px rgba(0,0,0,0.35);
   }
 }
 

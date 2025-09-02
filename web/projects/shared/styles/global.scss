@@ -62,3 +62,46 @@ ion-content {
   font-family: 'Open Sans';
   font-display: swap;
 }
+
+/* Reusable dark glass containers */
+.glass-dark {
+  --background: transparent !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-dark::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ensure Ionic shadow parts are transparent so overlay shows through */
+.glass-dark::part(background) { background: transparent !important; }
+.glass-dark::part(scroll) { background: transparent !important; }
+
+/* Stack content above overlay */
+.glass-dark > * { position: relative; z-index: 1; }
+
+/* Sidebar variant with right border only */
+.glass-dark--sidebar::before {
+  border: none;
+  border-right: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 6px 0 18px rgba(0,0,0,0.35);
+}
+
+/* Bar variant for toolbars */
+.glass-dark-bar {
+  --background: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}

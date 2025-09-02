@@ -9,8 +9,8 @@
 }
 
 /* Glass top bar */
-.glass-toolbar {
-  --background: rgba(0, 0, 0, 0.35);
+ion-header .glass-toolbar {
+  --background: rgba(0, 0, 0, 0.35) !important;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border-bottom: 1px solid rgba(255,255,255,0.18);
@@ -18,8 +18,8 @@
 }
 
 /* Service card as glass item */
-.service-card {
-  --background: rgba(0, 0, 0, 0.35);
+:host ::ng-deep ion-item.service-card {
+  --background: rgba(0, 0, 0, 0.35) !important;
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   border: 1px solid rgba(255,255,255,0.18);
@@ -29,8 +29,6 @@
   color: #fff;
 }
 
-.service-card ion-label h2 { color: #fff; }
-.service-card ion-label p { color: rgba(255,255,255,0.8); }
-
-/* Optional: lighten open button */
-.service-card ion-button[fill='clear'] { --color: #f2f2f2; }
+:host ::ng-deep ion-item.service-card ion-label h2 { color: #fff !important; }
+:host ::ng-deep ion-item.service-card ion-label p { color: rgba(255,255,255,0.8) !important; }
+:host ::ng-deep ion-item.service-card ion-button[fill='clear'] { --color: #f2f2f2 !important; }
