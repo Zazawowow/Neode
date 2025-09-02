@@ -9,6 +9,14 @@ tui-root {
 
 .left-menu {
   --side-max-width: 280px;
+
+  .menu {
+    --background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-right: 1px solid rgba(255,255,255,0.18);
+    box-shadow: 6px 0 18px rgba(0,0,0,0.35);
+  }
 }
 
 .menu {

@@ -7,3 +7,30 @@
     font-size: 2rem;
   }
 }
+
+/* Glass top bar */
+.glass-toolbar {
+  --background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+/* Service card as glass item */
+.service-card {
+  --background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  border-radius: 18px;
+  margin-bottom: 16px;
+  color: #fff;
+}
+
+.service-card ion-label h2 { color: #fff; }
+.service-card ion-label p { color: rgba(255,255,255,0.8); }
+
+/* Optional: lighten open button */
+.service-card ion-button[fill='clear'] { --color: #f2f2f2; }
