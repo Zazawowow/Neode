@@ -11,36 +11,30 @@ tui-root {
   --side-max-width: 280px;
 
   .menu {
-    /* neutralize Ionic color background */
+    /* make inner content fully transparent so host blur shows through */
     --background: transparent !important;
     position: relative;
     overflow: hidden;
 
-    &::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.35);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border-right: 1px solid rgba(255,255,255,0.18);
-      box-shadow: 6px 0 18px rgba(0,0,0,0.35);
-      pointer-events: none;
-      z-index: 0;
-    }
+    /* remove inner overlay to avoid double layers that block blur */
+    &::before { display: none; }
 
-    /* stack actual menu content above overlay */
+    /* stack content */
     > * { position: relative; z-index: 1; }
   }
-
-  /* Also style ion-content shadow parts to guarantee effect */
-  ion-content::part(background) {
-    background: rgba(0, 0, 0, 0.35) !important;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border-right: 1px solid rgba(255,255,255,0.18);
-  }
 }
+
+/* Apply glass on ion-menu host container only */
+ion-menu.left-menu::part(container) {
+  background: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-right: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 6px 0 18px rgba(0,0,0,0.35);
+}
+
+/* Ensure the background part of ion-content is transparent */
+.left-menu ion-content::part(background) { background: transparent !important; }
 
 .menu {
   :host-context(body[data-theme='Light']) & {

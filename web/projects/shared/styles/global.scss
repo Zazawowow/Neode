@@ -105,3 +105,22 @@ ion-content {
   border-bottom: 1px solid rgba(255,255,255,0.18);
   box-shadow: 0 6px 18px rgba(0,0,0,0.35);
 }
+
+/* Ensure Ionic root is transparent so body background shows through */
+ion-app { background: transparent !important; }
+
+/* Enforce sidebar glass globally to avoid initial opaque flash */
+ion-menu.left-menu::part(container) {
+  background: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-right: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 6px 0 18px rgba(0,0,0,0.35);
+  transition: background 200ms ease, backdrop-filter 200ms ease;
+}
+
+/* Ensure no overlay/backdrop adds opacity */
+ion-menu.left-menu::part(backdrop) { background: transparent !important; }
+
+/* Make nested menu content always transparent */
+ion-menu.left-menu ion-content::part(background) { background: transparent !important; }
