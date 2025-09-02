@@ -44,6 +44,81 @@ tui-root {
   }
 }
 
+/* App content wrapper - hidden during splash */
+.app-content {
+  transition: opacity 0.5s ease;
+  opacity: 1;
+  
+  &--hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+/* Splash overlay */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  animation: bg-fade-in 1.5s ease forwards;
+}
+
+.splash__overlay {
+  position: absolute;
+  inset: 0;
+  background-image: url('/assets/img/bg.jpg');
+  background-size: auto 100vh; /* fit height */
+  background-position: center top;
+  background-repeat: no-repeat;
+  opacity: 0;
+  animation: bg-reveal 1.5s ease forwards 0.2s;
+}
+
+.splash__logo {
+  position: relative;
+  width: min(50vw, 350px);
+  max-width: 80vw;
+  height: auto;
+  filter: drop-shadow(0 6px 24px rgba(0,0,0,0.35));
+  opacity: 0;
+  animation: logo-draw 1.2s ease forwards 0.4s, logo-glitch 0.1s step-end 1.8s 1;
+  /* Ensure logo doesn't get clipped */
+  margin: 20px;
+  object-fit: contain;
+  border-radius: 0;
+  clip-path: none;
+  mask: none;
+  -webkit-mask: none;
+}
+
+@keyframes bg-fade-in {
+  0% { background: #000; }
+  100% { background: rgba(0,0,0,0.5); }
+}
+
+@keyframes bg-reveal {
+  0% { opacity: 0; transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Simulated SVG draw by stroke-dashoffset if paths present; fallback to fade/scale */
+@keyframes logo-draw {
+  0% { opacity: 0; transform: translateY(8px) scale(0.98); }
+  60% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 1; }
+}
+
+/* Quick glitch hide/show */
+@keyframes logo-glitch {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
 .divider {
   height: 100%;
   width: 10px;
@@ -122,4 +197,19 @@ tui-root {
   &_collapse:after {
     transform: rotate(45deg);
   }
+}
+
+.login-modal::part(content) {
+  --background: transparent;
+  backdrop-filter: none;
+}
+
+.login-modal .modal-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-modal login ion-card {
+  animation: fadeUpIn 400ms ease forwards;
 }

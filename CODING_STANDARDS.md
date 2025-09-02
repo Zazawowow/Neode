@@ -1,0 +1,85 @@
+# Neode Coding Standards
+
+## Project Overview
+Neode is a modern fork of StartOS focused on enhanced UI/UX and streamlined user experience.
+
+## Design Principles
+
+### Visual Design
+- **Font**: Avenir Next (primary), system fallbacks
+- **Spacing**: 4px grid system, 16px default padding
+- **Glass Effects**: iOS-style glassmorphism
+  ```scss
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  ```
+- **Animations**: Smooth 2s splash screens, subtle draw/glitch effects
+- **Backgrounds**: Persistent, high-quality imagery
+
+### UI Patterns
+- **Containers**: Modern glass cards over traditional dark boxes
+- **Transitions**: Smooth fade/slide animations (0.3-0.5s)
+- **Responsive**: Mobile-first with desktop enhancements
+- **Accessibility**: High contrast text on glass, clear focus states
+
+## Development Workflow
+
+### Priority Order
+1. **UI/UX First**: Polish user experience before backend complexity
+2. **Iterative**: Lightweight implementations that can be enhanced
+3. **Testing**: Use mock mode for rapid UI development
+4. **Integration**: Connect to backend after UI is solid
+
+### Project Structure
+```
+/Users/tx1138/Code/Neode/
+├── web/projects/shared/assets/     # Global images, fonts, icons
+├── web/projects/ui/               # Main application UI
+├── web/config.json               # Mock/live API toggle
+└── core/                         # Rust backend (future integration)
+```
+
+### Development Commands
+```bash
+# Start UI dev server with mocks
+npm --prefix web run start:ui
+
+# Build for production
+npm --prefix web run build:ui
+
+# Stop dev server
+lsof -nPi :8100 | awk 'NR>1 {print $2}' | xargs kill
+```
+
+## Code Standards
+
+### CSS/SCSS
+- Use 4px grid for all spacing
+- Prefer CSS custom properties for theming
+- Use glassmorphism mixins for consistency
+- Absolute paths for assets: `/assets/img/...`
+
+### TypeScript/Angular
+- Prefer reactive patterns (Observables)
+- Use Ionic components for mobile-first design
+- Keep splash/animation logic in app.component
+- Mock API calls during UI development
+
+### Asset Management
+- Images: `web/projects/shared/assets/img/`
+- Icons: `web/projects/shared/assets/icon/`
+- Fonts: `web/projects/shared/assets/fonts/`
+- Animations: `web/projects/shared/assets/animations/`
+
+## Performance
+- Optimize images (WebP when possible)
+- Lazy load non-critical fonts
+- Use backdrop-filter sparingly
+- Minimize animation complexity
+
+## Future Considerations
+- Plan for OS image builds on Debian
+- Keep UI changes separate from backend changes
+- Consider preconfigured app marketplace
+- Maintain StartOS compatibility where possible

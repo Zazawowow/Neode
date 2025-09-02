@@ -1,46 +1,40 @@
 <ion-content class="content">
-  <!-- Local HTTP -->
-  <ng-container *ngIf="config.isLanHttp(); else notLanHttp">
-    <ca-wizard></ca-wizard>
-  </ng-container>
+  <div *ngIf="config.isTorHttp()" class="banner">
+    <ion-item color="warning">
+      <ion-icon slot="start" name="warning-outline"></ion-icon>
+      <ion-label>
+        <h2 style="font-weight: bold">Http detected</h2>
+        <p style="font-weight: 600">
+          Tor is faster over https. Your Root CA must be trusted.
+          <a
+            href="https://docs.start9.com/0.3.5.x/user-manual/trust-ca"
+            target="_blank"
+            noreferrer
+            style="color: black"
+          >
+            View instructions
+          </a>
+        </p>
+      </ion-label>
+      <ion-button slot="end" color="light" (click)="launchHttps()">
+        Open Https
+        <ion-icon slot="end" name="open-outline"></ion-icon>
+      </ion-button>
+    </ion-item>
+  </div>
 
-  <!-- not Local HTTP -->
-  <ng-template #notLanHttp>
-    <div *ngIf="config.isTorHttp()" class="banner">
-      <ion-item color="warning">
-        <ion-icon slot="start" name="warning-outline"></ion-icon>
-        <ion-label>
-          <h2 style="font-weight: bold">Http detected</h2>
-          <p style="font-weight: 600">
-            Tor is faster over https. Your Root CA must be trusted.
-            <a
-              href="https://docs.start9.com/0.3.5.x/user-manual/trust-ca"
-              target="_blank"
-              noreferrer
-              style="color: black"
-            >
-              View instructions
-            </a>
-          </p>
-        </ion-label>
-        <ion-button slot="end" color="light" (click)="launchHttps()">
-          Open Https
-          <ion-icon slot="end" name="open-outline"></ion-icon>
-        </ion-button>
-      </ion-item>
-    </div>
-
-    <ion-grid class="grid">
-      <ion-row class="row">
-        <ion-col>
+  <ion-grid class="grid">
+    <ion-row class="row">
+      <ion-col>
+        <div class="card-wrap">
+          <div class="logo-layer">
+            <div class="logo-badge">
+              <img class="logo-image" src="assets/img/l484-icon.svg" alt="Neode Logo" />
+            </div>
+          </div>
           <ion-card>
-            <img
-              alt="StartOS Icon"
-              class="header-icon"
-              src="assets/img/icon.png"
-            />
             <ion-card-header>
-              <ion-card-title class="title">Login to StartOS</ion-card-title>
+              <ion-card-title class="title">Login to Neode</ion-card-title>
             </ion-card-header>
             <ion-card-content class="ion-margin">
               <form (submit)="submit()">
@@ -79,15 +73,14 @@
                   class="login-button"
                   type="submit"
                   expand="block"
-                  color="tertiary"
                 >
                   Login
                 </ion-button>
               </form>
             </ion-card-content>
           </ion-card>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
-  </ng-template>
+        </div>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 </ion-content>

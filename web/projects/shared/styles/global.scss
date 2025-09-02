@@ -27,3 +27,38 @@
 
 /* Import swiper styles for slides */
 @import '~swiper/scss';
+
+/* Global background image for app (persists behind splash/login) */
+body {
+  background-color: #000; /* ensure solid black page background */
+  background-image: url('/assets/img/bg.jpg');
+  background-size: auto 100vh; /* fit height, preserve aspect */
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Improve background on small viewports where fixed can cause jumpiness */
+@media (max-width: 767px) {
+  body {
+    background-attachment: scroll;
+    background-size: auto 100vh;
+    background-position: center top;
+  }
+}
+
+/* Ensure ion-content is transparent to show background */
+ion-content {
+  --background: transparent !important;
+}
+
+/* Optimize font loading */
+@font-face {
+  font-family: 'Montserrat';
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  font-display: swap;
+}

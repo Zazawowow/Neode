@@ -4,7 +4,11 @@
   [style.--widgets-width.px]="drawer.open ? drawer.width : 0"
 >
   <ion-app appEnter>
-    <ion-content>
+    <div class="splash" *ngIf="showSplash">
+      <div class="splash__overlay"></div>
+      <img class="splash__logo" src="assets/img/logo-large.svg" alt="Logo" />
+    </div>
+    <div class="app-content">
       <ion-split-pane
         contentId="main-content"
         [disabled]="!(authService.isVerified$ | async)"
@@ -41,22 +45,16 @@
         </ion-menu>
 
         <ion-router-outlet
-          [responsiveColViewport]="viewport"
           id="main-content"
           class="container"
           [class.container_offline]="offline$ | async"
         >
-          <ion-content
-            #viewport="viewport"
-            responsiveColViewport
-            class="ion-padding with-widgets"
-            style="pointer-events: none; opacity: 0"
-          ></ion-content>
         </ion-router-outlet>
       </ion-split-pane>
 
       <section appPreloader></section>
-    </ion-content>
+    </div>
+    
     <ion-footer>
       <footer appFooter></footer>
     </ion-footer>

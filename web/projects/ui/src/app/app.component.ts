@@ -1,4 +1,6 @@
 import { Component, inject, OnDestroy } from '@angular/core'
+import { Router } from '@angular/router'
+import { take } from 'rxjs/operators'
 import { combineLatest, map, merge, startWith } from 'rxjs'
 import { AuthService } from './services/auth.service'
 import { SplitPaneTracker } from './services/split-pane.service'
@@ -21,6 +23,7 @@ import { DataModel } from './services/patch-db/data-model'
   styleUrls: ['app.component.scss'],
 })
 export class AppComponent implements OnDestroy {
+  showSplash = true
   readonly subscription = merge(this.patchData, this.patchMonitor).subscribe()
   readonly sidebarOpen$ = this.splitPane.sidebarOpen$
   readonly widgetDrawer$ = this.clientStorageService.widgetDrawer$
@@ -49,12 +52,23 @@ export class AppComponent implements OnDestroy {
     readonly connection: ConnectionService,
     readonly clientStorageService: ClientStorageService,
     readonly themeSwitcher: ThemeSwitcherService,
+    private readonly router: Router,
   ) {}
 
   async ngOnInit() {
     this.patch
       .watch$('ui', 'name')
       .subscribe(name => this.titleService.setTitle(name || 'StartOS'))
+
+    setTimeout(() => {
+      this.showSplash = false
+      document.body.classList.add('splash-complete')
+      this.authService.isVerified$.pipe(take(1)).subscribe(verified => {
+        if (!verified) {
+          this.router.navigate(['/login'], { replaceUrl: true })
+        }
+      })
+    }, 2000)
   }
 
   splitPaneVisible({ detail }: any) {

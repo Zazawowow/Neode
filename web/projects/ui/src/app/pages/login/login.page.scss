@@ -1,76 +1,105 @@
+/* Ensure login page renders above background */
 .content {
-  --background: #333333;
-}
+  --background: transparent;
+  position: relative;
+  min-height: 100vh;
+  z-index: 1;
 
-.grid {
-  height: 100%;
-  max-width: 540px;
-}
-
-.row {
-  height: 100%;
-  align-items: center;
-  text-align: center;
-}
-
-.banner {
-  position: absolute;
-  padding: 20px;
-  width: 100%;
-  display: inline-block;
-
-  ion-item {
-    max-width: 800px;
-    margin: auto;
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 0;
+    pointer-events: none;
   }
 }
 
+.grid { height: 100%; max-width: 540px; position: relative; z-index: 2; }
+.row { height: 100vh; align-items: center; text-align: center; position: relative; z-index: 3; }
+
+/* Hide card until splash completes; then fade up elegantly */
+@keyframes fadeUpIn {
+  0% { opacity: 0; transform: translateY(28px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Initial state: hidden before intro completes */
 ion-card {
-  background: #414141;
-  box-shadow: 0 4px 4px rgba(17, 17, 17, 0.144);
-  border-radius: 35px;
+  opacity: 0;
+  transform: translateY(28px);
+}
+
+/* Trigger after splash adds body.splash-complete */
+:host-context(body.splash-complete) ion-card {
+  background: rgba(0, 0, 0, 0.35) !important; /* transparent black */
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  border-radius: 24px;
   min-height: 16rem;
-  contain: unset;
-  overflow: unset;
   position: relative;
+  z-index: 5;
+  animation: fadeUpIn 900ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
 }
 
-ion-item {
-  --background: transparent;
-  --border-radius: 0px;
-}
-  
-.title {
-  padding-top: 55px;
-  color: #e0e0e0;
-  font-size: 1.3rem;
-}
-
+/* Header icon not clipped: center and pull up with safe overlap */
 .header {
   &-icon {
-    width: 100px;
+    width: 88px;
     position: absolute;
     left: 50%;
-    margin-left: -50px;
-    top: -17%;
-    z-index: 100;
+    margin-left: -44px;
+    top: -20%;
+    z-index: 6;
+    border-radius: 0;
+    pointer-events: none;
   }
 }
 
+/* Title contrast on dark glass */
+.title { color: rgba(255,255,255,0.96); text-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+
+/* Inputs on dark glass */
+ion-item { --background: transparent; --border-radius: 0px; color: #fff; }
+ion-input { color: #fff; }
+
+/* Button glass: black translucent with border/text off-white */
 .login-button {
+  --background: rgba(0, 0, 0, 0.6);
+  --background-hover: rgba(0, 0, 0, 0.68);
+  --background-activated: rgba(0, 0, 0, 0.72);
+  --color: #f2f2f2;
+  --border-color: rgba(255,255,255,0.85);
+  --border-width: 1px;
+  --border-style: solid;
+  --box-shadow: 0 4px 16px rgba(0,0,0,0.35);
   height: 45px;
-  width: 120px;
+  width: 180px;
   --border-radius: 50px;
-  margin: 0 auto;
-  margin-top: 27px;
-  margin-bottom: 10px;
+  margin: 28px auto 12px;
 }
 
-.item-interactive {
-  --highlight-background: #5260ff !important;
-}
+.error { display: block; padding-top: 4px; }
 
-.error {
-  display: block;
-  padding-top: 4px;
+.card-wrap { position: relative; width: 100%; }
+
+.logo-layer { position: absolute; left: 50%; transform: translateX(-50%); top: -44px; z-index: 10; }
+.logo-badge {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.22);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.25);
+  display: flex; align-items: center; justify-content: center;
 }
+.logo-image { width: 56px; height: 56px; }
+
+/* keep ion-card in flow; logo sits above without moving it */
+ion-card { padding-top: 40px; }
