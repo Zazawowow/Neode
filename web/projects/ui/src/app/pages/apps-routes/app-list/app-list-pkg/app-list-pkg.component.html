@@ -3,6 +3,7 @@
   *ngIf="pkg.entry.manifest as manifest"
   detail="false"
   class="service-card"
+  lines="none"
   [routerLink]="['/services', manifest.id]"
 >
   <app-list-icon slot="start" [pkg]="pkg"></app-list-icon>

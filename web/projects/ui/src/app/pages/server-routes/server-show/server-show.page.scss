@@ -1,0 +1,36 @@
+ion-header ion-toolbar { @extend .glass-dark-bar !optional; }
+
+ion-item[color='warning'] {
+  --background: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
+ion-item-divider {
+  --background: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  color: #fff;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --padding-start: 16px;
+}
+
+ion-item {
+  --background: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  border-radius: 16px;
+  margin: 12px 0;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --inner-padding-end: 16px;
+}

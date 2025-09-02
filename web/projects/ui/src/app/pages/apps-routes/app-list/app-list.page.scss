@@ -17,6 +17,8 @@ ion-header .glass-toolbar {
   box-shadow: 0 6px 18px rgba(0,0,0,0.35);
 }
 
+ion-header .glass-dark-bar { --padding-start: 16px; --padding-end: 16px; }
+
 /* Service card as glass item */
 :host ::ng-deep ion-item.service-card {
   --background: rgba(0, 0, 0, 0.35) !important;
@@ -24,8 +26,12 @@ ion-header .glass-toolbar {
   -webkit-backdrop-filter: blur(18px);
   border: 1px solid rgba(255,255,255,0.18);
   box-shadow: 0 8px 24px rgba(0,0,0,0.45);
-  border-radius: 18px;
-  margin-bottom: 16px;
+  border-radius: 16px;
+  margin-bottom: 16px !important;
+  --inner-padding-start: 16px;
+  --inner-padding-end: 16px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
   color: #fff;
 }
 

@@ -1,5 +1,5 @@
 <ion-header>
-  <ion-toolbar>
+  <ion-toolbar class="glass-dark-bar">
     <ion-buttons slot="start" *ngIf="fromToast">
       <ion-back-button></ion-back-button>
     </ion-buttons>
@@ -10,10 +10,10 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="with-widgets">
+<ion-content class="ion-padding with-widgets">
   <!-- loading -->
   <ion-item-group *ngIf="loading; else loaded">
-    <ion-item-divider>
+    <ion-item-divider class="glass-divider">
       <ion-button slot="end" fill="clear">
         <ion-skeleton-text
           style="width: 90px; height: 14px; border-radius: 0"
@@ -21,7 +21,7 @@
         ></ion-skeleton-text>
       </ion-button>
     </ion-item-divider>
-    <ion-item *ngFor="let entry of ['', '', '', '']">
+    <ion-item *ngFor="let entry of ['', '', '', '']" class="glass-card">
       <ion-label>
         <ion-skeleton-text
           animated
@@ -72,7 +72,7 @@
         *ngIf="packageData$ | async as packageData"
         style="margin-bottom: 16px"
       >
-        <ion-item-divider>
+        <ion-item-divider class="glass-divider">
           <ion-button
             slot="end"
             fill="clear"
@@ -82,7 +82,7 @@
             Delete All
           </ion-button>
         </ion-item-divider>
-        <ion-item *ngFor="let not of notifications; let i = index">
+        <ion-item *ngFor="let not of notifications; let i = index" class="glass-card" lines="none">
           <ion-label>
             <h2>
               <b>

@@ -1,5 +1,5 @@
 <ion-header>
-  <ion-toolbar>
+  <ion-toolbar class="glass-dark-bar">
     <ion-title>System</ion-title>
     <ion-buttons slot="end">
       <badge-menu-button></badge-menu-button>
@@ -18,7 +18,8 @@
     <ion-item
       *ngIf="!server['ntp-synced']"
       color="warning"
-      class="ion-margin-bottom"
+      class="ion-margin-bottom glass-card"
+      lines="none"
     >
       <ion-icon slot="start" name="warning-outline"></ion-icon>
       <ion-label>
@@ -40,7 +41,7 @@
       </ion-button>
     </ion-item>
 
-    <ion-item *ngIf="isTorHttp" color="warning" class="ion-margin-bottom">
+    <ion-item *ngIf="isTorHttp" color="warning" class="ion-margin-bottom glass-card" lines="none">
       <ion-icon slot="start" name="warning-outline"></ion-icon>
       <ion-label>
         <h2 style="font-weight: bold">Http detected</h2>
@@ -62,7 +63,7 @@
     </ion-item>
 
     <div *ngFor="let cat of settings | keyvalue : asIsOrder">
-      <ion-item-divider>
+      <ion-item-divider class="glass-divider">
         <ion-text color="dark" (click)="addClick(cat.key)">
           {{ cat.key }}
         </ion-text>
@@ -71,6 +72,8 @@
       <ion-item
         *ngFor="let button of cat.value"
         button
+        class="glass-card"
+        lines="none"
         [style.display]="(button.title === 'Repair Disk' && !(showDiskRepair$ | async)) ? 'none' : 'block'"
         [detail]="button.detail"
         [disabled]="button.disabled$ | async"

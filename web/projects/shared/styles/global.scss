@@ -124,3 +124,69 @@ ion-menu.left-menu::part(backdrop) { background: transparent !important; }
 
 /* Make nested menu content always transparent */
 ion-menu.left-menu ion-content::part(background) { background: transparent !important; }
+
+/* Reusable glass card with 4px-grid padding */
+.glass-card {
+  --background: rgba(0, 0, 0, 0.35) !important;
+  --background-hover: rgba(0, 0, 0, 0.40) !important;
+  --background-focused: rgba(0, 0, 0, 0.40) !important;
+  --inner-border-width: 0 !important; /* remove hairline */
+  --border-width: 0 !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  border-radius: 16px;
+  /* Ionic item paddings if applied to ion-item */
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --inner-padding-start: 16px;
+  --inner-padding-end: 16px;
+  color: #fff;
+}
+
+/* Divider/header variant */
+.glass-divider {
+  --background: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  /* top/bottom border only */
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  border-left: none;
+  border-right: none;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  color: #fff;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --padding-start: 16px;
+  border-radius: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* Enforce glass on Ionic item shadow parts when class="glass-card" */
+ion-item.glass-card {
+  --inner-border-width: 0 !important;
+  --border-width: 0 !important;
+}
+ion-item.glass-card::part(native) {
+  background: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+/* Flush section headers: no side borders/radius; style shadow part */
+ion-item-divider.glass-divider::part(native) {
+  background: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-left: none !important;
+  border-right: none !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0 !important;
+}

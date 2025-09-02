@@ -1,5 +1,5 @@
 <ion-header>
-  <ion-toolbar>
+  <ion-toolbar class="glass-dark-bar">
     <ion-buttons slot="start" *ngIf="back">
       <ion-back-button></ion-back-button>
     </ion-buttons>
@@ -12,7 +12,7 @@
 
 <ion-content class="ion-padding with-widgets">
   <ng-container *ngIf="details$ | async as details">
-    <ion-item [color]="details.color">
+    <ion-item [color]="details.color" class="glass-card" lines="none">
       <ion-icon slot="start" name="information-circle-outline"></ion-icon>
       <ion-label>
         <h2 style="font-weight: 600" [innerHTML]="details.description"></h2>
@@ -22,7 +22,7 @@
     <ion-grid>
       <ion-row>
         <ion-col>
-          <div class="heading">
+          <div class="heading glass-card" style="padding: 12px 16px;">
             <store-icon
               class="icon"
               size="80px"
@@ -60,7 +60,7 @@
                     sizeSm="12"
                     sizeMd="6"
                   >
-                    <marketplace-item [pkg]="pkg">
+                    <marketplace-item [pkg]="pkg" class="glass-card">
                       <marketplace-status
                         class="status"
                         [version]="pkg.manifest.version"
@@ -72,7 +72,7 @@
               </ng-container>
 
               <ng-template #empty>
-                <div class="ion-padding">
+                <div class="ion-padding glass-card">
                   <h2>No results</h2>
                 </div>
               </ng-template>

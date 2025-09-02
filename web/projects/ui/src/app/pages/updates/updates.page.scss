@@ -1,5 +1,5 @@
 .item-container {
-  border-bottom: 1px solid #373737;
+  border-bottom: none; /* remove hairline between items */
   padding: 12px 0;
 }
 
@@ -11,31 +11,42 @@
   }
 }
 
-ion-header ion-toolbar {
-  @extend .glass-dark-bar !optional;
-}
-
+/* Neutral divider (Start9 Registry) - no container look, flush edges */
 ion-item-divider.inline {
-  --background: rgba(0, 0, 0, 0.35) !important;
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255,255,255,0.18);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --padding-start: 16px;
+  --inner-padding-end: 16px;
+  --background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
   color: #fff;
 }
 
-ion-item {
-  --background: rgba(0, 0, 0, 0.35) !important;
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border: 1px solid rgba(255,255,255,0.18);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.45);
-  border-radius: 12px;
-  margin-bottom: 12px;
-  --background-hover: none;
-  color: #fff;
-  
-  &::part(native) {
-    cursor: context-menu;
-  }
+/* Normalize accordion and remove any default borders/backgrounds */
+ion-accordion-group { 
+  border: none !important; 
+  background: transparent !important;
 }
+ion-accordion { 
+  border: none !important; 
+  box-shadow: none !important; 
+  background: transparent !important;
+}
+
+/* Remove grey background from ion-item-group container */
+ion-item-group {
+  background: transparent !important;
+}
+
+/* Remove grey background from item containers */
+.item-container {
+  background: transparent !important;
+}
+
+/* Update service cards (headers and content) spacing */
+ion-item.glass-card { margin: 12px 0; border-radius: 16px; }
+
+/* Ensure no lines inside items */
+ion-item.glass-card::part(native) { border: 0 !important; }

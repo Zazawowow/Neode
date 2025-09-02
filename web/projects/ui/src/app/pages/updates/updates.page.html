@@ -1,5 +1,5 @@
 <ion-header>
-  <ion-toolbar>
+  <ion-toolbar class="glass-dark-bar">
     <ion-title>Updates</ion-title>
     <ion-buttons slot="end">
       <badge-menu-button></badge-menu-button>
@@ -7,7 +7,7 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="with-widgets">
+<ion-content class="ion-padding with-widgets">
   <ion-item-group *ngIf="data$ | async as data">
     <div *ngFor="let host of data.hosts">
       <ion-item-divider class="inline">
@@ -18,7 +18,7 @@
         </span>
       </ion-item-divider>
 
-      <ion-item *ngIf="data.errors.includes(host.url)">
+      <ion-item *ngIf="data.errors.includes(host.url)" class="glass-card" lines="none">
         <ion-text color="danger">Request Failed</ion-text>
       </ion-item>
 
@@ -31,7 +31,7 @@
           <ion-accordion-group multiple="true" class="ion-padding-start">
             <div *ngFor="let pkg of updates" class="item-container">
               <ion-accordion *ngIf="data.localPkgs[pkg.manifest.id] as local">
-                <ion-item lines="none" slot="header">
+                <ion-item lines="none" slot="header" class="glass-card">
                   <ion-avatar slot="start" style="width: 50px; height: 50px">
                     <img [src]="pkg | mimeType | trustUrl" />
                   </ion-avatar>
@@ -83,7 +83,7 @@
                     </ng-template>
                   </div>
                 </ion-item>
-                <div class="ion-padding" slot="content">
+                <div class="ion-padding glass-card" slot="content" style="margin-top: 8px;">
                   <div class="notes">
                     <h5>What's new</h5>
                     <p

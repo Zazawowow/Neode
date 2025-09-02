@@ -9,3 +9,7 @@
     cursor: pointer;
   }
 }
+
+/* Spacing for glass containers on notifications */
+ion-item.glass-card { margin: 12px 0; border-radius: 16px; }
+ion-item-divider.glass-divider { margin: 16px 0 8px 0; border-radius: 0; }
