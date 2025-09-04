@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  neode-builder:
+    image: node:18-alpine
+    working_dir: /app
+    command: >
+      sh -c "
+        apk add --no-cache git &&
+        git clone https://github.com/Zazawowow/Neode.git . &&
+        cd web &&
+        npm ci &&
+        npm run build:deps &&
+        npm run build:ui &&
+        echo 'Build complete - files ready in dist/raw/ui'
+      "
+    volumes:
+      - neode-build:/app/web/dist
+    container_name: neode-builder
+
+  neode-web:
+    image: nginx:alpine
+    container_name: neode-web
+    ports:
+      - "8100:80"
+    restart: unless-stopped
+    depends_on:
+      - neode-builder
+    volumes:
+      - neode-build:/usr/share/nginx/html:ro
+      - ./nginx-simple.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - neode-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  neode-build:
+
+networks:
+  neode-network:
+    driver: bridge
