@@ -8,8 +8,10 @@ services:
       - "80"
     ports:
       - "8100:80"
-    command: >
-      sh -c "
+    command: 
+      - sh
+      - -c
+      - |
         apk add --no-cache git nginx &&
         git clone https://github.com/Zazawowow/Neode.git . &&
         cd web &&
@@ -19,34 +21,9 @@ services:
         mkdir -p /usr/share/nginx/html &&
         cp -r dist/raw/ui/* /usr/share/nginx/html/ &&
         cp -r projects/shared/assets /usr/share/nginx/html/ &&
-        cat > /etc/nginx/nginx.conf << 'EOF'
-events { worker_connections 1024; }
-http {
-  include /etc/nginx/mime.types;
-  default_type application/octet-stream;
-  server {
-    listen 80;
-    server_name _;
-    root /usr/share/nginx/html;
-    index index.html;
-    location / {
-      try_files \$uri \$uri/ /index.html;
-    }
-    location /assets {
-      alias /usr/share/nginx/html/assets;
-      expires 1y;
-    }
-    location /health {
-      access_log off;
-      return 200 'healthy';
-      add_header Content-Type text/plain;
-    }
-  }
-}
-EOF
+        echo 'events { worker_connections 1024; } http { include /etc/nginx/mime.types; default_type application/octet-stream; server { listen 80; server_name _; root /usr/share/nginx/html; index index.html; location / { try_files $uri $uri/ /index.html; } location /assets { alias /usr/share/nginx/html/assets; expires 1y; } location /health { access_log off; return 200 "healthy"; add_header Content-Type text/plain; } } }' > /etc/nginx/nginx.conf &&
         nginx -t &&
         nginx -g 'daemon off;'
-      "
     container_name: neode-web
     restart: unless-stopped
     environment:
