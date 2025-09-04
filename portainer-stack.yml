@@ -13,7 +13,7 @@ services:
       - -c
       - |
         set -e
-        apk add --no-cache git nginx netstat-nat
+        apk add --no-cache git nginx net-tools
         
         # Clone repo if not exists, otherwise pull updates
         if [ ! -d ".git" ]; then
@@ -73,23 +73,8 @@ services:
         cat /etc/nginx/conf.d/neode.conf
         
         # Start nginx in foreground
-        echo "nginx will bind to 0.0.0.0:80"
-        nginx -g 'daemon off;' &
-        NGINX_PID=$!
-        
-        # Wait a moment for nginx to start
-        sleep 3
-        
-        # Test if nginx is listening
-        if netstat -tlnp | grep :80; then
-          echo "SUCCESS: nginx is listening on port 80"
-        else
-          echo "ERROR: nginx is not listening on port 80"
-          netstat -tlnp
-        fi
-        
-        # Keep nginx running
-        wait $NGINX_PID
+        echo "Starting nginx on 0.0.0.0:80..."
+        exec nginx -g 'daemon off;'
     container_name: neode-web
     restart: unless-stopped
     environment:
