@@ -4,8 +4,6 @@ services:
   neode-web:
     image: node:18-alpine
     working_dir: /app
-    expose:
-      - "80"
     ports:
       - "8100:80"
     command: 
@@ -21,8 +19,11 @@ services:
         mkdir -p /usr/share/nginx/html &&
         cp -r dist/raw/ui/* /usr/share/nginx/html/ &&
         cp -r projects/shared/assets /usr/share/nginx/html/ &&
-        echo 'events { worker_connections 1024; } http { include /etc/nginx/mime.types; default_type application/octet-stream; server { listen 80; server_name _; root /usr/share/nginx/html; index index.html; location / { try_files $uri $uri/ /index.html; } location /assets { alias /usr/share/nginx/html/assets; expires 1y; } location /health { access_log off; return 200 "healthy"; add_header Content-Type text/plain; } } }' > /etc/nginx/nginx.conf &&
+        rm -f /etc/nginx/conf.d/default.conf &&
+        echo 'server { listen 80 default_server; server_name _; root /usr/share/nginx/html; index index.html; location / { try_files $uri $uri/ /index.html; } location /assets { alias /usr/share/nginx/html/assets; expires 1y; } location /health { access_log off; return 200 "healthy"; add_header Content-Type text/plain; } }' > /etc/nginx/conf.d/neode.conf &&
+        echo 'events { worker_connections 1024; } http { include /etc/nginx/mime.types; include /etc/nginx/conf.d/*.conf; default_type application/octet-stream; }' > /etc/nginx/nginx.conf &&
         nginx -t &&
+        echo "Starting nginx on port 80..." &&
         nginx -g 'daemon off;'
     container_name: neode-web
     restart: unless-stopped

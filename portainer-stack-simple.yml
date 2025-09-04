@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  neode-builder:
+    image: node:18-alpine
+    working_dir: /app
+    volumes:
+      - build-output:/app/dist
+    command:
+      - sh
+      - -c
+      - |
+        apk add --no-cache git &&
+        git clone https://github.com/Zazawowow/Neode.git . &&
+        cd web &&
+        npm ci &&
+        npm run build:deps &&
+        npm run build:ui &&
+        cp -r dist/raw/ui/* /app/dist/ &&
+        cp -r projects/shared/assets /app/dist/ &&
+        echo "Build complete"
+
+  neode-web:
+    image: nginx:alpine
+    container_name: neode-web
+    ports:
+      - "8100:80"
+    restart: unless-stopped
+    depends_on:
+      - neode-builder
+    volumes:
+      - build-output:/usr/share/nginx/html:ro
+    environment:
+      - NGINX_HOST=_
+      - NGINX_PORT=80
+    command: >
+      sh -c "
+        echo 'server {
+          listen 80;
+          server_name _;
+          root /usr/share/nginx/html;
+          index index.html;
+          location / {
+            try_files \$$uri \$$uri/ /index.html;
+          }
+          location /assets {
+            alias /usr/share/nginx/html/assets;
+            expires 1y;
+          }
+          location /health {
+            access_log off;
+            return 200 \"healthy\";
+            add_header Content-Type text/plain;
+          }
+        }' > /etc/nginx/conf.d/default.conf &&
+        nginx -g 'daemon off;'
+      "
+    networks:
+      - neode-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  build-output:
+
+networks:
+  neode-network:
+    driver: bridge
