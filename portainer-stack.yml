@@ -29,10 +29,10 @@ services:
         rm -rf node_modules
         
         # Use npm install to get all dependencies including devDependencies
-        echo "Running npm install with legacy peer deps..."
-        npm install --legacy-peer-deps --production=false
+        echo "Running npm install with legacy peer deps and dev dependencies..."
+        npm install --legacy-peer-deps --include=dev
         
-        # Verify we have all packages (should be 559+, not 216)
+        # Verify we have all packages (should be 1400+, not 216)
         echo "Installed packages count: $(npm list --depth=0 2>/dev/null | wc -l)"
         
         # Verify Angular CLI is available
@@ -48,38 +48,22 @@ services:
           npm run build:deps || echo "Warning: build:deps failed, continuing..."
         else
           echo "Warning: patch-db/client not found, creating mock dependency..."
-          # Ensure node_modules exists and create mock patch-db-client module
-          ls -la node_modules/ || echo "node_modules directory contents:"
-          mkdir -p node_modules/patch-db-client || echo "Failed to create directory, trying alternative..."
           
-          # Alternative approach if mkdir fails
-          if [ ! -d "node_modules/patch-db-client" ]; then
-            echo "Creating mock in alternative location..."
-            mkdir -p ./patch-db-client
-            echo '{"name": "patch-db-client", "version": "1.0.0", "main": "index.js"}' > ./patch-db-client/package.json
-            echo 'module.exports = { PatchDB: class PatchDB {}, Update: class Update {} };' > ./patch-db-client/index.js
-            # Create symlink if possible
-            ln -sf ../patch-db-client node_modules/patch-db-client 2>/dev/null || echo "Symlink failed, continuing..."
-          else
-            echo '{"name": "patch-db-client", "version": "1.0.0", "main": "index.js", "types": "index.d.ts"}' > node_modules/patch-db-client/package.json
-            echo 'class PatchDB { watch$() { return { pipe: () => ({ subscribe: () => ({}) }) }; } } class Update {} class Bootstrapper {} class DBCache {} class Dump {} class Revision {} function pathFromArray() { return ""; } module.exports = { PatchDB, Update, Bootstrapper, DBCache, Dump, Revision, pathFromArray };' > node_modules/patch-db-client/index.js
-            echo 'export class PatchDB<T = any> { watch$(path1: string, path2?: string): any; } export class Update {} export class Bootstrapper {} export class DBCache {} export class Dump {} export class Revision {} export function pathFromArray(arr: string[]): string;' > node_modules/patch-db-client/index.d.ts
-            
-            # Also create a global declaration file as fallback
-            mkdir -p src/types
-            echo 'declare module "patch-db-client" { export class PatchDB<T = any> { watch$(path1: string, path2?: string): any; } export class Update {} export class Bootstrapper {} export class DBCache {} export class Dump {} export class Revision {} export function pathFromArray(arr: string[]): string; }' > src/types/patch-db-client.d.ts
-            
-            # Debug: check what was created
-            echo "Created files in node_modules/patch-db-client:"
-            ls -la node_modules/patch-db-client/
-            echo "Package.json content:"
-            cat node_modules/patch-db-client/package.json
-            echo "index.d.ts content:"
-            cat node_modules/patch-db-client/index.d.ts
-            echo "Global declaration file:"
-            cat src/types/patch-db-client.d.ts 2>/dev/null || echo "Global declaration not created"
-          fi
+          # Remove any existing symlink created by npm install
+          echo "Removing existing patch-db-client symlink..."
+          rm -rf node_modules/patch-db-client 2>/dev/null || true
+          
+          # Create mock patch-db-client directory and files
+          echo "Creating mock patch-db-client module..."
+          mkdir -p node_modules/patch-db-client
+          echo '{"name": "patch-db-client", "version": "1.0.0", "main": "index.js", "types": "index.d.ts"}' > node_modules/patch-db-client/package.json
+          echo 'class PatchDB { watch$() { return { pipe: () => ({ subscribe: () => ({}) }) }; } } class Update {} class Bootstrapper {} class DBCache {} class Dump {} class Revision {} function pathFromArray() { return ""; } module.exports = { PatchDB, Update, Bootstrapper, DBCache, Dump, Revision, pathFromArray };' > node_modules/patch-db-client/index.js
+          echo 'export class PatchDB<T = any> { watch$(path1: string, path2?: string): any; } export class Update {} export class Bootstrapper {} export class DBCache {} export class Dump {} export class Revision {} export function pathFromArray(arr: string[]): string;' > node_modules/patch-db-client/index.d.ts
+          
           echo "Mock patch-db-client setup complete"
+          # Debug: check what was created
+          echo "Created files in node_modules/patch-db-client:"
+          ls -la node_modules/patch-db-client/ 2>/dev/null || echo "Directory not found"
         fi
         
         # Build the UI
