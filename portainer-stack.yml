@@ -48,11 +48,23 @@ services:
           npm run build:deps || echo "Warning: build:deps failed, continuing..."
         else
           echo "Warning: patch-db/client not found, creating mock dependency..."
-          # Create a mock patch-db-client module
-          mkdir -p node_modules/patch-db-client
-          echo '{"name": "patch-db-client", "version": "1.0.0", "main": "index.js"}' > node_modules/patch-db-client/package.json
-          echo 'module.exports = { PatchDB: class PatchDB {}, Update: class Update {} };' > node_modules/patch-db-client/index.js
-          echo "Mock patch-db-client created"
+          # Ensure node_modules exists and create mock patch-db-client module
+          ls -la node_modules/ || echo "node_modules directory contents:"
+          mkdir -p node_modules/patch-db-client || echo "Failed to create directory, trying alternative..."
+          
+          # Alternative approach if mkdir fails
+          if [ ! -d "node_modules/patch-db-client" ]; then
+            echo "Creating mock in alternative location..."
+            mkdir -p ./patch-db-client
+            echo '{"name": "patch-db-client", "version": "1.0.0", "main": "index.js"}' > ./patch-db-client/package.json
+            echo 'module.exports = { PatchDB: class PatchDB {}, Update: class Update {} };' > ./patch-db-client/index.js
+            # Create symlink if possible
+            ln -sf ../patch-db-client node_modules/patch-db-client 2>/dev/null || echo "Symlink failed, continuing..."
+          else
+            echo '{"name": "patch-db-client", "version": "1.0.0", "main": "index.js"}' > node_modules/patch-db-client/package.json
+            echo 'module.exports = { PatchDB: class PatchDB {}, Update: class Update {} };' > node_modules/patch-db-client/index.js
+          fi
+          echo "Mock patch-db-client setup complete"
         fi
         
         # Build the UI
