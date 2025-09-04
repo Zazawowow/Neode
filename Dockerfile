@@ -1,17 +1,23 @@
 # Multi-stage build for Neode Web UI
 FROM node:18-alpine AS builder
 
+# Install git for patch-db dependency
+RUN apk add --no-cache git
+
 # Set working directory
 WORKDIR /app
 
-# Copy package files
-COPY web/package*.json ./
+# Copy the entire repository for patch-db dependency
+COPY . ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Set working directory to web
+WORKDIR /app/web
 
-# Copy web source code
-COPY web/ ./
+# Install dependencies (including devDependencies for building)
+RUN npm ci
+
+# Build the dependencies first
+RUN npm run build:deps
 
 # Build the UI application
 RUN npm run build:ui
@@ -23,10 +29,10 @@ FROM nginx:alpine
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 
 # Copy built application from builder stage
-COPY --from=builder /app/dist/raw/ui /usr/share/nginx/html
+COPY --from=builder /app/web/dist/raw/ui /usr/share/nginx/html
 
 # Copy assets
-COPY --from=builder /app/projects/shared/assets /usr/share/nginx/html/assets
+COPY --from=builder /app/web/projects/shared/assets /usr/share/nginx/html/assets
 
 # Expose port 80
 EXPOSE 80

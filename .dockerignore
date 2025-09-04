@@ -33,12 +33,12 @@ README.md
 core/
 target/
 
-# Other web projects we don't need
-web/projects/diagnostic-ui/
-web/projects/install-wizard/
-web/projects/setup-wizard/
-web/projects/marketplace/
+# Keep all web projects for now as they may be dependencies
+# web/projects/diagnostic-ui/
+# web/projects/install-wizard/
+# web/projects/setup-wizard/
+# web/projects/marketplace/
 
-# Keep only UI project and shared assets
-!web/projects/ui/
-!web/projects/shared/
+# Keep all projects for building
+# !web/projects/ui/
+# !web/projects/shared/
