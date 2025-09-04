@@ -42,12 +42,29 @@ services:
           npm install -g @angular/cli@14 --legacy-peer-deps
         fi
         
-        # Try to build deps, but continue if it fails
+        # Handle patch-db dependency
         if [ -d "../patch-db/client" ]; then
           echo "Building patch-db dependencies..."
           npm run build:deps || echo "Warning: build:deps failed, continuing..."
         else
-          echo "Warning: patch-db/client not found, skipping build:deps"
+          echo "Warning: patch-db/client not found, creating mock dependency..."
+          # Create a mock patch-db-client module
+          mkdir -p node_modules/patch-db-client
+          cat > node_modules/patch-db-client/package.json << 'EOF'
+{
+  "name": "patch-db-client",
+  "version": "1.0.0",
+  "main": "index.js"
+}
+EOF
+          cat > node_modules/patch-db-client/index.js << 'EOF'
+// Mock patch-db-client for build purposes
+module.exports = {
+  PatchDB: class PatchDB {},
+  Update: class Update {}
+};
+EOF
+          echo "Mock patch-db-client created"
         fi
         
         # Build the UI
