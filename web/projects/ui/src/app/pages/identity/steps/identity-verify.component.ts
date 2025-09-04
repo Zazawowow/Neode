@@ -5,7 +5,12 @@ import { IdentityMockService } from 'src/app/services/identity.mock.service'
 @Component({
   selector: 'identity-verify',
   template: `
-    <h2>Verify</h2>
+    <div class="step-header">
+      <ion-button fill="clear" class="back-btn" (click)="back()">
+        <ion-icon slot="icon-only" name="chevron-back-outline"></ion-icon>
+      </ion-button>
+      <h2>Verify</h2>
+    </div>
     <p>Sign a mock challenge to verify your DID is usable.</p>
     <ion-button class="setup-button" (click)="sign()">Sign Challenge</ion-button>
     <div *ngIf="ok">
@@ -19,6 +24,7 @@ export class IdentityVerifyComponent {
   ok = false
   kid = 'kid:mock'
   constructor(private readonly router: Router, private readonly identity: IdentityMockService) {}
+  back() { this.router.navigate(['/setup/backup']) }
   async sign() {
     const signed = await this.identity.signChallenge(this.kid, 'challenge')
     this.ok = !!signed

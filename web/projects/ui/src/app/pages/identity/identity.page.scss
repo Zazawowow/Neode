@@ -20,6 +20,23 @@
 h1, h2, p { color: rgba(255,255,255,0.96); text-shadow: 0 2px 6px rgba(0,0,0,0.4); }
 ion-button { align-self: center; margin-top: 16px; }
 
+/* Header container for back button and title */
+.step-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  
+  .back-btn {
+    margin-right: 12px;
+    --color: rgba(255,255,255,0.9);
+  }
+  
+  h1, h2 {
+    margin: 0;
+    flex: 1;
+  }
+}
+
 /* Match login button glass style */
 .setup-button {
   --background: rgba(0, 0, 0, 0.6);
@@ -33,6 +50,20 @@ ion-button { align-self: center; margin-top: 16px; }
   height: 45px;
   width: 180px;
   --border-radius: 50px;
+}
+
+.back-btn {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  --color: #f2f2f2;
+  z-index: 2;
+}
+
+.footer-link {
+  margin-top: 12px;
+  text-align: center;
+  a { color: rgba(255,255,255,0.85); text-decoration: underline; }
 }
 
 

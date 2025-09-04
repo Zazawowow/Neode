@@ -6,7 +6,12 @@ import { DidStateService } from 'src/app/services/did-state.service'
 @Component({
   selector: 'identity-import',
   template: `
-    <h2>Import DID</h2>
+    <div class="step-header">
+      <ion-button fill="clear" class="back-btn" (click)="back()">
+        <ion-icon slot="icon-only" name="chevron-back-outline"></ion-icon>
+      </ion-button>
+      <h2>Import DID</h2>
+    </div>
     <ion-textarea [(ngModel)]="input" placeholder="Paste JWK or backup JSON"></ion-textarea>
     <ion-button class="setup-button" (click)="validate()">Validate</ion-button>
     <div *ngIf="did">
@@ -24,6 +29,7 @@ export class IdentityImportComponent {
     private readonly identity: IdentityMockService,
     private readonly didState: DidStateService,
   ) {}
+  back() { this.router.navigate(['/setup/choose']) }
   async validate() {
     const { did, kid } = await this.identity.importFromBackup(this.input)
     this.did = did

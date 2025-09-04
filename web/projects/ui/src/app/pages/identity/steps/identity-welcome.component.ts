@@ -4,7 +4,9 @@ import { Router } from '@angular/router'
 @Component({
   selector: 'identity-welcome',
   template: `
-    <h1>Create your Decentralized ID</h1>
+    <div class="step-header">
+      <h1>Create your Decentralized ID</h1>
+    </div>
     <p>
       A DID lets you control your identity and sign in without a password.
     </p>

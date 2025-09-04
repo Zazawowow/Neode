@@ -4,7 +4,12 @@ import { Router } from '@angular/router'
 @Component({
   selector: 'identity-choose',
   template: `
-    <h2>Choose an option</h2>
+    <div class="step-header">
+      <ion-button fill="clear" class="back-btn" (click)="back()">
+        <ion-icon slot="icon-only" name="chevron-back-outline"></ion-icon>
+      </ion-button>
+      <h2>Choose an option</h2>
+    </div>
     <div class="choices">
       <ion-card (click)="create()">
         <ion-card-header><ion-card-title>Create new DID (did:key)</ion-card-title></ion-card-header>
@@ -15,7 +20,6 @@ import { Router } from '@angular/router'
         <ion-card-content>Paste or upload keys/backup.</ion-card-content>
       </ion-card>
     </div>
-    <ion-button class="setup-button" (click)="create()">Continue</ion-button>
   `,
   styles: [
     `
@@ -27,6 +31,7 @@ import { Router } from '@angular/router'
 })
 export class IdentityChooseComponent {
   constructor(private readonly router: Router) {}
+  back() { this.router.navigate(['/setup/welcome']) }
   create() { this.router.navigate(['/setup/create']) }
   import() { this.router.navigate(['/setup/import']) }
 }

@@ -58,13 +58,15 @@ export class AppComponent implements OnDestroy {
   async ngOnInit() {
     this.patch
       .watch$('ui', 'name')
-      .subscribe(name => this.titleService.setTitle(name || 'StartOS'))
+      .subscribe(name => this.titleService.setTitle(name || 'Neode'))
 
     setTimeout(() => {
       this.showSplash = false
       document.body.classList.add('splash-complete')
       this.authService.isVerified$.pipe(take(1)).subscribe(verified => {
         if (!verified) {
+          const currentUrl = this.router.url || ''
+          if (currentUrl.startsWith('/login') || currentUrl.startsWith('/setup')) return
           const config = require('../../../../config.json')
           if (config.enableDidFlow) {
             this.router.navigate(['/setup'], { replaceUrl: true })

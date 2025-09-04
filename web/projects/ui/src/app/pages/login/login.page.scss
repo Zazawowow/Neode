@@ -118,3 +118,11 @@ ion-input { color: #fff; }
 
 /* keep ion-card in flow; logo sits above without moving it */
 ion-card { padding-top: 40px; }
+
+.did-link {
+  margin-top: 12px;
+  .did-cta {
+    color: #fff;
+    text-decoration: none;
+  }
+}

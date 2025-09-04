@@ -6,7 +6,12 @@ import { DidStateService } from 'src/app/services/did-state.service'
 @Component({
   selector: 'identity-create',
   template: `
-    <h2>Create DID (did:key)</h2>
+    <div class="step-header">
+      <ion-button fill="clear" class="back-btn" (click)="back()">
+        <ion-icon slot="icon-only" name="chevron-back-outline"></ion-icon>
+      </ion-button>
+      <h2>Create DID (did:key)</h2>
+    </div>
     <p>Click to generate a new DID using a mock service.</p>
     <ion-button class="setup-button" (click)="generate()">Generate DID</ion-button>
     <div *ngIf="did">
@@ -23,6 +28,7 @@ export class IdentityCreateComponent {
     private readonly identity: IdentityMockService,
     private readonly didState: DidStateService,
   ) {}
+  back() { this.router.navigate(['/setup/choose']) }
   async generate() {
     const { did, kid } = await this.identity.createDidKey()
     this.did = did
