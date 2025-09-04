@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   neode-web:
-    image: ghcr.io/zazawowow/neode:latest
+    build:
+      context: https://github.com/Zazawowow/Neode.git
+      dockerfile: Dockerfile
     container_name: neode-web
     ports:
       - "8080:80"
