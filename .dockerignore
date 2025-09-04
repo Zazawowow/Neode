@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+
+# Build outputs
+dist/
+.angular/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Core Rust files (not needed for web build)
+core/
+target/
+
+# Other web projects we don't need
+web/projects/diagnostic-ui/
+web/projects/install-wizard/
+web/projects/setup-wizard/
+web/projects/marketplace/
+
+# Keep only UI project and shared assets
+!web/projects/ui/
+!web/projects/shared/

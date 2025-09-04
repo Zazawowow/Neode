@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  neode-web:
+    image: ghcr.io/zazawowow/neode:latest
+    container_name: neode-web
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.neode.rule=Host(`neode.local`)"
+      - "traefik.http.routers.neode.entrypoints=web"
+      - "traefik.http.services.neode.loadbalancer.server.port=80"
+    networks:
+      - neode-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  neode-network:
+    driver: bridge
