@@ -50,20 +50,8 @@ services:
           echo "Warning: patch-db/client not found, creating mock dependency..."
           # Create a mock patch-db-client module
           mkdir -p node_modules/patch-db-client
-          cat > node_modules/patch-db-client/package.json << 'EOF'
-{
-  "name": "patch-db-client",
-  "version": "1.0.0",
-  "main": "index.js"
-}
-EOF
-          cat > node_modules/patch-db-client/index.js << 'EOF'
-// Mock patch-db-client for build purposes
-module.exports = {
-  PatchDB: class PatchDB {},
-  Update: class Update {}
-};
-EOF
+          echo '{"name": "patch-db-client", "version": "1.0.0", "main": "index.js"}' > node_modules/patch-db-client/package.json
+          echo 'module.exports = { PatchDB: class PatchDB {}, Update: class Update {} };' > node_modules/patch-db-client/index.js
           echo "Mock patch-db-client created"
         fi
         
