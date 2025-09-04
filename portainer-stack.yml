@@ -21,16 +21,22 @@ services:
         fi
         
         cd web
-        npm ci
+        
+        # Clean install with all dependencies including devDependencies
+        echo "Installing all dependencies..."
+        rm -rf node_modules package-lock.json
+        npm install
         
         # Try to build deps, but continue if it fails
         if [ -d "../patch-db/client" ]; then
+          echo "Building patch-db dependencies..."
           npm run build:deps || echo "Warning: build:deps failed, continuing..."
         else
           echo "Warning: patch-db/client not found, skipping build:deps"
         fi
         
         # Build the UI
+        echo "Building UI application..."
         npm run build:ui
         
         # Setup nginx
