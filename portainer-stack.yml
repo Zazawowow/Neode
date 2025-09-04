@@ -4,6 +4,8 @@ services:
   neode-web:
     image: node:18-alpine
     working_dir: /app
+    expose:
+      - "80"
     ports:
       - "8100:80"
     command: 
@@ -11,7 +13,7 @@ services:
       - -c
       - |
         set -e
-        apk add --no-cache git nginx
+        apk add --no-cache git nginx netstat-nat
         
         # Clone repo if not exists, otherwise pull updates
         if [ ! -d ".git" ]; then
@@ -52,7 +54,29 @@ services:
         # Test and start nginx
         nginx -t
         echo "Starting nginx on port 80..."
-        nginx -g 'daemon off;'
+        
+        # Ensure nginx is listening on all interfaces
+        echo "Checking nginx configuration..."
+        cat /etc/nginx/conf.d/neode.conf
+        
+        # Start nginx in foreground
+        echo "nginx will bind to 0.0.0.0:80"
+        nginx -g 'daemon off;' &
+        NGINX_PID=$!
+        
+        # Wait a moment for nginx to start
+        sleep 3
+        
+        # Test if nginx is listening
+        if netstat -tlnp | grep :80; then
+          echo "SUCCESS: nginx is listening on port 80"
+        else
+          echo "ERROR: nginx is not listening on port 80"
+          netstat -tlnp
+        fi
+        
+        # Keep nginx running
+        wait $NGINX_PID
     container_name: neode-web
     restart: unless-stopped
     environment:
