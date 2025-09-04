@@ -27,7 +27,20 @@ services:
         # Clean install with all dependencies including devDependencies
         echo "Installing all dependencies..."
         rm -rf node_modules package-lock.json
-        npm install --legacy-peer-deps
+        
+        # Try npm ci first (with legacy peer deps), fallback to npm install
+        if npm ci --legacy-peer-deps; then
+          echo "npm ci succeeded"
+        else
+          echo "npm ci failed, trying npm install with force..."
+          npm install --legacy-peer-deps --force
+        fi
+        
+        # Verify Angular CLI is available
+        if ! command -v ng >/dev/null 2>&1; then
+          echo "Angular CLI not found, installing locally..."
+          npx ng version || npm install -g @angular/cli@14
+        fi
         
         # Try to build deps, but continue if it fails
         if [ -d "../patch-db/client" ]; then
