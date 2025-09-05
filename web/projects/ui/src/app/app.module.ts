@@ -1,7 +1,9 @@
 import {
+  TUI_SANITIZER,
   TuiDialogModule,
-  TuiModeModule,
+  TuiNotificationsModule,
   TuiRootModule,
+  TuiModeModule,
   TuiThemeNightModule,
 } from '@taiga-ui/core'
 import { HttpClientModule } from '@angular/common/http'
@@ -27,12 +29,16 @@ import { PreloaderModule } from './app/preloader/preloader.module'
 import { FooterModule } from './app/footer/footer.module'
 import { MenuModule } from './app/menu/menu.module'
 import { APP_PROVIDERS } from './app.providers'
-import { PatchDbModule } from './services/patch-db/patch-db.module'
+import { PatchDB } from './services/patch-db/patch-db.service'
+import { MockPatchDB } from './services/mock-patch-db.service'
 import { ToastContainerModule } from './components/toast-container/toast-container.module'
 import { ConnectionBarComponentModule } from './components/connection-bar/connection-bar.component.module'
 import { WidgetsPageModule } from './pages/widgets/widgets.module'
 import { ServiceWorkerModule } from '@angular/service-worker'
 import { environment } from '../environments/environment'
+import { getEmbassyApiProvider } from './services/api/embassy-api.provider'
+
+const { useMocks } = require('../../../../config.json')
 
 @NgModule({
   declarations: [AppComponent],
@@ -53,7 +59,7 @@ import { environment } from '../environments/environment'
     MonacoEditorModule,
     SharedPipesModule,
     MarketplaceModule,
-    PatchDbModule,
+    PatchDB,
     ToastContainerModule,
     ConnectionBarComponentModule,
     TuiRootModule,
@@ -71,7 +77,18 @@ import { environment } from '../environments/environment'
       registrationStrategy: 'registerWhenStable:30000',
     }),
   ],
-  providers: APP_PROVIDERS,
+  providers: [
+    getEmbassyApiProvider(useMocks),
+    !useMocks
+      ? []
+      : [
+          {
+            provide: PatchDB,
+            useClass: MockPatchDB,
+          },
+        ],
+    APP_PROVIDERS,
+  ],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

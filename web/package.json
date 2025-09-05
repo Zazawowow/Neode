@@ -72,7 +72,6 @@
     "mustache": "^4.2.0",
     "ng-qrcode": "^7.0.0",
     "node-jose": "^2.2.0",
-    "patch-db-client": "file: ../../../patch-db/client",
     "pbkdf2": "^3.1.2",
     "rxjs": "^7.8.1",
     "swiper": "^8.2.4",
