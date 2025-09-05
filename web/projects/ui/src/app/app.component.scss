@@ -286,9 +286,9 @@ ion-menu.left-menu::part(container) {
 /* Welcome line: faster type with the same 2-blink caret finish */
 .welcome-message .text.typing {
   animation:
-    typing-welcome 2.0s steps(22, end) forwards,
-    caret-blink 0.45s step-end 2 2.0s,
-    caret-off 0s linear 2.9s forwards;
+    typing-welcome 4s steps(60, end) forwards,
+    caret-blink 0.45s step-end 2 4s,
+    caret-off 0s linear 4.9s forwards;
 }
 
 @keyframes typing-welcome {
