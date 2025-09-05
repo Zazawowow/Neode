@@ -6,7 +6,30 @@
   <ion-app appEnter>
     <div class="splash" *ngIf="showSplash">
       <div class="splash__overlay"></div>
-      <img class="splash__logo" src="assets/img/logo-large.svg" alt="Logo" />
+      
+      <!-- Alien film-style terminal intro -->
+      <div class="alien-intro" [class.alien-intro--complete]="alienIntroComplete">
+        <div class="alien-intro__lines">
+          <div class="alien-intro__line" [class.visible]="showLine1">
+            <span class="prompt">></span>
+            <span class="text" [class.typing]="typingLine1">In the future there are 3 types of humans:</span>
+          </div>
+          <div class="alien-intro__line" [class.visible]="showLine2">
+            <span class="prompt">></span>
+            <span class="text" [class.typing]="typingLine2">Corporate Employees</span>
+          </div>
+          <div class="alien-intro__line" [class.visible]="showLine3">
+            <span class="prompt">></span>
+            <span class="text" [class.typing]="typingLine3">Government Employees</span>
+          </div>
+          <div class="alien-intro__line alien-intro__line--final" [class.visible]="showLine4">
+            <span class="prompt">></span>
+            <span class="text" [class.typing]="typingLine4">And Noderunners...</span>
+          </div>
+        </div>
+      </div>
+      
+      <img class="splash__logo" [class.splash__logo--delayed]="!alienIntroComplete" src="assets/img/logo-large.svg" alt="Logo" />
     </div>
     <div class="app-content">
       <ion-split-pane

@@ -100,7 +100,7 @@ ion-menu.left-menu::part(container) {
   background-position: center top;
   background-repeat: no-repeat;
   opacity: 0;
-  animation: bg-reveal 1.5s ease forwards 0.2s;
+  animation: bg-reveal-delayed 2s ease forwards 22.5s;
 }
 
 .splash__logo {
@@ -118,6 +118,7 @@ ion-menu.left-menu::part(container) {
   clip-path: none;
   mask: none;
   -webkit-mask: none;
+  
 }
 
 @keyframes bg-fade-in {
@@ -127,6 +128,11 @@ ion-menu.left-menu::part(container) {
 
 @keyframes bg-reveal {
   0% { opacity: 0; transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bg-reveal-delayed {
+  0% { opacity: 0; transform: scale(1.05); }
   100% { opacity: 1; transform: scale(1); }
 }
 
@@ -142,6 +148,120 @@ ion-menu.left-menu::part(container) {
   0% { opacity: 1; }
   50% { opacity: 0; }
   100% { opacity: 1; }
+}
+
+/* Alien film-style terminal intro */
+.alien-intro {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.8s ease;
+  
+  &--complete {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+.alien-intro__lines {
+  font-family: 'Courier New', monospace;
+  font-size: clamp(14px, 2vw, 20px);
+  line-height: 1.6;
+  max-width: 90vw;
+  padding: 0 20px;
+  
+  @media (min-width: 768px) {
+    max-width: 800px;
+    font-size: 18px;
+  }
+}
+
+.alien-intro__line {
+  opacity: 0;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: flex-start;
+  white-space: nowrap;
+  
+  @media (max-width: 767px) {
+    white-space: normal;
+    flex-wrap: wrap;
+  }
+  
+  &.visible {
+    opacity: 1;
+  }
+  
+  &--final {
+    margin-bottom: 32px;
+  }
+}
+
+.prompt {
+  color: #00ff41;
+  text-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+  margin-right: 12px;
+  flex-shrink: 0;
+  display: inline-block;
+  min-width: 20px;
+}
+
+.text {
+  color: #ffffff;
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
+  
+  &.typing {
+    animation: typing 4s steps(60, end) forwards;
+    overflow: hidden;
+    white-space: nowrap;
+    width: 0;
+    border-right: 2px solid #00ff41;
+    box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+  }
+}
+
+.text:not(.typing) {
+  border-right: none;
+  box-shadow: none;
+}
+
+@keyframes typing {
+  0% {
+    width: 0;
+  }
+  90% {
+    width: 100%;
+    border-right: 2px solid #00ff41;
+    box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+  }
+  100% {
+    width: 100%;
+    border-right: none;
+    box-shadow: none;
+  }
+}
+
+/* Delayed logo animation */
+.splash__logo--delayed {
+  opacity: 0 !important;
+  animation: none !important;
+}
+
+/* Logo appears when alien intro completes */
+.splash__logo:not(.splash__logo--delayed) {
+  animation: logo-draw-delayed 2.5s ease forwards, logo-glitch 0.2s step-end 3s 1;
+}
+
+@keyframes logo-draw-delayed {
+  0% { opacity: 0; transform: translateY(12px) scale(0.95); }
+  20% { opacity: 0.3; transform: translateY(6px) scale(0.97); }
+  60% { opacity: 0.8; transform: translateY(2px) scale(0.99); }
+  80% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .divider {

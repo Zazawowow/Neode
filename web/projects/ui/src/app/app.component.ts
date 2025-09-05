@@ -24,6 +24,15 @@ import { DataModel } from './services/patch-db/data-model'
 })
 export class AppComponent implements OnDestroy {
   showSplash = true
+  alienIntroComplete = false
+  showLine1 = false
+  showLine2 = false
+  showLine3 = false
+  showLine4 = false
+  typingLine1 = false
+  typingLine2 = false
+  typingLine3 = false
+  typingLine4 = false
   readonly subscription = merge(this.patchData, this.patchMonitor).subscribe()
   readonly sidebarOpen$ = this.splitPane.sidebarOpen$
   readonly widgetDrawer$ = this.clientStorageService.widgetDrawer$
@@ -60,6 +69,10 @@ export class AppComponent implements OnDestroy {
       .watch$('ui', 'name')
       .subscribe(name => this.titleService.setTitle(name || 'Neode'))
 
+    // Start the alien intro sequence
+    this.startAlienIntro()
+
+    // Original splash timing - now extended to accommodate intro
     setTimeout(() => {
       this.showSplash = false
       document.body.classList.add('splash-complete')
@@ -75,7 +88,42 @@ export class AppComponent implements OnDestroy {
           }
         }
       })
-    }, 2000)
+    }, 25000) // Extended to 25000ms to accommodate slower intro
+  }
+
+  private startAlienIntro() {
+    // Start first line immediately
+    setTimeout(() => {
+      this.showLine1 = true
+      this.typingLine1 = true
+    }, 500)
+
+    // Start second line after first completes (4s typing + 1s pause)
+    setTimeout(() => {
+      this.typingLine1 = false
+      this.showLine2 = true
+      this.typingLine2 = true
+    }, 5500)
+
+    // Start third line after second completes (4s typing + 1s pause)
+    setTimeout(() => {
+      this.typingLine2 = false
+      this.showLine3 = true
+      this.typingLine3 = true
+    }, 10500)
+
+    // Start fourth line after third completes (4s typing + 1s pause)
+    setTimeout(() => {
+      this.typingLine3 = false
+      this.showLine4 = true
+      this.typingLine4 = true
+    }, 15500)
+
+    // Hold for 3 seconds after final line, then show logo
+    setTimeout(() => {
+      this.typingLine4 = false
+      this.alienIntroComplete = true
+    }, 22500)
   }
 
   splitPaneVisible({ detail }: any) {
