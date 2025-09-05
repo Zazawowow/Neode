@@ -91,7 +91,7 @@ export class MenuComponent {
   )
 
   readonly updateCount$: Observable<number> = combineLatest([
-    this.marketplaceService.getMarketplace$(true),
+    this.marketplaceService.getMarketplace$(),
     this.local$,
   ]).pipe(
     map(([marketplace, local]) =>

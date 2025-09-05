@@ -1,7 +1,7 @@
 import { Component, inject, OnDestroy } from '@angular/core'
 import { Router } from '@angular/router'
 import { take } from 'rxjs/operators'
-import { combineLatest, map, merge, startWith } from 'rxjs'
+import { combineLatest, map, startWith, Subscription } from 'rxjs'
 import { AuthService } from './services/auth.service'
 import { SplitPaneTracker } from './services/split-pane.service'
 import { PatchDataService } from './services/patch-data.service'
@@ -28,6 +28,8 @@ export class AppComponent implements OnDestroy {
   fadeAlienIntro = false
   showWelcome = false
   fadeWelcome = false
+  typingWelcome = false
+  showLogo = false
   showLine1 = false
   showLine2 = false
   showLine3 = false
@@ -40,7 +42,7 @@ export class AppComponent implements OnDestroy {
   cursorLine2 = false
   cursorLine3 = false
   cursorLine4 = false
-  readonly subscription = merge(this.patchData, this.patchMonitor).subscribe()
+  private readonly subscriptions = new Subscription()
   readonly sidebarOpen$ = this.splitPane.sidebarOpen$
   readonly widgetDrawer$ = this.clientStorageService.widgetDrawer$
   readonly theme$ = inject(THEME)
@@ -72,30 +74,43 @@ export class AppComponent implements OnDestroy {
   ) {}
 
   async ngOnInit() {
+    // Skip intro if user is verified or they've seen it before
+    const seenIntro = localStorage.getItem('neode_intro_seen') === '1'
+    this.authService.isVerified$.pipe(take(1)).subscribe(verified => {
+      if (verified || seenIntro) {
+        this.showSplash = false
+      }
+    })
+    // Ensure client storage streams emit initial values so template can render
+    this.clientStorageService.init()
+
+    // Start background streams
+    this.subscriptions.add((this.patchData as any).subscribe?.() ?? new Subscription())
+    this.subscriptions.add((this.patchMonitor as any).subscribe?.() ?? new Subscription())
+
+    // Initialize auth service so isVerified$ has an initial value in mock mode
+    this.authService.init?.()
+
     this.patch
       .watch$('ui', 'name')
       .subscribe(name => this.titleService.setTitle(name || 'Neode'))
 
-    // Start the alien intro sequence
-    this.startAlienIntro()
+    // Start the alien intro sequence if splash is shown
+    if (this.showSplash) this.startAlienIntro()
 
     // Original splash timing - now extended to accommodate intro
     setTimeout(() => {
       this.showSplash = false
+      localStorage.setItem('neode_intro_seen', '1')
       document.body.classList.add('splash-complete')
       this.authService.isVerified$.pipe(take(1)).subscribe(verified => {
         if (!verified) {
           const currentUrl = this.router.url || ''
           if (currentUrl.startsWith('/login') || currentUrl.startsWith('/setup')) return
-          const config = require('../../../../config.json')
-          if (config.enableDidFlow) {
-            this.router.navigate(['/setup'], { replaceUrl: true })
-          } else {
-            this.router.navigate(['/login'], { replaceUrl: true })
-          }
+          this.router.navigate(['/login'], { replaceUrl: true })
         }
       })
-    }, 20000) // Shortened to 20s
+    }, 23200) // End after logo shows for 3s
   }
 
   private startAlienIntro() {
@@ -132,16 +147,29 @@ export class AppComponent implements OnDestroy {
       this.fadeAlienIntro = true
     }, 16000) // Shortened and changed to fade
 
-    // Show welcome message
+    // Show welcome message with typing
     setTimeout(() => {
       this.alienIntroComplete = true
       this.showWelcome = true
+      this.typingWelcome = true
     }, 16800)
 
-    // Fade out welcome message
+    // Fade out welcome message and then show logo for exactly 3s
     setTimeout(() => {
       this.fadeWelcome = true
+      this.typingWelcome = false
     }, 19000)
+
+    // Show logo after welcome fully hidden
+    setTimeout(() => {
+      this.showWelcome = false
+      this.showLogo = true
+    }, 19800)
+
+    // Hide logo after 3 seconds, then allow splash to close on the global timer
+    setTimeout(() => {
+      this.showLogo = false
+    }, 22800)
   }
 
   splitPaneVisible({ detail }: any) {
@@ -156,6 +184,6 @@ export class AppComponent implements OnDestroy {
   }
 
   ngOnDestroy() {
-    this.subscription.unsubscribe()
+    this.subscriptions.unsubscribe()
   }
 }

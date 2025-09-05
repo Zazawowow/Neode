@@ -39,10 +39,11 @@
         *ngIf="showWelcome"
         [class.welcome-message--fade-out]="fadeWelcome"
       >
-        <span class="text">Welcome Noderunner</span>
+        <span class="prompt">></span>
+        <span class="text" [class.typing]="typingWelcome">Welcome Noderunner</span>
       </div>
 
-      <img class="splash__logo" [class.splash__logo--delayed]="!alienIntroComplete" src="assets/img/logo-large.svg" alt="Logo" />
+      <img *ngIf="showLogo" class="splash__logo" src="assets/img/logo-large.svg" alt="Logo" />
     </div>
     <div class="app-content">
       <ion-split-pane

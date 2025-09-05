@@ -1,53 +1,19 @@
 import { Injectable } from '@angular/core'
 import { of, BehaviorSubject } from 'rxjs'
 import { DBCache, PatchDB } from './patch-db/patch-db.service'
+import { DataModel } from './patch-db/data-model'
+import { mockPatchData } from '../services/api/mock-patch'
 
-const mockData = {
-  ui: {
-    name: 'Neode',
-    theme: 'dark',
-    marketplace: {
-      'selected-url': 'https://registry.start9.com/',
-      'known-hosts': {
-        'https://registry.start9.com/': { name: 'Start9 Registry' },
-        'https://community-registry.start9.com/': { name: 'Community Registry' },
-      },
-    },
-  },
-  'server-info': {
-    id: 'mock',
-    version: '0.3.5.1',
-    'ntp-synced': true,
-    'status-info': {
-      restarting: false,
-      'shutting-down': false,
-      'backup-progress': null,
-    },
-  },
-  'package-data': {
-    'mock-pkg': {
-      manifest: {
-        id: 'mock-pkg',
-        title: 'Mock Package',
-        version: '1.0.0',
-        actions: {},
-      },
-      state: 'installed',
-      'static-files': {
-        icon: '',
-      },
-      'install-progress': null,
-    },
-  },
-}
+// Seed the mock DB with full fixture data, including Bitcoin Core and LND
+const mockData: DataModel = mockPatchData
 
 @Injectable()
-export class MockPatchDB implements PatchDB<any> {
-  cache$ = new BehaviorSubject<DBCache<any>>({ sequence: 1, data: mockData })
+export class MockPatchDB implements PatchDB<DataModel> {
+  cache$ = new BehaviorSubject<DBCache<DataModel>>({ sequence: 1, data: mockData })
 
   watch$(...args: string[]) {
     if (args.length === 0) return of(mockData)
-    return of(this.getNestedValue(mockData, args))
+    return of(this.getNestedValue(mockData as any, args))
   }
 
   private getNestedValue(obj: any, path: string[]) {

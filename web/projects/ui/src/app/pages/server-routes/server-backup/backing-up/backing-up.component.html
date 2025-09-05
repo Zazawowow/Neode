@@ -13,7 +13,7 @@
       <ion-col>
         <ion-item-group>
           <ng-container *ngFor="let pkg of pkgs | keyvalue">
-            <ion-item *ngIf="$any(backupProgress)[pkg.key] as pkgProgress">
+            <ion-item *ngIf="$any(backupProgress)[$any(pkg).key] as pkgProgress">
               <ion-avatar slot="start">
                 <img [src]="$any(pkg.value)['static-files'].icon" />
               </ion-avatar>

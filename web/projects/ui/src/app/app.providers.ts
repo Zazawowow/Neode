@@ -11,6 +11,8 @@ import { DepErrorService } from './services/dep-error.service'
 import { EOSService } from './services/eos.service'
 import { TuiAlertService } from '@taiga-ui/core'
 import { getEmbassyApiProvider } from './services/api/embassy-api.provider'
+import { AbstractMarketplaceService } from '@start9labs/marketplace'
+import { MarketplaceService } from './services/marketplace.service'
 
 const { useMocks } = require('../../../../config.json')
 
@@ -25,5 +27,9 @@ export const APP_PROVIDERS: Provider[] = [
   DepErrorService,
   EOSService,
   TuiAlertService,
+  {
+    provide: AbstractMarketplaceService,
+    useClass: MarketplaceService,
+  },
   ...getEmbassyApiProvider(useMocks),
 ]

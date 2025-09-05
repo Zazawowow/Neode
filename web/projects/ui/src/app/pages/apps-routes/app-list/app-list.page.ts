@@ -11,18 +11,18 @@ import { filter, map, pairwise, startWith } from 'rxjs/operators'
 })
 export class AppListPage {
   readonly pkgs$ = this.patch.watch$('package-data').pipe(
-    map(pkgs => Object.values(pkgs)),
+    map((pkgs: any) => Object.values(pkgs)),
     startWith([]),
     pairwise(),
     filter(([prev, next]) => {
       const length = next.length
       return !length || prev.length !== length
     }),
-    map(([_, pkgs]) =>
-      pkgs.sort((a, b) =>
-        b.manifest.title.toLowerCase() > a.manifest.title.toLowerCase()
-          ? -1
-          : 1,
+    map(([_, pkgs]: any) =>
+      (pkgs as any[]).sort((a, b) =>
+        a?.manifest?.title?.toLowerCase() > b?.manifest?.title?.toLowerCase()
+          ? 1
+          : -1,
       ),
     ),
   )

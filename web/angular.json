@@ -20,6 +20,14 @@
             "polyfills": "projects/ui/src/polyfills.ts",
             "tsConfig": "projects/ui/tsconfig.json",
             "inlineStyleLanguage": "scss",
+            "allowedCommonJsDependencies": [
+              "text-mask-core",
+              "qrcode",
+              "base64-js",
+              "cbor",
+              "src/app/services/form.service",
+              "src/app/services/config.service"
+            ],
             "assets": [
               {
                 "glob": "**/*",

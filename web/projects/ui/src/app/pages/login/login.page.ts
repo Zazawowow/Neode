@@ -5,6 +5,7 @@ import { AuthService } from 'src/app/services/auth.service'
 import { Router } from '@angular/router'
 import { ConfigService } from 'src/app/services/config.service'
 import { DOCUMENT } from '@angular/common'
+import { DidStateService } from 'src/app/services/did-state.service'
 import { WINDOW } from '@ng-web-apis/common'
 
 @Component({
@@ -25,7 +26,10 @@ export class LoginPage {
     public readonly config: ConfigService,
     @Inject(DOCUMENT) public readonly document: Document,
     @Inject(WINDOW) private readonly windowRef: Window,
+    private readonly didState: DidStateService,
   ) {}
+
+  readonly did$ = this.didState.did$
 
   launchHttps() {
     const host = this.config.getHost()

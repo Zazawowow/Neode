@@ -33,6 +33,7 @@ export class ConfigService {
   api = api
   marketplace = marketplace
   enableDidFlow = !!enableDidFlow
+
   skipStartupAlerts = useMocks && mocks.skipStartupAlerts
   isConsulate = (window as any)['platform'] === 'ios'
   supportsWebSockets = !!window.WebSocket || this.isConsulate

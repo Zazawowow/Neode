@@ -21,17 +21,17 @@
     ></app-actions-item>
 
     <!-- ** specific actions ** -->
-    <ion-item-divider *ngIf="!(pkg.manifest.actions | empty)">
+    <ion-item-divider *ngIf="!($any(pkg.manifest).actions | empty)">
       Actions for {{ pkg.manifest.title }}
     </ion-item-divider>
     <app-actions-item
-      *ngFor="let action of pkg.manifest.actions | keyvalue: asIsOrder"
+      *ngFor="let action of $any(pkg.manifest).actions | keyvalue: asIsOrder"
       [action]="{
-        name: action.value.name,
-        description: action.value.description,
+        name: $any(action.value).name,
+        description: $any(action.value).description,
         icon: 'play-circle-outline'
       }"
-      (click)="handleAction(pkg, action)"
+      (click)="handleAction(pkg, $any(action))"
     ></app-actions-item>
   </ion-item-group>
 </ion-content>
