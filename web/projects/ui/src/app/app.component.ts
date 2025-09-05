@@ -25,6 +25,9 @@ import { DataModel } from './services/patch-db/data-model'
 export class AppComponent implements OnDestroy {
   showSplash = true
   alienIntroComplete = false
+  fadeAlienIntro = false
+  showWelcome = false
+  fadeWelcome = false
   showLine1 = false
   showLine2 = false
   showLine3 = false
@@ -92,7 +95,7 @@ export class AppComponent implements OnDestroy {
           }
         }
       })
-    }, 25000) // Extended to 25000ms to accommodate slower intro
+    }, 20000) // Shortened to 20s
   }
 
   private startAlienIntro() {
@@ -107,27 +110,38 @@ export class AppComponent implements OnDestroy {
       this.typingLine1 = false
       this.showLine2 = true
       this.typingLine2 = true
-    }, 5500)
+    }, 4500) // Shortened
 
     // Start third line after second completes (4s typing + 1s pause)
     setTimeout(() => {
       this.typingLine2 = false
       this.showLine3 = true
       this.typingLine3 = true
-    }, 10500)
+    }, 9000) // Shortened
 
     // Start fourth line after third completes (4s typing + 1s pause)
     setTimeout(() => {
       this.typingLine3 = false
       this.showLine4 = true
       this.typingLine4 = true
-    }, 15500)
+    }, 13500) // Shortened
 
-    // Hold for 3 seconds after final line, then show logo
+    // Fade out alien intro
     setTimeout(() => {
       this.typingLine4 = false
+      this.fadeAlienIntro = true
+    }, 16000) // Shortened and changed to fade
+
+    // Show welcome message
+    setTimeout(() => {
       this.alienIntroComplete = true
-    }, 22500)
+      this.showWelcome = true
+    }, 16800)
+
+    // Fade out welcome message
+    setTimeout(() => {
+      this.fadeWelcome = true
+    }, 19000)
   }
 
   splitPaneVisible({ detail }: any) {

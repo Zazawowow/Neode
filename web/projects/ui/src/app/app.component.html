@@ -8,7 +8,11 @@
       <div class="splash__overlay"></div>
       
       <!-- Alien film-style terminal intro -->
-      <div class="alien-intro" [class.alien-intro--complete]="alienIntroComplete">
+      <div
+        class="alien-intro"
+        [class.alien-intro--complete]="alienIntroComplete"
+        [class.alien-intro--fade-out]="fadeAlienIntro"
+      >
         <div class="alien-intro__lines">
           <div class="alien-intro__line" [class.visible]="showLine1">
             <span class="prompt">></span>
@@ -28,7 +32,16 @@
           </div>
         </div>
       </div>
-      
+
+      <!-- Welcome message -->
+      <div
+        class="welcome-message"
+        *ngIf="showWelcome"
+        [class.welcome-message--fade-out]="fadeWelcome"
+      >
+        <span class="text">Welcome Noderunner</span>
+      </div>
+
       <img class="splash__logo" [class.splash__logo--delayed]="!alienIntroComplete" src="assets/img/logo-large.svg" alt="Logo" />
     </div>
     <div class="app-content">
