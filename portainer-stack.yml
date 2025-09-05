@@ -91,14 +91,14 @@ services:
           '' \
           '        # Handle Angular SPA routes' \
           '        location / {' \
-          '            try_files \$uri \$uri/ /index.html;' \
+          '            try_files $$uri $$uri/ /index.html;' \
           '        }' \
           '' \
           '        # Static assets caching' \
           '        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {' \
           '            expires 1y;' \
           '            add_header Cache-Control "public, immutable";' \
-          '            try_files \$uri =404;' \
+          '            try_files $$uri =404;' \
           '        }' \
           '    }' \
           '}' > /etc/nginx/nginx.conf
