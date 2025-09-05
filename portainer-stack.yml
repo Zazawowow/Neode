@@ -33,151 +33,87 @@ services:
         echo "Creating patch-db-client stub for container deployment..."
         mkdir -p node_modules/patch-db-client
         
-        cat > node_modules/patch-db-client/package.json << 'EOF'
-{
-  "name": "patch-db-client",
-  "version": "1.0.0",
-  "main": "index.js",
-  "types": "index.d.ts"
-}
-EOF
+        echo '{"name": "patch-db-client", "version": "1.0.0", "main": "index.js", "types": "index.d.ts"}' > node_modules/patch-db-client/package.json
         
-        cat > node_modules/patch-db-client/index.js << 'EOF'
-const { of, BehaviorSubject, EMPTY } = require("rxjs");
-
-const mockData = {
-  ui: {
-    "ack-welcome": false,
-    gaming: { snake: { "high-score": 0 } },
-    marketplace: { "selected-url": "registry.start9.com", "known-hosts": {} },
-    dev: {}
-  },
-  "server-info": {
-    id: "mock-server",
-    version: "1.0.0",
-    "tor-address": "mock.onion",
-    "lan-address": "localhost",
-    "ip-info": { eth0: { ipv4: ["127.0.0.1"], ipv6: ["::1"] } },
-    "ca-fingerprint": "mock-fingerprint",
-    "status-info": { updated: false, "update-progress": null, "backup-progress": null }
-  },
-  "package-data": {}
-};
-
-class PatchDB {
-  constructor(source) {
-    this.source = source;
-    this.cache$ = new BehaviorSubject(mockData);
-  }
-  
-  watch$(...args) {
-    if (args.length === 0) return of(mockData);
-    
-    let value = mockData;
-    for (const key of args) {
-      value = value && value[key];
-    }
-    
-    return of(value || {});
-  }
-  
-  start(bootstrapper) {
-    if (bootstrapper && typeof bootstrapper.init === 'function') {
-      bootstrapper.init();
-    }
-  }
-  
-  stop() {}
-}
-
-class Update {}
-
-class Bootstrapper {
-  init() {
-    return { sequence: 0, data: mockData };
-  }
-  update() {}
-}
-
-class DBCache {
-  constructor() {
-    this.sequence = 0;
-    this.data = {};
-  }
-}
-
-class Dump {}
-class Revision {}
-class Operation {}
-
-class PatchOp {
-  static ADD = "add";
-  static REMOVE = "remove"; 
-  static REPLACE = "replace";
-}
-
-class RemoveOperation {}
-
-function pathFromArray(arr) {
-  return arr ? arr.join('.') : '';
-}
-
-module.exports = {
-  PatchDB,
-  Update,
-  Bootstrapper,
-  DBCache,
-  Dump,
-  Revision,
-  Operation,
-  PatchOp,
-  RemoveOperation,
-  pathFromArray
-};
-EOF
-
-        cat > node_modules/patch-db-client/index.d.ts << 'EOF'
-import { Observable } from "rxjs";
-
-export class PatchDB<T = any> {
-  constructor(source: Observable<any>);
-  cache$: Observable<T>;
-  watch$(): Observable<T>;
-  watch$(path: string): Observable<any>;
-  watch$(path1: string, path2: string): Observable<any>;
-  watch$(path1: string, path2: string, path3: string): Observable<any>;
-  watch$(path1: string, path2: string, path3: string, path4: string): Observable<any>;
-  watch$(path1: string, path2: string, path3: string, path4: string, path5: string): Observable<any>;
-  start(bootstrapper: Bootstrapper<T>): void;
-  stop(): void;
-}
-
-export class Update<T = any> {}
-
-export abstract class Bootstrapper<T = any> {
-  abstract init(): DBCache<T>;
-  abstract update?(cache: DBCache<T>): void;
-}
-
-export interface DBCache<T = any> {
-  sequence: number;
-  data: T;
-}
-
-export class Dump<T = any> {}
-export class Revision {}
-export class Operation<T = any> {}
-
-export class PatchOp {
-  static readonly ADD: string;
-  static readonly REMOVE: string;
-  static readonly REPLACE: string;
-}
-
-export class RemoveOperation {}
-
-export function pathFromArray(arr: string[]): string;
-EOF
+        printf '%s\n' \
+          'const { of, BehaviorSubject, EMPTY } = require("rxjs");' \
+          '' \
+          'const mockData = {' \
+          '  ui: {' \
+          '    "ack-welcome": false,' \
+          '    gaming: { snake: { "high-score": 0 } },' \
+          '    marketplace: { "selected-url": "registry.start9.com", "known-hosts": {} },' \
+          '    dev: {}' \
+          '  },' \
+          '  "server-info": {' \
+          '    id: "mock-server",' \
+          '    version: "1.0.0",' \
+          '    "tor-address": "mock.onion",' \
+          '    "lan-address": "localhost",' \
+          '    "ip-info": { eth0: { ipv4: ["127.0.0.1"], ipv6: ["::1"] } },' \
+          '    "ca-fingerprint": "mock-fingerprint",' \
+          '    "status-info": { updated: false, "update-progress": null, "backup-progress": null }' \
+          '  },' \
+          '  "package-data": {}' \
+          '};' \
+          '' \
+          'class PatchDB {' \
+          '  constructor(source) {' \
+          '    this.source = source;' \
+          '    this.cache\$$ = new BehaviorSubject(mockData);' \
+          '  }' \
+          '  ' \
+          '  watch\$$(...args) {' \
+          '    if (args.length === 0) return of(mockData);' \
+          '    let value = mockData;' \
+          '    for (const key of args) {' \
+          '      value = value && value[key];' \
+          '    }' \
+          '    return of(value || {});' \
+          '  }' \
+          '  ' \
+          '  start(bootstrapper) {' \
+          '    if (bootstrapper && typeof bootstrapper.init === "function") {' \
+          '      bootstrapper.init();' \
+          '    }' \
+          '  }' \
+          '  ' \
+          '  stop() {}' \
+          '}' \
+          '' \
+          'class Update {}' \
+          'class Bootstrapper { init() { return { sequence: 0, data: mockData }; } update() {} }' \
+          'class DBCache { constructor() { this.sequence = 0; this.data = {}; } }' \
+          'class Dump {}' \
+          'class Revision {}' \
+          'class Operation {}' \
+          'class PatchOp { static ADD = "add"; static REMOVE = "remove"; static REPLACE = "replace"; }' \
+          'class RemoveOperation {}' \
+          'function pathFromArray(arr) { return arr ? arr.join(".") : ""; }' \
+          '' \
+          'module.exports = { PatchDB, Update, Bootstrapper, DBCache, Dump, Revision, Operation, PatchOp, RemoveOperation, pathFromArray };' \
+          > node_modules/patch-db-client/index.js
+        
+        printf '%s\n' \
+          'import { Observable } from "rxjs";' \
+          'export class PatchDB<T = any> {' \
+          '  constructor(source: Observable<any>);' \
+          '  cache\$$: Observable<T>;' \
+          '  watch\$$(): Observable<T>;' \
+          '  watch\$$(path: string): Observable<any>;' \
+          '  start(bootstrapper: Bootstrapper<T>): void;' \
+          '  stop(): void;' \
+          '}' \
+          'export class Update<T = any> {}' \
+          'export abstract class Bootstrapper<T = any> { abstract init(): DBCache<T>; }' \
+          'export interface DBCache<T = any> { sequence: number; data: T; }' \
+          'export class Dump<T = any> {}' \
+          'export class Revision {}' \
+          'export class Operation<T = any> {}' \
+          'export class PatchOp { static readonly ADD: string; static readonly REMOVE: string; static readonly REPLACE: string; }' \
+          'export class RemoveOperation {}' \
+          'export function pathFromArray(arr: string[]): string;' \
+          > node_modules/patch-db-client/index.d.ts
         
         echo "patch-db-client stub created successfully"
         
