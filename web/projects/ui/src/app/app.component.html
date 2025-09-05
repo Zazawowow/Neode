@@ -31,7 +31,7 @@
       
       <img class="splash__logo" [class.splash__logo--delayed]="!alienIntroComplete" src="assets/img/logo-large.svg" alt="Logo" />
     </div>
-    <div class="app-content" *ngIf="!showSplash">
+    <div class="app-content">
       <ion-split-pane
         contentId="main-content"
         [disabled]="!(authService.isVerified$ | async)"

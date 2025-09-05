@@ -219,8 +219,8 @@ ion-menu.left-menu::part(container) {
     overflow: hidden;
     white-space: nowrap;
     width: 0;
-    border-right: 2px solid #ffffff;
-    box-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
+    border-right: 2px solid #00ff41;
+    box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
   }
 }
 
@@ -234,12 +234,12 @@ ion-menu.left-menu::part(container) {
     width: 0;
   }
   90% {
-    width: fit-content;
-    border-right: 2px solid #ffffff;
-    box-shadow: 0 0 4px rgba(255, 255, 255, 0.3);
+    width: 100%;
+    border-right: 2px solid #00ff41;
+    box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
   }
   100% {
-    width: fit-content;
+    width: 100%;
     border-right: none;
     box-shadow: none;
   }
