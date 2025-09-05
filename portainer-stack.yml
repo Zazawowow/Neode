@@ -37,8 +37,11 @@ services:
             echo "Creating tsconfig.json for patch-db build..." && \
             echo '{ "compilerOptions": { "target": "es2017", "module": "commonjs", "lib": ["es2017", "dom"], "declaration": true, "outDir": "./dist", "strict": false, "esModuleInterop": true, "skipLibCheck": true, "forceConsistentCasingInFileNames": true }, "include": ["lib/**/*"] }' > tsconfig.json && \
             npm ci --include=dev && \
-            ./node_modules/typescript/bin/tsc
+            ./node_modules/typescript/bin/tsc && \
+            echo "patch-db build completed successfully"
           )
+          echo "Linking patch-db to node_modules..."
+          cd node_modules && ln -sf ../../patch-db/client patch-db-client && cd ..
         else
           echo "FATAL: patch-db/client submodule not found. Build cannot continue."
           exit 1
