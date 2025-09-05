@@ -1,6 +1,6 @@
 import { Component, inject, OnDestroy } from '@angular/core'
-import { Router } from '@angular/router'
-import { take } from 'rxjs/operators'
+import { ActivatedRoute, NavigationEnd, Router } from '@angular/router'
+import { filter, take } from 'rxjs/operators'
 import { combineLatest, map, startWith, Subscription } from 'rxjs'
 import { AuthService } from './services/auth.service'
 import { SplitPaneTracker } from './services/split-pane.service'
@@ -71,14 +71,51 @@ export class AppComponent implements OnDestroy {
     readonly clientStorageService: ClientStorageService,
     readonly themeSwitcher: ThemeSwitcherService,
     private readonly router: Router,
+    private readonly route: ActivatedRoute,
   ) {}
 
   async ngOnInit() {
-    // Skip intro if user is verified or they've seen it before
+    // Initialize auth first so streams emit immediately
+    this.authService.init?.()
+
+    // Skip intro if user is verified or they've seen it before, unless /intro route
     const seenIntro = localStorage.getItem('neode_intro_seen') === '1'
+    const forceIntro = this.router.url.startsWith('/intro')
+
+    // Force-play intro regardless of seen/verified
+    if (forceIntro) {
+      this.playIntroNow()
+      return
+    }
     this.authService.isVerified$.pipe(take(1)).subscribe(verified => {
       if (verified || seenIntro) {
-        this.showSplash = false
+        if (!forceIntro) {
+          this.showSplash = false
+          document.body.classList.add('splash-complete')
+        }
+        if (!verified) {
+          const currentUrl = this.router.url || ''
+          if (!forceIntro && !currentUrl.startsWith('/login') && !currentUrl.startsWith('/setup')) {
+            this.router.navigate(['/login'], { replaceUrl: true })
+          }
+        }
+      } else {
+        // Only start intro when needed or forced
+        if (forceIntro) localStorage.removeItem('neode_intro_seen')
+        this.startAlienIntro()
+        // Original splash timing - now extended to accommodate intro
+        setTimeout(() => {
+          this.showSplash = false
+          localStorage.setItem('neode_intro_seen', '1')
+          document.body.classList.add('splash-complete')
+          this.authService.isVerified$.pipe(take(1)).subscribe(isVerified => {
+            if (!isVerified) {
+              const currentUrl = this.router.url || ''
+              if (currentUrl.startsWith('/login') || currentUrl.startsWith('/setup')) return
+              this.router.navigate(['/login'], { replaceUrl: true })
+            }
+          })
+        }, 23200)
       }
     })
     // Ensure client storage streams emit initial values so template can render
@@ -88,29 +125,47 @@ export class AppComponent implements OnDestroy {
     this.subscriptions.add((this.patchData as any).subscribe?.() ?? new Subscription())
     this.subscriptions.add((this.patchMonitor as any).subscribe?.() ?? new Subscription())
 
-    // Initialize auth service so isVerified$ has an initial value in mock mode
-    this.authService.init?.()
-
     this.patch
       .watch$('ui', 'name')
       .subscribe(name => this.titleService.setTitle(name || 'Neode'))
 
-    // Start the alien intro sequence if splash is shown
-    if (this.showSplash) this.startAlienIntro()
+    // Allow replaying intro on-demand by navigating to /intro
+    this.subscriptions.add(
+      this.router.events
+        .pipe(filter(e => e instanceof NavigationEnd))
+        .subscribe((e: any) => {
+          const url: string = e.urlAfterRedirects || e.url || ''
+          if (url.startsWith('/intro')) {
+            this.playIntroNow()
+          }
+        }),
+    )
+    // Timers and intro are now scheduled in the verified/seensIntro branch above
+  }
 
-    // Original splash timing - now extended to accommodate intro
+  private playIntroNow() {
+    // reset intro states
+    this.showLine1 = this.showLine2 = this.showLine3 = this.showLine4 = false
+    this.typingLine1 = this.typingLine2 = this.typingLine3 = this.typingLine4 = false
+    this.alienIntroComplete = false
+    this.fadeAlienIntro = false
+    this.showWelcome = false
+    this.fadeWelcome = false
+    this.typingWelcome = false
+    this.showLogo = false
+    this.showSplash = true
+    document.body.classList.remove('splash-complete')
+
+    this.startAlienIntro()
+
     setTimeout(() => {
       this.showSplash = false
       localStorage.setItem('neode_intro_seen', '1')
       document.body.classList.add('splash-complete')
-      this.authService.isVerified$.pipe(take(1)).subscribe(verified => {
-        if (!verified) {
-          const currentUrl = this.router.url || ''
-          if (currentUrl.startsWith('/login') || currentUrl.startsWith('/setup')) return
-          this.router.navigate(['/login'], { replaceUrl: true })
-        }
+      this.authService.isVerified$.pipe(take(1)).subscribe(isVerified => {
+        if (!isVerified) this.router.navigate(['/login'], { replaceUrl: true })
       })
-    }, 23200) // End after logo shows for 3s
+    }, 23200)
   }
 
   private startAlienIntro() {

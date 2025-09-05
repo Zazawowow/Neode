@@ -45,7 +45,7 @@
 
       <img *ngIf="showLogo" class="splash__logo" src="assets/img/logo-large.svg" alt="Logo" />
     </div>
-    <div class="app-content">
+    <div class="app-content" [class.app-content--hidden]="showSplash">
       <ion-split-pane
         contentId="main-content"
         [disabled]="!(authService.isVerified$ | async)"

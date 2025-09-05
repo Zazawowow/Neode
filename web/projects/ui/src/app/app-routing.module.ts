@@ -11,6 +11,11 @@ const routes: Routes = [
     path: '',
   },
   {
+    path: 'intro',
+    loadChildren: () =>
+      import('./pages/login/login.module').then(m => m.LoginPageModule),
+  },
+  {
     path: 'login',
     canActivate: [UnauthGuard],
     loadChildren: () =>

@@ -5,6 +5,9 @@ import { Router } from '@angular/router'
   selector: 'identity-welcome',
   template: `
     <div class="step-header">
+      <ion-button fill="clear" class="back-btn" (click)="back()">
+        <ion-icon slot="icon-only" name="chevron-back-outline"></ion-icon>
+      </ion-button>
       <h1>Create your Decentralized ID</h1>
     </div>
     <p>
@@ -15,6 +18,7 @@ import { Router } from '@angular/router'
 })
 export class IdentityWelcomeComponent {
   constructor(private readonly router: Router) {}
+  back() { this.router.navigate(['/login']) }
   next() {
     this.router.navigate(['/setup/choose'])
   }

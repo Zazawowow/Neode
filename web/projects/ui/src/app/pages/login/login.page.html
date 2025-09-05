@@ -82,6 +82,9 @@
           <div *ngIf="config.enableDidFlow" class="did-link ion-text-center ion-margin-top">
             <a class="did-cta" routerLink="/setup">Set up your Decentralized ID</a>
           </div>
+          <div class="ion-text-center ion-margin-top">
+            <a class="play-intro" routerLink="/intro">Play intro</a>
+          </div>
           <div *ngIf="config.enableDidFlow && (did$ | async) as did" class="ion-text-center ion-margin-top">
             <ion-text color="medium" class="mono">DID: {{ did.did }}</ion-text>
           </div>
