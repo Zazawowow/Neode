@@ -112,97 +112,10 @@ services:
         sed -i 's/<toast-container><\/toast-container>/<toast-container *ngIf="!showSplash"><\/toast-container>/' projects/ui/src/app/app.component.html
         
         # Add cursor state tracking to TypeScript
-        cat >> projects/ui/src/app/app.component.ts << 'EOF'
-  
-  // Additional cursor tracking states for blinking effect
-  cursorLine1 = false
-  cursorLine2 = false  
-  cursorLine3 = false
-  cursorLine4 = false
-EOF
+        printf '\n\n  // Additional cursor tracking states for blinking effect\n  cursorLine1 = false\n  cursorLine2 = false\n  cursorLine3 = false\n  cursorLine4 = false\n' >> projects/ui/src/app/app.component.ts
         
-        # Update the TypeScript timing logic for better cursor control - SHORTER VERSION
-        cat > /tmp/alien-intro-fix.js << 'EOF'
-        // Update the alien intro timing in app.component.ts
-        const fs = require('fs');
-        const filePath = 'projects/ui/src/app/app.component.ts';
-        let content = fs.readFileSync(filePath, 'utf8');
-        
-        // Replace the startAlienIntro method with SHORTER timing
-        const newMethod = `  private startAlienIntro() {
-    // Line 1: Type for 2s, then blink cursor for 1s
-    setTimeout(() => {
-      this.showLine1 = true
-      this.typingLine1 = true
-    }, 300)
-    
-    setTimeout(() => {
-      this.typingLine1 = false
-      this.cursorLine1 = true
-    }, 2300) // Type completes at 2.3s
-    
-    // Line 2: Start after cursor blinks
-    setTimeout(() => {
-      this.cursorLine1 = false
-      this.showLine2 = true
-      this.typingLine2 = true
-    }, 3300) // 1s cursor blink
-    
-    setTimeout(() => {
-      this.typingLine2 = false
-      this.cursorLine2 = true
-    }, 5300) // Type completes at 5.3s
-    
-    // Line 3: Start after cursor blinks
-    setTimeout(() => {
-      this.cursorLine2 = false
-      this.showLine3 = true
-      this.typingLine3 = true
-    }, 6300) // 1s cursor blink
-    
-    setTimeout(() => {
-      this.typingLine3 = false
-      this.cursorLine3 = true
-    }, 8300) // Type completes at 8.3s
-    
-    // Line 4: Start after cursor blinks
-    setTimeout(() => {
-      this.cursorLine3 = false
-      this.showLine4 = true
-      this.typingLine4 = true
-    }, 9300) // 1s cursor blink
-    
-    setTimeout(() => {
-      this.typingLine4 = false
-      this.cursorLine4 = true
-    }, 11300) // Type completes at 11.3s
-    
-    // Hold final cursor for 1s, then show logo for 3s
-    setTimeout(() => {
-      this.cursorLine4 = false
-      this.alienIntroComplete = true
-    }, 12300) // 1s final cursor blink
-    
-    // Hide splash after logo shows for 3s
-    setTimeout(() => {
-      this.showSplash = false
-    }, 15300) // Logo shows for 3s (12.3s + 3s)
-  }`;
-        
-        // Replace the method
-        content = content.replace(
-          /private startAlienIntro\(\) \{[\s\S]*?\n  \}/,
-          newMethod
-        );
-        
-        fs.writeFileSync(filePath, content);
-        console.log('Updated alien intro timing');
-EOF
-        
-        node /tmp/alien-intro-fix.js
-        
-        # Remove the old splash timing since we handle it in the intro method now
-        sed -i '/setTimeout.*showSplash = false/,/}, [0-9]*)/d' projects/ui/src/app/app.component.ts
+        # Simplify timing - just use sed to modify the existing splash timeout
+        sed -i 's/}, 25000)/}, 15300)/' projects/ui/src/app/app.component.ts
         
         # Update the HTML template to include cursor states
         sed -i 's/<span class="text" \[class\.typing\]="typingLine1">/<span class="text" [class.typing]="typingLine1" [class.cursor-blink]="cursorLine1">/' projects/ui/src/app/app.component.html
@@ -211,67 +124,7 @@ EOF
         sed -i 's/<span class="text" \[class\.typing\]="typingLine4">/<span class="text" [class.typing]="typingLine4" [class.cursor-blink]="cursorLine4">/' projects/ui/src/app/app.component.html
         
         # Update the CSS for better cursor animation and remove ALL text effects
-        cat >> projects/ui/src/app/app.component.scss << 'EOF'
-
-/* Completely remove ALL text effects and borders for clean terminal look */
-.text {
-  color: #ffffff !important;
-  text-shadow: none !important;
-  box-shadow: none !important;
-  border: none !important;
-}
-
-.text.typing {
-  animation: typing 2s steps(40, end) forwards !important;
-  border-right: 2px solid #00ff41 !important;
-  box-shadow: 0 0 6px rgba(0, 255, 65, 0.4) !important;
-}
-
-/* Improved cursor blinking after typing completes */
-.text.cursor-blink {
-  border-right: 2px solid #00ff41 !important;
-  box-shadow: 0 0 6px rgba(0, 255, 65, 0.4) !important;
-  animation: cursor-blink 0.5s infinite !important;
-}
-
-@keyframes cursor-blink {
-  0%, 50% {
-    border-right-color: #00ff41;
-    box-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
-  }
-  51%, 100% {
-    border-right-color: transparent;
-    box-shadow: none;
-  }
-}
-
-/* Faster typing animation - 2s instead of 4s */
-@keyframes typing {
-  0% {
-    width: 0;
-    border-right: 2px solid #00ff41;
-    box-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
-  }
-  100% {
-    width: 100%;
-    border-right: 2px solid #00ff41;
-    box-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
-  }
-}
-
-/* Override original styles completely */
-.alien-intro .text {
-  text-shadow: none !important;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-/* Ensure no cursor when not typing or blinking */
-.text:not(.typing):not(.cursor-blink) {
-  border-right: none !important;
-  box-shadow: none !important;
-}
-EOF
+        printf '\n/* Clean terminal text - no shadows */\n.text { color: #ffffff !important; text-shadow: none !important; }\n.text.typing { animation: typing 2s steps(40, end) forwards !important; border-right: 2px solid #00ff41 !important; }\n.text.cursor-blink { border-right: 2px solid #00ff41 !important; animation: cursor-blink 0.5s infinite !important; }\n@keyframes cursor-blink { 0%%, 50%% { border-right-color: #00ff41; } 51%%, 100%% { border-right-color: transparent; } }\n@keyframes typing { 0%% { width: 0; border-right: 2px solid #00ff41; } 100%% { width: 100%%; border-right: 2px solid #00ff41; } }\n.text:not(.typing):not(.cursor-blink) { border-right: none !important; }\n' >> projects/ui/src/app/app.component.scss
         
         # Build the UI with error handling
         echo "Building UI application..."
