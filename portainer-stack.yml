@@ -58,7 +58,7 @@ services:
         cp -r dist/raw/ui/* /usr/share/nginx/html/
         cp -r projects/shared/assets /usr/share/nginx/html/
         
-        echo '
+        cat <<'EOF' > /etc/nginx/nginx.conf
 worker_processes 1;
 
 events {
@@ -79,7 +79,7 @@ http {
         }
     }
 }
-' > /etc/nginx/nginx.conf
+EOF
         
         echo "Starting nginx..."
         exec nginx -g 'daemon off;'
