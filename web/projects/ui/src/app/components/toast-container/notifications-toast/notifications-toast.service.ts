@@ -33,7 +33,7 @@ export class NotificationsToastService {
             }),
           ),
         ),
-        filter(res => res === 'click'),
+        filter(() => true),
         take(1),
         tap(() => this.router.navigate(['/notifications'])),
       )

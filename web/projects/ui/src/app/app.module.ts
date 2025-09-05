@@ -18,6 +18,8 @@ import { AppComponent } from './app.component'
 import { AppRoutingModule } from './app-routing.module'
 import { TuiLetModule } from '@taiga-ui/cdk'
 import { MenuModule } from './app/menu/menu.module'
+import { GenericInputComponentModule } from './modals/generic-input/generic-input.component.module'
+import { OSWelcomePageModule } from './modals/os-welcome/os-welcome.module'
 import { APP_PROVIDERS } from './app.providers'
 import { PatchDbModule } from './services/patch-db/patch-db.module'
 import { ToastContainerModule } from './components/toast-container/toast-container.module'
@@ -56,6 +58,8 @@ import {
     PatchDbModule,
     ToastContainerModule,
     ConnectionBarComponentModule,
+    GenericInputComponentModule,
+    OSWelcomePageModule,
     WidgetsPageModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
       enabled: environment.production,

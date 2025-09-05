@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core'
 import { of, BehaviorSubject } from 'rxjs'
-import { PatchDB } from './patch-db/patch-db.service'
+import { DBCache, PatchDB } from './patch-db/patch-db.service'
 
 const mockData = {
   ui: {
@@ -43,7 +43,7 @@ const mockData = {
 
 @Injectable()
 export class MockPatchDB implements PatchDB<any> {
-  cache$ = new BehaviorSubject(mockData)
+  cache$ = new BehaviorSubject<DBCache<any>>({ sequence: 1, data: mockData })
 
   watch$(...args: string[]) {
     if (args.length === 0) return of(mockData)

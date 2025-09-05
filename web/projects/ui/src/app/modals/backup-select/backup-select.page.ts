@@ -33,7 +33,7 @@ export class BackupSelectPage {
   async ngOnInit() {
     this.pkgs = await firstValueFrom(
       this.patch.watch$('package-data').pipe(
-        map(pkgs => {
+        map((pkgs: any) => {
           return Object.values(pkgs)
             .map(pkg => {
               const { id, title } = pkg.manifest

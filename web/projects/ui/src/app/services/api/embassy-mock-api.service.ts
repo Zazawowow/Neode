@@ -118,7 +118,8 @@ export class MockApiService extends ApiService {
     await pauseFor(2000)
 
     setTimeout(() => {
-      this.mockWsSource$.next({ id: 1, patch: [] })
+      // emit an empty revision-like Update: set a benign field so typing accepts it
+      this.mockWsSource$.next({ __op: 'replace' } as any)
     }, 2000)
 
     return null
