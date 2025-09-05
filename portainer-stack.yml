@@ -34,17 +34,10 @@ services:
           echo "Building patch-db dependency from source inside a subshell..."
           (
             cd ../patch-db/client && \
-            echo "--- Debugging patch-db build ---" && \
-            pwd && \
             echo "Creating tsconfig.json for patch-db build..." && \
             echo '{ "compilerOptions": { "target": "es2017", "module": "commonjs", "lib": ["es2017", "dom"], "declaration": true, "outDir": "./dist", "strict": false, "esModuleInterop": true, "skipLibCheck": true, "forceConsistentCasingInFileNames": true }, "include": ["lib/**/*"] }' > tsconfig.json && \
-            echo "Running npm ci to install ALL dependencies (including dev)..." && \
             npm ci --include=dev && \
-            echo "Listing node_modules/.bin to confirm tsc exists..." && \
-            ls -la node_modules/.bin/ && \
-            echo "Attempting to build with direct tsc path..." && \
-            ./node_modules/typescript/bin/tsc && \
-            echo "--- patch-db build successful ---"
+            ./node_modules/typescript/bin/tsc
           )
         else
           echo "FATAL: patch-db/client submodule not found. Build cannot continue."
@@ -66,6 +59,7 @@ services:
         cp -r projects/shared/assets /usr/share/nginx/html/
         
         rm -f /etc/nginx/conf.d/default.conf
+        mkdir -p /etc/nginx/conf.d
         echo 'server { listen 80 default_server; server_name _; root /usr/share/nginx/html; index index.html; location / { try_files $uri $uri/ /index.html; } }' > /etc/nginx/conf.d/neode.conf
         
         echo "Starting nginx..."
