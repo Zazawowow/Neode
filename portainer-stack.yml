@@ -245,8 +245,14 @@ EOF
         sed -i 's/<span class="text" \[class\.typing\]="typingLine3">/<span class="text" [class.typing]="typingLine3" [class.cursor-blink]="cursorLine3">/' projects/ui/src/app/app.component.html
         sed -i 's/<span class="text" \[class\.typing\]="typingLine4">/<span class="text" [class.typing]="typingLine4" [class.cursor-blink]="cursorLine4">/' projects/ui/src/app/app.component.html
         
-        # Update the CSS for better cursor animation
+        # Update the CSS for better cursor animation and remove text glow
         cat >> projects/ui/src/app/app.component.scss << 'EOF'
+
+/* Remove text glow/shadow for cleaner terminal look */
+.text {
+  color: #ffffff;
+  text-shadow: none !important;
+}
 
 /* Improved cursor blinking after typing completes */
 .text.cursor-blink {
