@@ -126,8 +126,9 @@ export class MenuComponent {
   constructor(
     private readonly patch: PatchDB<DataModel>,
     private readonly eosService: EOSService,
-    @Inject(AbstractMarketplaceService)
-    private readonly marketplaceService: MarketplaceService,
+    private readonly marketplaceService: AbstractMarketplaceService,
+    private readonly router: Router,
+    private readonly route: ActivatedRoute,
     private readonly splitPane: SplitPaneTracker,
     private readonly emver: Emver,
     private readonly connectionService: ConnectionService,

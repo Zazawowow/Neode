@@ -5,8 +5,7 @@ import {
   PackageState,
 } from 'src/app/services/patch-db/data-model'
 import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
-import { map } from 'rxjs/operators'
-import { Observable } from 'rxjs'
+import { firstValueFrom, map, Observable } from 'rxjs'
 
 interface PkgEntry extends PackageDataEntry {
   id: string
@@ -32,23 +31,25 @@ export class BackupSelectPage {
   ) {}
 
   async ngOnInit() {
-    this.pkgs = await this.patch.watch$('package-data').pipe(
-      map(pkgs => {
-        return Object.values(pkgs)
-          .map(pkg => {
-            const { id, title } = pkg.manifest
-            return {
-              id,
-              title,
-              icon: pkg['static-files'].icon,
-              disabled: pkg.state !== PackageState.Installed,
-              checked: pkg.state === PackageState.Installed,
-            }
-          })
-          .sort((a, b) =>
-            b.title.toLowerCase() > a.title.toLowerCase() ? -1 : 1,
-          )
-      }),
+    this.pkgs = await firstValueFrom(
+      this.patch.watch$('package-data').pipe(
+        map(pkgs => {
+          return Object.values(pkgs)
+            .map(pkg => {
+              const { id, title } = pkg.manifest
+              return {
+                id,
+                title,
+                icon: pkg['static-files'].icon,
+                disabled: pkg.state !== PackageState.Installed,
+                checked: pkg.state === PackageState.Installed,
+              }
+            })
+            .sort((a, b) =>
+              b.title.toLowerCase() > a.title.toLowerCase() ? -1 : 1,
+            )
+        }),
+      ),
     )
   }
 

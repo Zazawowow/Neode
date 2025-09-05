@@ -1,19 +1,10 @@
 import { Injectable } from '@angular/core'
-import { TuiAlertService } from '@taiga-ui/core'
-import { from, Subject } from 'rxjs'
-import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
-import { DataModel } from 'src/app/services/patch-db/data-model'
-import {
-  exhaustMap,
-  filter,
-  pairwise,
-  switchMap,
-  take,
-  tap,
-  map,
-  endWith,
-} from 'rxjs/operators'
 import { Router } from '@angular/router'
+import { TuiAlertService, TuiNotification } from '@taiga-ui/core'
+import { from } from 'rxjs'
+import { exhaustMap, filter, take, tap } from 'rxjs/operators'
+import { DataModel } from 'src/app/services/patch-db/data-model'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 
 @Injectable({ providedIn: 'root' })
 export class NotificationsToastService {
@@ -37,12 +28,12 @@ export class NotificationsToastService {
           from(
             this.alertService.open('New notifications', {
               label: 'You have new notifications',
-              status: 'info',
+              status: 'info' as TuiNotification,
               autoClose: 6000,
             }),
           ),
         ),
-        filter(res => res === 'click'),
+        filter(res => !!res),
         take(1),
         tap(() => this.router.navigate(['/notifications'])),
       )
