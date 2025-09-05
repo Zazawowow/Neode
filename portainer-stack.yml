@@ -34,10 +34,17 @@ services:
           echo "Building patch-db dependency from source inside a subshell..."
           (
             cd ../patch-db/client && \
-            echo "Creating tsconfig.json for patch-db build to set modern ES target..." && \
+            echo "--- Debugging patch-db build ---" && \
+            pwd && \
+            echo "Creating tsconfig.json for patch-db build..." && \
             echo '{ "compilerOptions": { "target": "es2017", "module": "commonjs", "lib": ["es2017", "dom"], "declaration": true, "outDir": "./dist", "strict": false, "esModuleInterop": true, "skipLibCheck": true, "forceConsistentCasingInFileNames": true }, "include": ["lib/**/*"] }' > tsconfig.json && \
+            echo "Running npm ci..." && \
             npm ci && \
-            ./node_modules/.bin/tsc
+            echo "Listing node_modules/.bin..." && \
+            ls -la node_modules/.bin/ && \
+            echo "Attempting to build with direct tsc path from typescript package..." && \
+            ./node_modules/typescript/bin/tsc && \
+            echo "--- patch-db build successful ---"
           )
         else
           echo "FATAL: patch-db/client submodule not found. Build cannot continue."
