@@ -16,7 +16,6 @@ import { CommonModule } from '@angular/common'
 
 import { AppComponent } from './app.component'
 import { AppRoutingModule } from './app-routing.module'
-import { TuiMobileDialog } from '@taiga-ui/addon-mobile'
 import { TuiLetModule } from '@taiga-ui/cdk'
 import { MenuModule } from './app/menu/menu.module'
 import { APP_PROVIDERS } from './app.providers'
@@ -44,7 +43,6 @@ import {
     AppRoutingModule,
     TuiRootModule,
     TuiDialogModule,
-    TuiMobileDialog,
     TuiLetModule,
     TuiModeModule,
     TuiThemeNightModule,

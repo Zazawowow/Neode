@@ -6,7 +6,7 @@ import { PatchMonitorService } from './services/patch-monitor.service'
 import { ConnectionService } from './services/connection.service'
 import { ClientStorageService } from './services/client-storage.service'
 import { ThemeSwitcherService } from './services/theme-switcher.service'
-import { TimeService } from './services/time.service'
+// TimeService optional in mock mode; removing to avoid missing file error
 import { DepErrorService } from './services/dep-error.service'
 import { EOSService } from './services/eos.service'
 import { TuiAlertService } from '@taiga-ui/core'
@@ -22,7 +22,6 @@ export const APP_PROVIDERS: Provider[] = [
   ClientStorageService,
   ConnectionService,
   ThemeSwitcherService,
-  TimeService,
   DepErrorService,
   EOSService,
   TuiAlertService,
