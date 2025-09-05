@@ -37,7 +37,7 @@ services:
             echo "Creating tsconfig.json for patch-db build to set modern ES target..." && \
             echo '{ "compilerOptions": { "target": "es2017", "module": "commonjs", "lib": ["es2017", "dom"], "declaration": true, "outDir": "./dist", "strict": false, "esModuleInterop": true, "skipLibCheck": true, "forceConsistentCasingInFileNames": true }, "include": ["lib/**/*"] }' > tsconfig.json && \
             npm ci && \
-            npm run build
+            npx tsc
           )
         else
           echo "FATAL: patch-db/client submodule not found. Build cannot continue."
