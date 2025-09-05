@@ -55,11 +55,18 @@ services:
         # Setup nginx
         echo "Setting up nginx..."
         mkdir -p /usr/share/nginx/html
+        echo "Checking build output..."
+        ls -la dist/raw/ui/
+        echo "Copying built files to web root..."
         cp -r dist/raw/ui/* /usr/share/nginx/html/
+        echo "Copying shared assets..."
         cp -r projects/shared/assets /usr/share/nginx/html/
+        echo "Verifying web root contents..."
+        ls -la /usr/share/nginx/html/
         
         printf '%s\n' \
           'worker_processes 1;' \
+          'error_log /var/log/nginx/error.log warn;' \
           '' \
           'events {' \
           '    worker_connections 768;' \
@@ -68,14 +75,30 @@ services:
           'http {' \
           '    include       /etc/nginx/mime.types;' \
           '    default_type  application/octet-stream;' \
+          '    access_log /var/log/nginx/access.log;' \
+          '    sendfile on;' \
+          '    keepalive_timeout 65;' \
+          '    gzip on;' \
+          '    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;' \
           '' \
           '    server {' \
           '        listen 80 default_server;' \
           '        server_name _;' \
           '        root /usr/share/nginx/html;' \
-          '        index index.html;' \
+          '        index index.html index.htm;' \
+          '        error_log /var/log/nginx/error.log;' \
+          '        access_log /var/log/nginx/access.log;' \
+          '' \
+          '        # Handle Angular SPA routes' \
           '        location / {' \
           '            try_files \$uri \$uri/ /index.html;' \
+          '        }' \
+          '' \
+          '        # Static assets caching' \
+          '        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {' \
+          '            expires 1y;' \
+          '            add_header Cache-Control "public, immutable";' \
+          '            try_files \$uri =404;' \
           '        }' \
           '    }' \
           '}' > /etc/nginx/nginx.conf
@@ -94,7 +117,7 @@ services:
     networks:
       - neode-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
       interval: 30s
       timeout: 10s
       retries: 3
