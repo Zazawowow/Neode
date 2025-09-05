@@ -28,7 +28,7 @@ export class UpdateToastService {
             }),
           ),
         ),
-        filter(res => !!res),
+        filter(res => res === 'click'),
         take(1),
         tap(() => window.location.reload()),
       )

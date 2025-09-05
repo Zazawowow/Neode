@@ -450,7 +450,7 @@ export class LiveApiService extends ApiService {
     if (patchSequence)
       await firstValueFrom(
         this.patch.cache$.pipe(
-          filter(({ sequence }) => sequence >= Number(patchSequence)),
+          filter((cache: any) => cache.sequence >= Number(patchSequence)),
         ),
       )
 

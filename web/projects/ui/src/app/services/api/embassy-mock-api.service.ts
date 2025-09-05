@@ -118,7 +118,7 @@ export class MockApiService extends ApiService {
     await pauseFor(2000)
 
     setTimeout(() => {
-      this.mockWsSource$.next({ id: 1, value: mockPatchData })
+      this.mockWsSource$.next({ id: 1, patch: [] })
     }, 2000)
 
     return null
@@ -670,7 +670,7 @@ export class MockApiService extends ApiService {
       this.updateProgress(params.id)
     }, 1000)
 
-    const patch: Operation<PackageDataEntry>[] = [
+    const patch: Operation[] = [
       {
         op: PatchOp.ADD,
         path: `/package-data/${params.id}`,
@@ -724,7 +724,7 @@ export class MockApiService extends ApiService {
     params: RR.RestorePackagesReq,
   ): Promise<RR.RestorePackagesRes> {
     await pauseFor(2000)
-    const patch: Operation<PackageDataEntry>[] = params.ids.map(id => {
+    const patch: Operation[] = params.ids.map(id => {
       setTimeout(async () => {
         this.updateProgress(id)
       }, 2000)
@@ -759,7 +759,7 @@ export class MockApiService extends ApiService {
     await pauseFor(2000)
 
     setTimeout(async () => {
-      const patch2 = [
+      const patch2: Operation[] = [
         {
           op: PatchOp.REPLACE,
           path: path + '/status',
@@ -856,7 +856,7 @@ export class MockApiService extends ApiService {
 
       await pauseFor(2000)
 
-      const patch3: Operation<any>[] = [
+      const patch3: Operation[] = [
         {
           op: PatchOp.REPLACE,
           path: path + '/status',
@@ -1022,7 +1022,7 @@ export class MockApiService extends ApiService {
     }
 
     setTimeout(() => {
-      const patch2: Operation<any>[] = [
+      const patch2: Operation[] = [
         {
           op: PatchOp.REPLACE,
           path: `/package-data/${id}/state`,
@@ -1046,7 +1046,7 @@ export class MockApiService extends ApiService {
     let size = 10000
     let downloaded = 0
 
-    const patch0 = [
+    const patch0: Operation[] = [
       {
         op: PatchOp.REPLACE,
         path: `/server-info/status-info/update-progress/size`,
@@ -1058,7 +1058,7 @@ export class MockApiService extends ApiService {
     while (downloaded < size) {
       await pauseFor(250)
       downloaded += 500
-      const patch = [
+      const patch: Operation[] = [
         {
           op: PatchOp.REPLACE,
           path: `/server-info/status-info/update-progress/downloaded`,
@@ -1068,7 +1068,7 @@ export class MockApiService extends ApiService {
       this.mockRevision(patch)
     }
 
-    const patch2 = [
+    const patch2: Operation[] = [
       {
         op: PatchOp.REPLACE,
         path: `/server-info/status-info/update-progress/downloaded`,
@@ -1078,7 +1078,7 @@ export class MockApiService extends ApiService {
     this.mockRevision(patch2)
 
     setTimeout(async () => {
-      const patch3: Operation<ServerStatus>[] = [
+      const patch3: Operation[] = [
         {
           op: PatchOp.REPLACE,
           path: '/server-info/status',
@@ -1092,7 +1092,7 @@ export class MockApiService extends ApiService {
       this.mockRevision(patch3)
       // quickly revert server to "running" for continued testing
       await pauseFor(100)
-      const patch4 = [
+      const patch4: Operation[] = [
         {
           op: PatchOp.REPLACE,
           path: '/server-info/status',
@@ -1102,7 +1102,7 @@ export class MockApiService extends ApiService {
       this.mockRevision(patch4)
       // set patch indicating update is complete
       await pauseFor(100)
-      const patch6 = [
+      const patch6: Operation[] = [
         {
           op: PatchOp.REPLACE,
           path: '/server-info/status-info',
@@ -1113,7 +1113,7 @@ export class MockApiService extends ApiService {
     }, 1000)
   }
 
-  private async mockRevision<T>(patch: Operation<T>[]): Promise<void> {
+  private async mockRevision(patch: Operation[]): Promise<void> {
     if (!this.sequence) {
       const { sequence } = this.bootstrapper.init()
       this.sequence = sequence
@@ -1122,6 +1122,6 @@ export class MockApiService extends ApiService {
       id: ++this.sequence,
       patch,
     }
-    this.mockWsSource$.next(revision)
+    this.mockWsSource$.next(revision as any)
   }
 }

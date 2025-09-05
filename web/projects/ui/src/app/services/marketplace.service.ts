@@ -41,7 +41,7 @@ export class MarketplaceService implements AbstractMarketplaceService {
   private readonly knownHosts$: Observable<StoreIdentity[]> = this.patch
     .watch$('ui', 'marketplace', 'known-hosts')
     .pipe(
-      map(hosts => {
+      map((hosts: Record<string, UIStore>) => {
         const { start9, community } = this.config.marketplace
         let arr = [
           toStoreIdentity(start9, hosts[start9]),
@@ -74,7 +74,7 @@ export class MarketplaceService implements AbstractMarketplaceService {
     .watch$('ui', 'marketplace')
     .pipe(
       distinctUntilKeyChanged('selected-url'),
-      map(({ 'selected-url': url, 'known-hosts': hosts }) =>
+      map(({ 'selected-url': url, 'known-hosts': hosts }: any) =>
         toStoreIdentity(url, hosts[url]),
       ),
       shareReplay({ bufferSize: 1, refCount: true }),
