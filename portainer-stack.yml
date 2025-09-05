@@ -39,11 +39,11 @@ services:
         # Create minimal stub for patch-db-client with enhanced mock data
         printf '%s\n' \
           'const { of, BehaviorSubject } = require("rxjs");' \
-          'const mockData = { ui: { name: "Neode", theme: "dark", marketplace: { "selected-url": "https://registry.start9.com/", "known-hosts": { "https://registry.start9.com/": { name: "Start9 Registry" }, "https://community-registry.start9.com/": { name: "Community Registry" } } } }, "server-info": { id: "mock", version: "0.3.5.1", "ntp-synced": true, "status-info": { restarting: false, "shutting-down": false, "backup-progress": null } }, "package-data": {} };' \
+          'const mockData = { ui: { name: "Neode", theme: "dark", marketplace: { "selected-url": "https://registry.start9.com/", "known-hosts": { "https://registry.start9.com/": { name: "Start9 Registry" }, "https://community-registry.start9.com/": { name: "Community Registry" } } } }, "server-info": { id: "mock", version: "0.3.5.1", "ntp-synced": true, "status-info": { restarting: false, "shutting-down": false, "backup-progress": null } }, "package-data": { "mock-pkg": { "manifest": { "id": "mock-pkg", "title": "Mock Package", "version": "1.0.0", "actions": {} }, "state": "installed", "static-files": { "icon": "" }, "install-progress": null } } };' \
           'class PatchDB {' \
           '  constructor(source) { this.source = source; this["cache$"] = new BehaviorSubject(mockData); }' \
-          '  ["watch$"](...args) { if (args.length === 0) return of(mockData); const path = args.join("."); return of(this.getNestedValue(mockData, args) || mockData); }' \
-          '  getNestedValue(obj, path) { return path.reduce((current, key) => current && current[key], obj); }' \
+          '  ["watch$"](...args) { if (args.length === 0) return of(mockData); return of(this.getNestedValue(mockData, args)); }' \
+          '  getNestedValue(obj, path) { return path.reduce((current, key) => (current && typeof current === "object") ? current[key] : undefined, obj); }' \
           '  start() {} stop() {}' \
           '}' \
           'class Update {} class Bootstrapper { init() { return { sequence: 0, data: mockData }; } }' \
@@ -115,8 +115,8 @@ services:
         sed -i 's/<ion-footer>/<ion-footer *ngIf="!showSplash">/' projects/ui/src/app/app.component.html
         sed -i 's/<toast-container><\/toast-container>/<toast-container *ngIf="!showSplash"><\/toast-container>/' projects/ui/src/app/app.component.html
         
-        # Add cursor state tracking to TypeScript
-        printf '\n\n  // Additional cursor tracking states for blinking effect\n  cursorLine1 = false\n  cursorLine2 = false\n  cursorLine3 = false\n  cursorLine4 = false\n' >> projects/ui/src/app/app.component.ts
+        # Add cursor state tracking to TypeScript, injecting them directly into the class
+        sed -i '/export class AppComponent/a \  public cursorLine1 = false;\n  public cursorLine2 = false;\n  public cursorLine3 = false;\n  public cursorLine4 = false;' projects/ui/src/app/app.component.ts
         
         # Simplify timing - just use sed to modify the existing splash timeout
         sed -i 's/}, 25000)/}, 15300)/' projects/ui/src/app/app.component.ts
