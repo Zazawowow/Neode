@@ -145,6 +145,148 @@ services:
         echo "Checking patch-db-client availability..."
         ls -la node_modules/patch-db-client/ 2>/dev/null || echo "patch-db-client not found in node_modules"
         
+        # Fix splash screen timing and cursor animation
+        echo "Fixing splash screen timing and terminal cursor effect..."
+        
+        # Fix the app.component.html to properly hide content during splash
+        sed -i 's/<div class="app-content">/<div class="app-content" [class.app-content--hidden]="showSplash">/' projects/ui/src/app/app.component.html
+        
+        # Add cursor state tracking to TypeScript
+        cat >> projects/ui/src/app/app.component.ts << 'EOF'
+  
+  // Additional cursor tracking states for blinking effect
+  cursorLine1 = false
+  cursorLine2 = false  
+  cursorLine3 = false
+  cursorLine4 = false
+EOF
+        
+        # Update the TypeScript timing logic for better cursor control
+        cat > /tmp/alien-intro-fix.js << 'EOF'
+        // Update the alien intro timing in app.component.ts
+        const fs = require('fs');
+        const filePath = 'projects/ui/src/app/app.component.ts';
+        let content = fs.readFileSync(filePath, 'utf8');
+        
+        // Replace the startAlienIntro method with improved timing
+        const newMethod = `  private startAlienIntro() {
+    // Line 1: Type for 3s, then blink cursor for 1.5s
+    setTimeout(() => {
+      this.showLine1 = true
+      this.typingLine1 = true
+    }, 500)
+    
+    setTimeout(() => {
+      this.typingLine1 = false
+      this.cursorLine1 = true
+    }, 3500) // Type completes at 3.5s
+    
+    // Line 2: Start after cursor blinks
+    setTimeout(() => {
+      this.cursorLine1 = false
+      this.showLine2 = true
+      this.typingLine2 = true
+    }, 5000) // 1.5s cursor blink
+    
+    setTimeout(() => {
+      this.typingLine2 = false
+      this.cursorLine2 = true
+    }, 8500) // Type completes at 8.5s
+    
+    // Line 3: Start after cursor blinks
+    setTimeout(() => {
+      this.cursorLine2 = false
+      this.showLine3 = true
+      this.typingLine3 = true
+    }, 10000) // 1.5s cursor blink
+    
+    setTimeout(() => {
+      this.typingLine3 = false
+      this.cursorLine3 = true
+    }, 13500) // Type completes at 13.5s
+    
+    // Line 4: Start after cursor blinks
+    setTimeout(() => {
+      this.cursorLine3 = false
+      this.showLine4 = true
+      this.typingLine4 = true
+    }, 15000) // 1.5s cursor blink
+    
+    setTimeout(() => {
+      this.typingLine4 = false
+      this.cursorLine4 = true
+    }, 18500) // Type completes at 18.5s
+    
+    // Hold final cursor for 2s, then complete
+    setTimeout(() => {
+      this.cursorLine4 = false
+      this.alienIntroComplete = true
+    }, 20500) // 2s final cursor blink
+  }`;
+        
+        // Replace the method
+        content = content.replace(
+          /private startAlienIntro\(\) \{[\s\S]*?\n  \}/,
+          newMethod
+        );
+        
+        fs.writeFileSync(filePath, content);
+        console.log('Updated alien intro timing');
+EOF
+        
+        node /tmp/alien-intro-fix.js
+        
+        # Update splash timing to match new animation duration (20.5s + 2s buffer = 22.5s)
+        sed -i 's/}, 25000)/}, 22500)/' projects/ui/src/app/app.component.ts
+        
+        # Update the HTML template to include cursor states
+        sed -i 's/<span class="text" \[class\.typing\]="typingLine1">/<span class="text" [class.typing]="typingLine1" [class.cursor-blink]="cursorLine1">/' projects/ui/src/app/app.component.html
+        sed -i 's/<span class="text" \[class\.typing\]="typingLine2">/<span class="text" [class.typing]="typingLine2" [class.cursor-blink]="cursorLine2">/' projects/ui/src/app/app.component.html
+        sed -i 's/<span class="text" \[class\.typing\]="typingLine3">/<span class="text" [class.typing]="typingLine3" [class.cursor-blink]="cursorLine3">/' projects/ui/src/app/app.component.html
+        sed -i 's/<span class="text" \[class\.typing\]="typingLine4">/<span class="text" [class.typing]="typingLine4" [class.cursor-blink]="cursorLine4">/' projects/ui/src/app/app.component.html
+        
+        # Update the CSS for better cursor animation
+        cat >> projects/ui/src/app/app.component.scss << 'EOF'
+
+/* Improved cursor blinking after typing completes */
+.text.cursor-blink {
+  border-right: 2px solid #00ff41;
+  box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+  animation: cursor-blink 0.5s infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 50% {
+    border-right-color: #00ff41;
+    box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+  }
+  51%, 100% {
+    border-right-color: transparent;
+    box-shadow: none;
+  }
+}
+
+/* Update typing animation to not remove cursor at end */
+@keyframes typing {
+  0% {
+    width: 0;
+    border-right: 2px solid #00ff41;
+    box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+  }
+  100% {
+    width: 100%;
+    border-right: 2px solid #00ff41;
+    box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+  }
+}
+
+/* Ensure no cursor when not typing or blinking */
+.text:not(.typing):not(.cursor-blink) {
+  border-right: none;
+  box-shadow: none;
+}
+EOF
+        
         # Build the UI with error handling
         echo "Building UI application..."
         npm run build:ui || (
