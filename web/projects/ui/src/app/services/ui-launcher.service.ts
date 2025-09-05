@@ -13,6 +13,10 @@ export class UiLauncherService {
   ) {}
 
   launch(pkg: PackageDataEntry): void {
+    if ((pkg as any)?.installed?.manifest?.id === 'atob' || (pkg as any)?.manifest?.id === 'atob') {
+      this.windowRef.open('https://app.atobitcoin.io', '_blank', 'noopener,noreferrer')
+      return
+    }
     this.windowRef.open(this.config.launchableURL(pkg), '_blank', 'noreferrer')
   }
 }

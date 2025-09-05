@@ -57,6 +57,8 @@ export class LoginPage {
 
       this.password = ''
       this.authService.setVerified()
+      document.body.classList.add('bg-glitch')
+      setTimeout(() => document.body.classList.remove('bg-glitch'), 900)
       this.router.navigate([''], { replaceUrl: true })
     } catch (e: any) {
       // code 7 is for incorrect password

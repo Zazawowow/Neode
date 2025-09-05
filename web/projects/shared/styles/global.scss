@@ -38,6 +38,80 @@ body {
   background-attachment: fixed;
 }
 
+/* One-shot background glitch overlay when class is present */
+body.bg-glitch::before,
+body.bg-glitch::after,
+html.bg-glitch::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* RGB split overlay */
+body.bg-glitch::before {
+  background-image: url('/assets/img/bg.jpg');
+  background-size: auto 100vh;
+  background-position: center top;
+  mix-blend-mode: screen;
+  opacity: 0.22;
+  filter: hue-rotate(22deg) saturate(1.35);
+  will-change: transform, clip-path;
+  animation: bg-glitch-shift 900ms steps(10, end) 1 both;
+}
+
+/* Second color offset layer (blue/cyan) */
+html.bg-glitch::before {
+  background-image: url('/assets/img/bg.jpg');
+  background-size: auto 100vh;
+  background-position: center top;
+  mix-blend-mode: screen;
+  opacity: 0.18;
+  filter: hue-rotate(-30deg) saturate(1.45);
+  will-change: transform, clip-path;
+  animation: bg-glitch-shift-2 900ms steps(9, end) 1 both;
+}
+
+/* Scanline sweep + grain */
+body.bg-glitch::after {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.16), rgba(0,0,0,0) 60%),
+    repeating-linear-gradient(180deg, rgba(255,255,255,0.05) 0 2px, rgba(0,0,0,0) 2px 4px),
+    radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.35) 100%);
+  opacity: 0.0;
+  will-change: transform, opacity;
+  animation: bg-glitch-scan 900ms ease-out 1 both;
+}
+
+@keyframes bg-glitch-shift {
+  0%   { transform: translate(0,0); clip-path: inset(0% 0 0 0); opacity: .22; }
+  10%  { transform: translate(6px,-2px); clip-path: inset(8% 0 70% 0); }
+  20%  { transform: translate(-5px,2px); clip-path: inset(42% 0 40% 0); }
+  30%  { transform: translate(3px,0); clip-path: inset(68% 0 10% 0); }
+  45%  { transform: translate(-4px,3px); clip-path: inset(18% 0 60% 0); }
+  60%  { transform: translate(5px,-3px); clip-path: inset(55% 0 20% 0); }
+  75%  { transform: translate(-3px,1px); clip-path: inset(10% 0 80% 0); }
+  100% { transform: translate(0,0); clip-path: inset(0% 0 0 0); opacity: 0; }
+}
+
+@keyframes bg-glitch-scan {
+  0%   { opacity: 0.0; transform: translateY(-20%); }
+  12%  { opacity: 0.40; }
+  40%  { opacity: 0.28; }
+  100% { opacity: 0; transform: translateY(115%); }
+}
+
+@keyframes bg-glitch-shift-2 {
+  0%   { transform: translate(0,0); clip-path: inset(0% 0 0 0); opacity: .18; }
+  12%  { transform: translate(-6px,2px); clip-path: inset(12% 0 65% 0); }
+  22%  { transform: translate(5px,-1px) skewX(0.6deg); clip-path: inset(36% 0 42% 0); }
+  38%  { transform: translate(-3px,2px); clip-path: inset(72% 0 8% 0); }
+  55%  { transform: translate(4px,-3px); clip-path: inset(22% 0 58% 0); }
+  70%  { transform: translate(-4px,1px); clip-path: inset(50% 0 26% 0); }
+  100% { transform: translate(0,0); clip-path: inset(0% 0 0 0); opacity: 0; }
+}
+
 /* Improve background on small viewports where fixed can cause jumpiness */
 @media (max-width: 767px) {
   body {

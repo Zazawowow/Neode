@@ -160,11 +160,13 @@ export class AppComponent implements OnDestroy {
 
     setTimeout(() => {
       this.showSplash = false
+      document.body.classList.add('bg-glitch')
       localStorage.setItem('neode_intro_seen', '1')
       document.body.classList.add('splash-complete')
       this.authService.isVerified$.pipe(take(1)).subscribe(isVerified => {
         if (!isVerified) this.router.navigate(['/login'], { replaceUrl: true })
       })
+      setTimeout(() => document.body.classList.remove('bg-glitch'), 900)
     }, 23200)
   }
 
