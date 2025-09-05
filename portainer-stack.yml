@@ -47,7 +47,7 @@ services:
           echo "Building patch-db dependencies..."
           npm run build:deps || echo "Warning: build:deps failed, continuing..."
         else
-          echo "Warning: patch-db/client not found, creating mock dependency..."
+          echo "Warning: patch-db/client not found, creating comprehensive mocks..."
           
           # Remove any existing symlink created by npm install
           echo "Removing existing patch-db-client symlink..."
@@ -59,32 +59,29 @@ services:
           echo '{"name": "patch-db-client", "version": "1.0.0", "main": "index.js", "types": "index.d.ts"}' > node_modules/patch-db-client/package.json
           echo 'const { of, BehaviorSubject } = require("rxjs"); const mockPkg = { manifest: { id: "test", title: "Test App" }, "static-files": { icon: "/test.png" }, state: "installed", key: "test" }; const mockData = { ui: { gaming: { snake: { "high-score": 0 } }, marketplace: { "selected-url": "test", "known-hosts": { "test": { name: "test" } } }, dev: {} }, "server-info": { id: "test", version: "1.0.0", "tor-address": "test.onion", "lan-address": "192.168.1.1", "ip-info": { eth0: { ipv4: ["192.168.1.1"], ipv6: ["::1"] } }, "ca-fingerprint": "test", "status-info": { updated: false, "update-progress": null, "backup-progress": null } }, "package-data": { test: mockPkg } }; function getByPath(root, segments){ let cur = root; for(const s of segments){ if(cur == null) return undefined; cur = cur[s]; } return cur; } class PatchDB { constructor() { this.cache$ = new BehaviorSubject(mockData); } watch$(...args) { if (args.length === 0) return of(mockData); const val = getByPath(mockData, args); if (args.includes("high-score")) return of(0); return of(val !== undefined ? val : {}); } start() {} stop() {} } class Update {} class Bootstrapper { init() { return { sequence: 0 }; } } class DBCache { constructor() { this.sequence = 0; } } class Dump {} class Revision {} class Operation {} class PatchOp { static ADD = "add"; static REMOVE = "remove"; static REPLACE = "replace"; } class RemoveOperation {} function pathFromArray() { return ""; } module.exports = { PatchDB, Update, Bootstrapper, DBCache, Dump, Revision, Operation, PatchOp, RemoveOperation, pathFromArray };' > node_modules/patch-db-client/index.js
           echo 'import { Observable } from "rxjs"; export class PatchDB<T = any> { watch$(): Observable<T>; watch$(path1: string): Observable<any>; watch$(path1: string, path2: string): Observable<any>; watch$(path1: string, path2: string, path3: string): Observable<any>; watch$(path1: string, path2: string, path3: string, path4: string): Observable<any>; watch$(path1: string, path2: string, path3: string, path4: string, path5: string): Observable<any>; watch$(path1: string, path2: string, path3: string, path4: string, path5: string, path6: string): Observable<any>; start(bootstrapper: any): void; stop(): void; get cache$(): Observable<any>; } export class Update<T = any> {} export class Bootstrapper<T = any> { init(): { sequence: number }; } export class DBCache<T = any> { sequence: number; } export class Dump<T = any> {} export class Revision {} export class Operation<T = any> {} export class PatchOp { static ADD: string; static REMOVE: string; static REPLACE: string; } export class RemoveOperation {} export function pathFromArray(arr: any[]): string;' > node_modules/patch-db-client/index.d.ts
-          
+
           # Create @start9labs/shared mock with ALL exports
           echo "Creating comprehensive @start9labs/shared mock..."
           mkdir -p node_modules/@start9labs/shared
           echo '{"name": "@start9labs/shared", "version": "1.0.0", "main": "index.js", "types": "index.d.ts"}' > node_modules/@start9labs/shared/package.json
-          echo 'function isEmptyObject(obj) { return obj && typeof obj === "object" && Object.keys(obj).length === 0; } function pauseFor(ms) { return new Promise(resolve => setTimeout(resolve, ms)); } function copyToClipboard(text) { return Promise.resolve(); } function sameUrl(a, b) { return a === b; } class Emver { static satisfies(version, range) { return true; } static compare(a, b) { return 0; } } const emver = new Emver(); emver.satisfies = Emver.satisfies; emver.compare = Emver.compare; class ErrorToastService { present() {} } class HttpService { request() { return Promise.resolve({}); } } class Log { static info() {} static error() {} } const HttpOptions = {}; const Method = { GET: "GET", POST: "POST" }; const RpcError = {}; const RPCOptions = {}; function isRpcError() { return false; } const WorkspaceConfig = {}; const StartOSDiskInfo = {}; const LogsRes = {}; const ServerLogsReq = {}; const SharedPipesModule = { ngModule: true }; const EmverPipesModule = { ngModule: true }; const EmverDisplayPipe = { pipe: true }; const MarkdownPipeModule = { ngModule: true }; const TextSpinnerComponentModule = { ngModule: true }; module.exports = { isEmptyObject, pauseFor, copyToClipboard, sameUrl, Emver, emver, ErrorToastService, HttpService, Log, HttpOptions, Method, RpcError, RPCOptions, isRpcError, WorkspaceConfig, StartOSDiskInfo, LogsRes, ServerLogsReq, SharedPipesModule, EmverPipesModule, EmverDisplayPipe, MarkdownPipeModule, TextSpinnerComponentModule };' > node_modules/@start9labs/shared/index.js
-          echo 'export function isEmptyObject(obj: any): boolean; export function pauseFor(ms: number): Promise<void>; export function copyToClipboard(text: string): Promise<void>; export function sameUrl(a: string, b: string): boolean; export class Emver { static satisfies(version: string, range: string): boolean; static compare(a: string, b: string): number; } export const emver: { satisfies: (version: string, range: string) => boolean; compare: (a: string, b: string) => number; }; export class ErrorToastService { present(): void; } export class HttpService { request(): Promise<any>; } export class Log { static info(): void; static error(): void; } export const HttpOptions: any; export const Method: any; export const RpcError: any; export const RPCOptions: any; export function isRpcError(): boolean; export const WorkspaceConfig: any; export const StartOSDiskInfo: any; export const LogsRes: any; export const ServerLogsReq: any; export const SharedPipesModule: any; export const EmverPipesModule: any; export const EmverDisplayPipe: any; export const MarkdownPipeModule: any; export const TextSpinnerComponentModule: any;' > node_modules/@start9labs/shared/index.d.ts
+          echo 'function isEmptyObject(obj) { return obj && typeof obj === "object" && Object.keys(obj).length === 0; } function pauseFor(ms) { return new Promise(resolve => setTimeout(resolve, ms)); } function copyToClipboard(text) { return Promise.resolve(true); } function sameUrl(a, b) { return a === b; } function getErrorMessage(e) { return "error"; } function isObject(o) { return o !== null && typeof o === "object"; } function toUrl(u) { return u; } function getPkgId(p) { return "id"; } function toLocalIsoString(d) { return new Date().toISOString(); } function debounce(fn, ms) { return fn; } class Emver { static satisfies(version, range) { return true; } static compare(a, b) { return 0; } } const emver = new Emver(); emver.satisfies = Emver.satisfies; emver.compare = Emver.compare; class ErrorToastService { present(e) {return Promise.resolve({})} } class HttpService { request() { return Promise.resolve({}); } rpcRequest() { return Promise.resolve({}); } httpRequest() { return Promise.resolve({}); } } class Log { constructor() { this.timestamp = new Date(); this.message = ""; } static info() {} static error() {} } class DownloadHTMLService {} const HttpOptions = {}; const Method = { GET: "GET", POST: "POST" }; const RpcError = {}; const RPCOptions = {}; function isRpcError(b) { return false; } const WorkspaceConfig = {}; const StartOSDiskInfo = {}; const LogsRes = {}; const ServerLogsReq = {}; const SharedPipesModule = { ngModule: true }; const EmverPipesModule = { ngModule: true }; const EmverDisplayPipe = { pipe: true }; const MarkdownPipeModule = { ngModule: true }; const TextSpinnerComponentModule = { ngModule: true }; const UnitConversionPipesModule = { ngModule: true }; const AlertModule = { ngModule: true }; const ToastModule = { ngModule: true }; const ResponsiveColModule = { ngModule: true }; const TickerModule = { ngModule: true }; const MarkdownComponent = { component: true }; const THEME = {}; const RELATIVE_URL = ""; module.exports = { isEmptyObject, pauseFor, copyToClipboard, sameUrl, Emver, emver, ErrorToastService, HttpService, Log, HttpOptions, Method, RpcError, RPCOptions, isRpcError, WorkspaceConfig, StartOSDiskInfo, LogsRes, ServerLogsReq, SharedPipesModule, EmverPipesModule, EmverDisplayPipe, MarkdownPipeModule, TextSpinnerComponentModule, getErrorMessage, isObject, toUrl, getPkgId, toLocalIsoString, DownloadHTMLService, UnitConversionPipesModule, AlertModule, ToastModule, ResponsiveColModule, TickerModule, debounce, MarkdownComponent, THEME, RELATIVE_URL };' > node_modules/@start9labs/shared/index.js
+          echo 'export function isEmptyObject(obj: any): boolean; export function pauseFor(ms: number): Promise<void>; export function copyToClipboard(text: string): Promise<boolean>; export function sameUrl(a: string, b: string): boolean; export function getErrorMessage(e: any): string; export function isObject(o: any): boolean; export function toUrl(u: string): string; export function getPkgId(p: any): string; export function toLocalIsoString(d: Date): string; export function debounce(fn: Function, ms: number): Function; export class Emver { static satisfies(version: string, range: string): boolean; static compare(a: string, b: string): number; } export const emver: { satisfies: (version: string, range: string) => boolean; compare: (a: string, b: string) => number; }; export class ErrorToastService { present(e?: any): Promise<any>; } export class HttpService { request(): Promise<any>; rpcRequest<T>(options: any, urlOverride?: string): Promise<T>; httpRequest<T>(opts: any): Promise<T>; } export class Log { timestamp: Date; message: string; static info(): void; static error(): void; } export class DownloadHTMLService {} export const HttpOptions: any; export const Method: any; export const RpcError: any; export const RPCOptions: any; export function isRpcError(body: any): boolean; export declare type WorkspaceConfig = any; export declare type StartOSDiskInfo = any; export declare type LogsRes = any; export declare type ServerLogsReq = any; export const SharedPipesModule: any; export const EmverPipesModule: any; export const EmverDisplayPipe: any; export const MarkdownPipeModule: any; export const TextSpinnerComponentModule: any; export const UnitConversionPipesModule: any; export const AlertModule: any; export const ToastModule: any; export const ResponsiveColModule: any; export const TickerModule: any; export const MarkdownComponent: any; export const THEME: any; export const RELATIVE_URL: string;' > node_modules/@start9labs/shared/index.d.ts
           
-          # Create @start9labs/marketplace mock
-          echo "Creating @start9labs/marketplace mock..."
+          # Create @start9labs/marketplace mock with ALL exports
+          echo "Creating comprehensive @start9labs/marketplace mock..."
           mkdir -p node_modules/@start9labs/marketplace
           echo '{"name": "@start9labs/marketplace", "version": "1.0.0", "main": "index.js", "types": "index.d.ts"}' > node_modules/@start9labs/marketplace/package.json
-          echo 'const MarketplacePkg = {}; const StoreInfo = {}; const DependencyMetadata = {}; const AbstractMarketplaceService = class {}; const MimeTypePipeModule = { ngModule: true }; module.exports = { MarketplacePkg, StoreInfo, DependencyMetadata, AbstractMarketplaceService, MimeTypePipeModule };' > node_modules/@start9labs/marketplace/index.js
-          echo 'export const MarketplacePkg: any; export const StoreInfo: any; export const DependencyMetadata: any; export class AbstractMarketplaceService {} export const MimeTypePipeModule: any;' > node_modules/@start9labs/marketplace/index.d.ts
+          echo 'const MarketplacePkg = {}; const StoreInfo = {}; const DependencyMetadata = {}; class AbstractMarketplaceService { getPackage$(...args) { return require("rxjs").of({}); } } const MimeTypePipeModule = { ngModule: true }; const FilterPackagesPipeModule = { ngModule: true }; const CategoriesModule = { ngModule: true }; const ItemModule = { ngModule: true }; const SearchModule = { ngModule: true }; const SkeletonModule = { ngModule: true }; const AboutModule = { ngModule: true }; const AdditionalModule = { ngModule: true }; const DependenciesModule = { ngModule: true }; const PackageModule = { ngModule: true }; const ReleaseNotesModule = { ngModule: true }; const StoreData = {}; const Marketplace = {}; const MarketplaceManifest = {}; const StoreIdentity = {}; module.exports = { MarketplacePkg, StoreInfo, DependencyMetadata, AbstractMarketplaceService, MimeTypePipeModule, FilterPackagesPipeModule, CategoriesModule, ItemModule, SearchModule, SkeletonModule, AboutModule, AdditionalModule, DependenciesModule, PackageModule, ReleaseNotesModule, StoreData, Marketplace, MarketplaceManifest, StoreIdentity };' > node_modules/@start9labs/marketplace/index.js
+          echo 'import { Observable } from "rxjs"; export declare type MarketplacePkg = any; export declare type StoreInfo = any; export declare type DependencyMetadata = any; export declare class AbstractMarketplaceService { getPackage$(pkgId: string, version?: string, url?: string): Observable<any>; } export const MimeTypePipeModule: any; export const FilterPackagesPipeModule: any; export const CategoriesModule: any; export const ItemModule: any; export const SearchModule: any; export const SkeletonModule: any; export const AboutModule: any; export const AdditionalModule: any; export const DependenciesModule: any; export const PackageModule: any; export const ReleaseNotesModule: any; export declare type StoreData = any; export declare type Marketplace = any; export declare type MarketplaceManifest = any; export declare type StoreIdentity = any;' > node_modules/@start9labs/marketplace/index.d.ts
           
           # Create missing local modules with complete type definitions
           echo "Creating missing local modules..."
           mkdir -p projects/ui/src/app/services/patch-db
-          echo 'export interface DataModel { ui: any; "server-info": any; "package-data": any; } export interface ServerInfo { id: string; version: string; "password-hash"?: string; "tor-address"?: string; } export interface PackageDataEntry { manifest: any; state: string; key: string; "static-files"?: any; installed?: any; "install-progress"?: any; } export enum PackageState { Installed = "installed", Installing = "installing", Stopped = "stopped", Updating = "updating", Restoring = "restoring", Removing = "removing" } export enum PackageMainStatus { Running = "running", Stopped = "stopped", Starting = "starting", BackingUp = "backing-up", Restarting = "restarting", Stopping = "stopping" } export enum DockerIoFormat { Yaml = "yaml", Cbor = "cbor" } export enum HealthResult { Success = "success", Failure = "failure", Loading = "loading", Starting = "starting", Disabled = "disabled" } export enum ServerStatus { Updated = "updated", Running = "running" } export interface Action { name: string; description: string; } export interface InstalledPackageDataEntry extends PackageDataEntry { installed: any; status?: any; } export interface InterfaceDef { name: string; ui?: any; } export interface Manifest { id: string; title: string; version: string; dependencies?: any; assets?: any; } export interface InstallProgress { downloadProgress?: number; validateProgress?: number; unpackProgress?: number; totalProgress?: number; downloaded?: number; validated?: number; unpacked?: number; size?: number; "download-complete"?: boolean; "validation-complete"?: boolean; "unpack-complete"?: boolean; } export interface HealthCheckResult { result: string; } export interface Status { main: any; configured?: boolean; } export interface UIStore { name: string; } export interface DevData { name: string; } export interface DevProjectData { name: string; } export interface Widget { id: string; } export interface UIData { [key: string]: any; } export interface ServerStatusInfo { [key: string]: any; } export interface MainStatusStarting { [key: string]: any; }' > projects/ui/src/app/services/patch-db/data-model.ts
+          echo 'export interface DataModel { ui: any; "server-info": any; "package-data": any; } export interface ServerInfo { id: string; version: string; "password-hash"?: string; "tor-address"?: string; } export interface PackageDataEntry { manifest: any; state: string; key: string; "static-files"?: any; installed?: any; "install-progress"?: any; } export enum PackageState { Installed = "installed", Installing = "installing", Stopped = "stopped", Updating = "updating", Restoring = "restoring", Removing = "removing" } export enum PackageMainStatus { Running = "running", Stopped = "stopped", Starting = "starting", BackingUp = "backing-up", Restarting = "restarting", Stopping = "stopping" } export enum DockerIoFormat { Yaml = "yaml", Cbor = "cbor" } export enum HealthResult { Success = "success", Failure = "failure", Loading = "loading", Starting = "starting", Disabled = "disabled" } export enum ServerStatus { Updated = "updated", Running = "running" } export interface Action { name: string; description: string; warning?: string; } export interface InstalledPackageDataEntry extends PackageDataEntry { installed: any; status?: any; ["interface-addresses"]?: any; } export interface InterfaceDef { name: string; ui?: any; } export interface Manifest { id: string; title: string; version: string; dependencies?: any; assets?: any; } export interface InstallProgress { downloadProgress?: number; validateProgress?: number; unpackProgress?: number; totalProgress?: number; downloaded?: number; validated?: number; unpacked?: number; size?: number; "download-complete"?: boolean; "validation-complete"?: boolean; "unpack-complete"?: boolean; } export interface HealthCheckResult { result: string; } export interface Status { main: any; configured?: boolean; } export interface UIStore { name: string; } export interface DevData { name: string; } export interface DevProjectData { name: string; } export interface Widget { id: string; } export interface UIData { [key: string]: any; } export interface ServerStatusInfo { [key: string]: any; } export interface MainStatusStarting { [key: string]: any; }' > projects/ui/src/app/services/patch-db/data-model.ts
           mkdir -p projects/ui/src/app/types  
           echo 'export interface ProgressData { result?: string; [key: string]: any; }' > projects/ui/src/app/types/progress-data.ts
           
-          echo "Mock patch-db-client setup complete"
-          # Debug: check what was created
-          echo "Created files in node_modules/patch-db-client:"
-          ls -la node_modules/patch-db-client/ 2>/dev/null || echo "Directory not found"
+          echo "All mocks created successfully"
         fi
         
         # Ensure config.json exists at multiple locations for import resolution
@@ -93,92 +90,9 @@ services:
         echo '{"enableDidFlow": true, "api": "mock"}' > config.json
         echo '{"enableDidFlow": true, "api": "mock"}' > projects/config.json
         
-        # Create a minimal tsconfig that ignores all errors
-        echo "Creating lenient tsconfig for container build..."
-        echo '{"extends": "./tsconfig.json","compilerOptions": {"strict": false,"noImplicitAny": false,"strictNullChecks": false,"strictFunctionTypes": false,"strictBindCallApply": false,"strictPropertyInitialization": false,"noImplicitReturns": false,"noFallthroughCasesInSwitch": false,"noImplicitOverride": false,"noPropertyAccessFromIndexSignature": false,"noImplicitThis": false,"noUncheckedIndexedAccess": false,"exactOptionalPropertyTypes": false,"skipLibCheck": true,"skipDefaultLibCheck": true},"angularCompilerOptions": {"fullTemplateTypeCheck": false,"strictTemplates": false,"strictInputAccessModifiers": false,"strictInputTypes": false,"strictNullInputTypes": false,"strictAttributeTypes": false,"strictSafeNavigationTypes": false,"strictDomLocalRefTypes": false,"strictOutputEventTypes": false,"strictDomEventTypes": false,"strictContextGenerics": false,"strictLiteralTypes": false}}' > tsconfig.container.json
-        
-        # Create angular.json configuration that completely bypasses TypeScript checking
-        echo "Modifying angular.json to bypass all TypeScript checking..."
-        cp angular.json angular.json.backup 2>/dev/null || true
-        
-        # Patch angular.json to add a no-type-check configuration
-        echo "Adding no-type-check configuration..."
-        node -e "
-        const fs = require('fs');
-        const config = JSON.parse(fs.readFileSync('angular.json', 'utf8'));
-        
-        // Add a new configuration that skips all type checking
-        if (!config.projects.ui.architect.build.configurations['no-types']) {
-          config.projects.ui.architect.build.configurations['no-types'] = {
-            ...config.projects.ui.architect.build.configurations.development,
-            aot: false,
-            buildOptimizer: false,
-            optimization: false,
-            sourceMap: true,
-            extractLicenses: false,
-            vendorChunk: true,
-            namedChunks: true
-          };
-        }
-        
-        fs.writeFileSync('angular.json', JSON.stringify(config, null, 2));
-        console.log('Angular configuration updated');
-        "
-        
-        # Override tsconfig to be maximally permissive
-        echo "Creating maximally permissive tsconfig..."
-        echo '{
-          "compileOnSave": false,
-          "compilerOptions": {
-            "baseUrl": "./",
-            "outDir": "./dist/out-tsc",
-            "target": "es2020",
-            "module": "es2020",
-            "lib": ["es2020", "dom"],
-            "allowJs": true,
-            "skipLibCheck": true,
-            "skipDefaultLibCheck": true,
-            "moduleResolution": "node",
-            "importHelpers": true,
-            "experimentalDecorators": true,
-            "strict": false,
-            "noImplicitAny": false,
-            "noImplicitThis": false,
-            "noImplicitReturns": false,
-            "noUnusedLocals": false,
-            "noUnusedParameters": false,
-            "strictNullChecks": false,
-            "strictFunctionTypes": false,
-            "strictBindCallApply": false,
-            "strictPropertyInitialization": false,
-            "noPropertyAccessFromIndexSignature": false,
-            "noImplicitOverride": false,
-            "exactOptionalPropertyTypes": false,
-            "suppressImplicitAnyIndexErrors": true,
-            "suppressExcessPropertyErrors": true,
-            "forceConsistentCasingInFileNames": false
-          },
-          "angularCompilerOptions": {
-            "strictTemplates": false,
-            "strictInjectionParameters": false,
-            "strictInputAccessModifiers": false,
-            "strictInputTypes": false,
-            "strictNullInputTypes": false,
-            "strictAttributeTypes": false,
-            "strictSafeNavigationTypes": false,
-            "strictDomLocalRefTypes": false,
-            "strictOutputEventTypes": false,
-            "strictDomEventTypes": false,
-            "strictContextGenerics": false,
-            "strictLiteralTypes": false,
-            "enableI18nLegacyMessageIdFormat": false,
-            "fullTemplateTypeCheck": false
-          }
-        }' > tsconfig.json
-        
-        # Build with the no-types configuration
-        echo "Building with all type checking disabled..."
-        npx ng build ui --configuration=no-types || npm run build:ui
+        # Build with simple command now that mocks are complete
+        echo "Building UI application..."
+        npm run build:ui
         
         # Setup nginx
         mkdir -p /usr/share/nginx/html
