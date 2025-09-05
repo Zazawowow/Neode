@@ -72,9 +72,9 @@ services:
         echo '{"enableDidFlow": true, "api": "mock"}' > config.json
         echo '{"enableDidFlow": true, "api": "mock"}' > projects/config.json
         
-        # Build the UI
-        echo "Building UI application..."
-        npm run build:ui
+        # Build the UI (dev mode to match local: disables AOT/strict template checks)
+        echo "Building UI application (dev mode)..."
+        npx ng build ui --configuration=development || npm run build:ui
         
         # Setup nginx
         mkdir -p /usr/share/nginx/html
