@@ -35,85 +35,85 @@ services:
         
         echo '{"name": "patch-db-client", "version": "1.0.0", "main": "index.js", "types": "index.d.ts"}' > node_modules/patch-db-client/package.json
         
-        printf '%s\n' \
-          'const { of, BehaviorSubject, EMPTY } = require("rxjs");' \
-          '' \
-          'const mockData = {' \
-          '  ui: {' \
-          '    "ack-welcome": false,' \
-          '    gaming: { snake: { "high-score": 0 } },' \
-          '    marketplace: { "selected-url": "registry.start9.com", "known-hosts": {} },' \
-          '    dev: {}' \
-          '  },' \
-          '  "server-info": {' \
-          '    id: "mock-server",' \
-          '    version: "1.0.0",' \
-          '    "tor-address": "mock.onion",' \
-          '    "lan-address": "localhost",' \
-          '    "ip-info": { eth0: { ipv4: ["127.0.0.1"], ipv6: ["::1"] } },' \
-          '    "ca-fingerprint": "mock-fingerprint",' \
-          '    "status-info": { updated: false, "update-progress": null, "backup-progress": null }' \
-          '  },' \
-          '  "package-data": {}' \
-          '};' \
-          '' \
-          'class PatchDB {' \
-          '  constructor(source) {' \
-          '    this.source = source;' \
-          '    this.cache\$$ = new BehaviorSubject(mockData);' \
-          '  }' \
-          '  ' \
-          '  watch\$$(...args) {' \
-          '    if (args.length === 0) return of(mockData);' \
-          '    let value = mockData;' \
-          '    for (const key of args) {' \
-          '      value = value && value[key];' \
-          '    }' \
-          '    return of(value || {});' \
-          '  }' \
-          '  ' \
-          '  start(bootstrapper) {' \
-          '    if (bootstrapper && typeof bootstrapper.init === "function") {' \
-          '      bootstrapper.init();' \
-          '    }' \
-          '  }' \
-          '  ' \
-          '  stop() {}' \
-          '}' \
-          '' \
-          'class Update {}' \
-          'class Bootstrapper { init() { return { sequence: 0, data: mockData }; } update() {} }' \
-          'class DBCache { constructor() { this.sequence = 0; this.data = {}; } }' \
-          'class Dump {}' \
-          'class Revision {}' \
-          'class Operation {}' \
-          'class PatchOp { static ADD = "add"; static REMOVE = "remove"; static REPLACE = "replace"; }' \
-          'class RemoveOperation {}' \
-          'function pathFromArray(arr) { return arr ? arr.join(".") : ""; }' \
-          '' \
-          'module.exports = { PatchDB, Update, Bootstrapper, DBCache, Dump, Revision, Operation, PatchOp, RemoveOperation, pathFromArray };' \
-          > node_modules/patch-db-client/index.js
+        cat > node_modules/patch-db-client/index.js << 'PATCH_JS_EOF'
+const { of, BehaviorSubject, EMPTY } = require("rxjs");
+
+const mockData = {
+  ui: {
+    "ack-welcome": false,
+    gaming: { snake: { "high-score": 0 } },
+    marketplace: { "selected-url": "registry.start9.com", "known-hosts": {} },
+    dev: {}
+  },
+  "server-info": {
+    id: "mock-server",
+    version: "1.0.0",
+    "tor-address": "mock.onion",
+    "lan-address": "localhost",
+    "ip-info": { eth0: { ipv4: ["127.0.0.1"], ipv6: ["::1"] } },
+    "ca-fingerprint": "mock-fingerprint",
+    "status-info": { updated: false, "update-progress": null, "backup-progress": null }
+  },
+  "package-data": {}
+};
+
+class PatchDB {
+  constructor(source) {
+    this.source = source;
+    this["cache$"] = new BehaviorSubject(mockData);
+  }
+  
+  ["watch$"](...args) {
+    if (args.length === 0) return of(mockData);
+    let value = mockData;
+    for (const key of args) {
+      value = value && value[key];
+    }
+    return of(value || {});
+  }
+  
+  start(bootstrapper) {
+    if (bootstrapper && typeof bootstrapper.init === "function") {
+      bootstrapper.init();
+    }
+  }
+  
+  stop() {}
+}
+
+class Update {}
+class Bootstrapper { init() { return { sequence: 0, data: mockData }; } update() {} }
+class DBCache { constructor() { this.sequence = 0; this.data = {}; } }
+class Dump {}
+class Revision {}
+class Operation {}
+class PatchOp { static ADD = "add"; static REMOVE = "remove"; static REPLACE = "replace"; }
+class RemoveOperation {}
+function pathFromArray(arr) { return arr ? arr.join(".") : ""; }
+
+module.exports = { PatchDB, Update, Bootstrapper, DBCache, Dump, Revision, Operation, PatchOp, RemoveOperation, pathFromArray };
+PATCH_JS_EOF
         
-        printf '%s\n' \
-          'import { Observable } from "rxjs";' \
-          'export class PatchDB<T = any> {' \
-          '  constructor(source: Observable<any>);' \
-          '  cache\$$: Observable<T>;' \
-          '  watch\$$(): Observable<T>;' \
-          '  watch\$$(path: string): Observable<any>;' \
-          '  start(bootstrapper: Bootstrapper<T>): void;' \
-          '  stop(): void;' \
-          '}' \
-          'export class Update<T = any> {}' \
-          'export abstract class Bootstrapper<T = any> { abstract init(): DBCache<T>; }' \
-          'export interface DBCache<T = any> { sequence: number; data: T; }' \
-          'export class Dump<T = any> {}' \
-          'export class Revision {}' \
-          'export class Operation<T = any> {}' \
-          'export class PatchOp { static readonly ADD: string; static readonly REMOVE: string; static readonly REPLACE: string; }' \
-          'export class RemoveOperation {}' \
-          'export function pathFromArray(arr: string[]): string;' \
-          > node_modules/patch-db-client/index.d.ts
+        cat > node_modules/patch-db-client/index.d.ts << 'PATCH_TS_EOF'
+import { Observable } from "rxjs";
+export class PatchDB<T = any> {
+  constructor(source: Observable<any>);
+  "cache$": Observable<T>;
+  "watch$"(): Observable<T>;
+  "watch$"(path: string): Observable<any>;
+  start(bootstrapper: Bootstrapper<T>): void;
+  stop(): void;
+}
+export class Update<T = any> {}
+export abstract class Bootstrapper<T = any> { abstract init(): DBCache<T>; }
+export interface DBCache<T = any> { sequence: number; data: T; }
+export class Dump<T = any> {}
+export class Revision {}
+export class Operation<T = any> {}
+export class PatchOp { static readonly ADD: string; static readonly REMOVE: string; static readonly REPLACE: string; }
+export class RemoveOperation {}
+export function pathFromArray(arr: string[]): string;
+PATCH_TS_EOF
         
         echo "patch-db-client stub created successfully"
         
@@ -151,6 +151,10 @@ services:
         # Fix the app.component.html to properly hide content during splash
         sed -i 's/<div class="app-content">/<div class="app-content" [class.app-content--hidden]="showSplash">/' projects/ui/src/app/app.component.html
         
+        # Also hide all other content during splash
+        sed -i 's/<ion-footer>/<ion-footer *ngIf="!showSplash">/' projects/ui/src/app/app.component.html
+        sed -i 's/<toast-container><\/toast-container>/<toast-container *ngIf="!showSplash"><\/toast-container>/' projects/ui/src/app/app.component.html
+        
         # Add cursor state tracking to TypeScript
         cat >> projects/ui/src/app/app.component.ts << 'EOF'
   
@@ -161,67 +165,72 @@ services:
   cursorLine4 = false
 EOF
         
-        # Update the TypeScript timing logic for better cursor control
+        # Update the TypeScript timing logic for better cursor control - SHORTER VERSION
         cat > /tmp/alien-intro-fix.js << 'EOF'
         // Update the alien intro timing in app.component.ts
         const fs = require('fs');
         const filePath = 'projects/ui/src/app/app.component.ts';
         let content = fs.readFileSync(filePath, 'utf8');
         
-        // Replace the startAlienIntro method with improved timing
+        // Replace the startAlienIntro method with SHORTER timing
         const newMethod = `  private startAlienIntro() {
-    // Line 1: Type for 3s, then blink cursor for 1.5s
+    // Line 1: Type for 2s, then blink cursor for 1s
     setTimeout(() => {
       this.showLine1 = true
       this.typingLine1 = true
-    }, 500)
+    }, 300)
     
     setTimeout(() => {
       this.typingLine1 = false
       this.cursorLine1 = true
-    }, 3500) // Type completes at 3.5s
+    }, 2300) // Type completes at 2.3s
     
     // Line 2: Start after cursor blinks
     setTimeout(() => {
       this.cursorLine1 = false
       this.showLine2 = true
       this.typingLine2 = true
-    }, 5000) // 1.5s cursor blink
+    }, 3300) // 1s cursor blink
     
     setTimeout(() => {
       this.typingLine2 = false
       this.cursorLine2 = true
-    }, 8500) // Type completes at 8.5s
+    }, 5300) // Type completes at 5.3s
     
     // Line 3: Start after cursor blinks
     setTimeout(() => {
       this.cursorLine2 = false
       this.showLine3 = true
       this.typingLine3 = true
-    }, 10000) // 1.5s cursor blink
+    }, 6300) // 1s cursor blink
     
     setTimeout(() => {
       this.typingLine3 = false
       this.cursorLine3 = true
-    }, 13500) // Type completes at 13.5s
+    }, 8300) // Type completes at 8.3s
     
     // Line 4: Start after cursor blinks
     setTimeout(() => {
       this.cursorLine3 = false
       this.showLine4 = true
       this.typingLine4 = true
-    }, 15000) // 1.5s cursor blink
+    }, 9300) // 1s cursor blink
     
     setTimeout(() => {
       this.typingLine4 = false
       this.cursorLine4 = true
-    }, 18500) // Type completes at 18.5s
+    }, 11300) // Type completes at 11.3s
     
-    // Hold final cursor for 2s, then complete
+    // Hold final cursor for 1s, then show logo for 3s
     setTimeout(() => {
       this.cursorLine4 = false
       this.alienIntroComplete = true
-    }, 20500) // 2s final cursor blink
+    }, 12300) // 1s final cursor blink
+    
+    // Hide splash after logo shows for 3s
+    setTimeout(() => {
+      this.showSplash = false
+    }, 15300) // Logo shows for 3s (12.3s + 3s)
   }`;
         
         // Replace the method
@@ -236,8 +245,8 @@ EOF
         
         node /tmp/alien-intro-fix.js
         
-        # Update splash timing to match new animation duration (20.5s + 2s buffer = 22.5s)
-        sed -i 's/}, 25000)/}, 22500)/' projects/ui/src/app/app.component.ts
+        # Remove the old splash timing since we handle it in the intro method now
+        sed -i '/setTimeout.*showSplash = false/,/}, [0-9]*)/d' projects/ui/src/app/app.component.ts
         
         # Update the HTML template to include cursor states
         sed -i 's/<span class="text" \[class\.typing\]="typingLine1">/<span class="text" [class.typing]="typingLine1" [class.cursor-blink]="cursorLine1">/' projects/ui/src/app/app.component.html
@@ -245,26 +254,34 @@ EOF
         sed -i 's/<span class="text" \[class\.typing\]="typingLine3">/<span class="text" [class.typing]="typingLine3" [class.cursor-blink]="cursorLine3">/' projects/ui/src/app/app.component.html
         sed -i 's/<span class="text" \[class\.typing\]="typingLine4">/<span class="text" [class.typing]="typingLine4" [class.cursor-blink]="cursorLine4">/' projects/ui/src/app/app.component.html
         
-        # Update the CSS for better cursor animation and remove text glow
+        # Update the CSS for better cursor animation and remove ALL text effects
         cat >> projects/ui/src/app/app.component.scss << 'EOF'
 
-/* Remove text glow/shadow for cleaner terminal look */
+/* Completely remove ALL text effects and borders for clean terminal look */
 .text {
-  color: #ffffff;
+  color: #ffffff !important;
   text-shadow: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.text.typing {
+  animation: typing 2s steps(40, end) forwards !important;
+  border-right: 2px solid #00ff41 !important;
+  box-shadow: 0 0 6px rgba(0, 255, 65, 0.4) !important;
 }
 
 /* Improved cursor blinking after typing completes */
 .text.cursor-blink {
-  border-right: 2px solid #00ff41;
-  box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
-  animation: cursor-blink 0.5s infinite;
+  border-right: 2px solid #00ff41 !important;
+  box-shadow: 0 0 6px rgba(0, 255, 65, 0.4) !important;
+  animation: cursor-blink 0.5s infinite !important;
 }
 
 @keyframes cursor-blink {
   0%, 50% {
     border-right-color: #00ff41;
-    box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+    box-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
   }
   51%, 100% {
     border-right-color: transparent;
@@ -272,24 +289,31 @@ EOF
   }
 }
 
-/* Update typing animation to not remove cursor at end */
+/* Faster typing animation - 2s instead of 4s */
 @keyframes typing {
   0% {
     width: 0;
     border-right: 2px solid #00ff41;
-    box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+    box-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
   }
   100% {
     width: 100%;
     border-right: 2px solid #00ff41;
-    box-shadow: 0 0 8px rgba(0, 255, 65, 0.5);
+    box-shadow: 0 0 6px rgba(0, 255, 65, 0.4);
   }
+}
+
+/* Override original styles completely */
+.alien-intro .text {
+  text-shadow: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Ensure no cursor when not typing or blinking */
 .text:not(.typing):not(.cursor-blink) {
-  border-right: none;
-  box-shadow: none;
+  border-right: none !important;
+  box-shadow: none !important;
 }
 EOF
         
