@@ -13,11 +13,11 @@
       <ion-col>
         <ion-item-group>
           <ng-container *ngFor="let pkg of pkgs | keyvalue">
-            <ion-item *ngIf="backupProgress[pkg.key] as pkgProgress">
+            <ion-item *ngIf="$any(backupProgress)[pkg.key] as pkgProgress">
               <ion-avatar slot="start">
-                <img [src]="pkg.value['static-files'].icon" />
+                <img [src]="$any(pkg.value)['static-files'].icon" />
               </ion-avatar>
-              <ion-label>{{ pkg.value.manifest.title }}</ion-label>
+              <ion-label>{{ $any(pkg.value).manifest.title }}</ion-label>
               <!-- complete -->
               <ion-note
                 *ngIf="pkgProgress.complete; else incomplete"
@@ -30,9 +30,7 @@
               </ion-note>
               <!-- incomplete -->
               <ng-template #incomplete>
-                <ng-container
-                  *ngIf="pkg.key | pkgMainStatus | async as pkgStatus"
-                >
+                <ng-container *ngIf="$any(pkg.key) | pkgMainStatus | async as pkgStatus">
                   <!-- active -->
                   <ion-note
                     *ngIf="

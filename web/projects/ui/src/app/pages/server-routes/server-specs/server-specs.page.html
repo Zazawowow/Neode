@@ -59,7 +59,7 @@
       </ion-button>
     </ion-item>
     <ng-container *ngFor="let iface of server['ip-info'] | keyvalue">
-      <ion-item *tuiLet="iface.value.ipv4 as ipv4">
+      <ion-item *tuiLet="$any(iface.value).ipv4 as ipv4">
         <ion-label>
           <h2>{{ iface.key }} (IPv4)</h2>
           <p>{{ ipv4 || 'n/a' }}</p>
@@ -68,7 +68,7 @@
           <ion-icon slot="icon-only" name="copy-outline"></ion-icon>
         </ion-button>
       </ion-item>
-      <ion-item *tuiLet="iface.value.ipv6 as ipv6">
+      <ion-item *tuiLet="$any(iface.value).ipv6 as ipv6">
         <ion-label>
           <h2>{{ iface.key }} (IPv6)</h2>
           <p>{{ ipv6 || 'n/a' }}</p>
