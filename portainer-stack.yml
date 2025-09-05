@@ -38,11 +38,11 @@ services:
             pwd && \
             echo "Creating tsconfig.json for patch-db build..." && \
             echo '{ "compilerOptions": { "target": "es2017", "module": "commonjs", "lib": ["es2017", "dom"], "declaration": true, "outDir": "./dist", "strict": false, "esModuleInterop": true, "skipLibCheck": true, "forceConsistentCasingInFileNames": true }, "include": ["lib/**/*"] }' > tsconfig.json && \
-            echo "Running npm ci..." && \
-            npm ci && \
-            echo "Listing node_modules/.bin..." && \
+            echo "Running npm ci to install ALL dependencies (including dev)..." && \
+            npm ci --include=dev && \
+            echo "Listing node_modules/.bin to confirm tsc exists..." && \
             ls -la node_modules/.bin/ && \
-            echo "Attempting to build with direct tsc path from typescript package..." && \
+            echo "Attempting to build with direct tsc path..." && \
             ./node_modules/typescript/bin/tsc && \
             echo "--- patch-db build successful ---"
           )
