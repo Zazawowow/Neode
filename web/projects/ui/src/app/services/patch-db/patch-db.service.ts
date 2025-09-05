@@ -19,13 +19,13 @@ export class Bootstrapper<T> {
   }
 }
 export class DBCache<T> {
-  sequence: number
-  data: T
+  sequence: number = 0
+  data: T = {} as T
 }
 export class Dump<T> {
-  data: T
-  sequence: number
-  'last-modified': string
+  data: T = {} as T
+  sequence: number = 0
+  'last-modified': string = ''
 }
 export class Revision {}
 export class Operation {}

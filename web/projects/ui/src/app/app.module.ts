@@ -7,17 +7,18 @@ import {
   TuiModeModule,
   TuiRootModule,
   TuiThemeNightModule,
+  TuiNotificationsModule,
 } from '@taiga-ui/core'
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
 import { IonicModule, IonicRouteStrategy } from '@ionic/angular'
 import { HttpClientModule } from '@angular/common/http'
+import { CommonModule } from '@angular/common'
 
 import { AppComponent } from './app.component'
 import { AppRoutingModule } from './app-routing.module'
 import { TuiMobileDialogModule } from '@taiga-ui/addon-mobile'
 import { TuiLetModule } from '@taiga-ui/cdk'
 import { MarketplaceModule } from './pages/marketplace-routes/marketplace.module'
-import { PreloadAllModules } from '@angular/router'
 import { MenuModule } from './app/menu/menu.module'
 import { APP_PROVIDERS } from './app.providers'
 import { PatchDbModule } from './services/patch-db/patch-db.module'
@@ -27,10 +28,17 @@ import { WidgetsPageModule } from './pages/widgets/widgets.module'
 import { ServiceWorkerModule } from '@angular/service-worker'
 import { environment } from '../environments/environment'
 import { NgDompurifySanitizer } from '@tinkoff/ng-dompurify'
+import {
+  DarkThemeModule,
+  EnterModule,
+  LightThemeModule,
+  SharedPipesModule,
+} from '@start9labs/shared'
 
 @NgModule({
   declarations: [AppComponent],
   imports: [
+    CommonModule,
     HttpClientModule,
     BrowserModule,
     BrowserAnimationsModule,
@@ -41,6 +49,7 @@ import { NgDompurifySanitizer } from '@tinkoff/ng-dompurify'
     TuiLetModule,
     TuiModeModule,
     TuiThemeNightModule,
+    TuiNotificationsModule,
     MenuModule,
     IonicModule.forRoot({
       mode: 'md',
@@ -54,10 +63,12 @@ import { NgDompurifySanitizer } from '@tinkoff/ng-dompurify'
     WidgetsPageModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
       enabled: environment.production,
-      // Register the ServiceWorker as soon as the application is stable
-      // or after 30 seconds (whichever comes first).
       registrationStrategy: 'registerWhenStable:30000',
     }),
+    DarkThemeModule,
+    EnterModule,
+    LightThemeModule,
+    SharedPipesModule,
   ],
   providers: [
     {

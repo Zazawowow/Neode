@@ -2,7 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   inject,
-  Inject,
+  Input,
 } from '@angular/core'
 import { ActivatedRoute, Router } from '@angular/router'
 import { PatchDB } from '../../services/patch-db/patch-db.service'
@@ -26,6 +26,7 @@ import { Emver, THEME } from '@start9labs/shared'
 import { ConnectionService } from 'src/app/services/connection.service'
 import { ConfigService } from 'src/app/services/config.service'
 import { DidStateService } from 'src/app/services/did-state.service'
+import { EOSService } from 'src/app/services/eos.service'
 
 @Component({
   selector: 'app-menu',
