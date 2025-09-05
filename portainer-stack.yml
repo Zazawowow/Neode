@@ -74,42 +74,7 @@ services:
         
         # Create a minimal tsconfig that ignores all errors
         echo "Creating lenient tsconfig for container build..."
-        cat > tsconfig.container.json << 'EOF'
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "strict": false,
-    "noImplicitAny": false,
-    "strictNullChecks": false,
-    "strictFunctionTypes": false,
-    "strictBindCallApply": false,
-    "strictPropertyInitialization": false,
-    "noImplicitReturns": false,
-    "noFallthroughCasesInSwitch": false,
-    "noImplicitOverride": false,
-    "noPropertyAccessFromIndexSignature": false,
-    "noImplicitThis": false,
-    "noUncheckedIndexedAccess": false,
-    "exactOptionalPropertyTypes": false,
-    "skipLibCheck": true,
-    "skipDefaultLibCheck": true
-  },
-  "angularCompilerOptions": {
-    "fullTemplateTypeCheck": false,
-    "strictTemplates": false,
-    "strictInputAccessModifiers": false,
-    "strictInputTypes": false,
-    "strictNullInputTypes": false,
-    "strictAttributeTypes": false,
-    "strictSafeNavigationTypes": false,
-    "strictDomLocalRefTypes": false,
-    "strictOutputEventTypes": false,
-    "strictDomEventTypes": false,
-    "strictContextGenerics": false,
-    "strictLiteralTypes": false
-  }
-}
-EOF
+        echo '{"extends": "./tsconfig.json","compilerOptions": {"strict": false,"noImplicitAny": false,"strictNullChecks": false,"strictFunctionTypes": false,"strictBindCallApply": false,"strictPropertyInitialization": false,"noImplicitReturns": false,"noFallthroughCasesInSwitch": false,"noImplicitOverride": false,"noPropertyAccessFromIndexSignature": false,"noImplicitThis": false,"noUncheckedIndexedAccess": false,"exactOptionalPropertyTypes": false,"skipLibCheck": true,"skipDefaultLibCheck": true},"angularCompilerOptions": {"fullTemplateTypeCheck": false,"strictTemplates": false,"strictInputAccessModifiers": false,"strictInputTypes": false,"strictNullInputTypes": false,"strictAttributeTypes": false,"strictSafeNavigationTypes": false,"strictDomLocalRefTypes": false,"strictOutputEventTypes": false,"strictDomEventTypes": false,"strictContextGenerics": false,"strictLiteralTypes": false}}' > tsconfig.container.json
         
         # Build with the lenient config
         echo "Building UI application with lenient TypeScript config..."
