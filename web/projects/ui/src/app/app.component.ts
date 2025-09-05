@@ -14,7 +14,7 @@ import {
 } from './services/client-storage.service'
 import { ThemeSwitcherService } from './services/theme-switcher.service'
 import { THEME } from '@start9labs/shared'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from './services/patch-db/patch-db.service'
 import { DataModel } from './services/patch-db/data-model'
 
 @Component({

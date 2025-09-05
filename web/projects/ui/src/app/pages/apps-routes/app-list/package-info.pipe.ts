@@ -3,7 +3,7 @@ import { Observable, combineLatest, firstValueFrom } from 'rxjs'
 import { filter, map } from 'rxjs/operators'
 import { DataModel } from 'src/app/services/patch-db/data-model'
 import { getPackageInfo, PkgInfo } from '../../../util/get-package-info'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import { DepErrorService } from 'src/app/services/dep-error.service'
 
 @Pipe({

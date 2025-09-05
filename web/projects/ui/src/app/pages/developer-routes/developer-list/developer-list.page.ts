@@ -10,7 +10,7 @@ import {
   GenericInputComponent,
   GenericInputOptions,
 } from 'src/app/modals/generic-input/generic-input.component'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import { ApiService } from 'src/app/services/api/embassy-api.service'
 import { ConfigSpec } from 'src/app/pkg-config/config-types'
 import * as yaml from 'js-yaml'

@@ -4,7 +4,7 @@ import { BehaviorSubject, combineLatest } from 'rxjs'
 import { distinctUntilChanged, map } from 'rxjs/operators'
 import { MarketplaceEOS } from 'src/app/services/api/api.types'
 import { ApiService } from 'src/app/services/api/embassy-api.service'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import { getServerInfo } from 'src/app/util/get-server-info'
 import { DataModel } from './patch-db/data-model'
 

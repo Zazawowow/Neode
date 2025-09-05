@@ -1,6 +1,6 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core'
-import { PatchDB } from 'patch-db-client'
-import { combineLatest, map, Observable, startWith } from 'rxjs'
+import { Component, NgZone } from '@angular/core'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
+import { combineLatest, filter, map, startWith } from 'rxjs'
 import { ConnectionService } from 'src/app/services/connection.service'
 import { DataModel } from 'src/app/services/patch-db/data-model'
 

@@ -9,7 +9,7 @@ import {
   GenericInputComponent,
   GenericInputOptions,
 } from 'src/app/modals/generic-input/generic-input.component'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import { skip, takeUntil } from 'rxjs/operators'
 import { MappedBackupTarget } from 'src/app/types/mapped-backup-target'
 import * as argon2 from '@start9labs/argon2'

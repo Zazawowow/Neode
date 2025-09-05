@@ -4,8 +4,8 @@ import {
   inject,
   Inject,
 } from '@angular/core'
-import { EOSService } from '../../services/eos.service'
-import { PatchDB } from 'patch-db-client'
+import { ActivatedRoute, Router } from '@angular/router'
+import { PatchDB } from '../../services/patch-db/patch-db.service'
 import {
   combineLatest,
   filter,
@@ -20,7 +20,7 @@ import {
 } from 'rxjs'
 import { AbstractMarketplaceService } from '@start9labs/marketplace'
 import { MarketplaceService } from 'src/app/services/marketplace.service'
-import { DataModel } from 'src/app/services/patch-db/data-model'
+import { DataModel, UIStore } from '../../services/patch-db/data-model'
 import { SplitPaneTracker } from 'src/app/services/split-pane.service'
 import { Emver, THEME } from '@start9labs/shared'
 import { ConnectionService } from 'src/app/services/connection.service'

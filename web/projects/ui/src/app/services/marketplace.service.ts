@@ -20,7 +20,7 @@ import {
 import { RR } from 'src/app/services/api/api.types'
 import { ApiService } from 'src/app/services/api/embassy-api.service'
 import { DataModel, UIStore } from 'src/app/services/patch-db/data-model'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import {
   catchError,
   filter,

@@ -7,7 +7,7 @@ import {
   take,
   tap,
 } from 'rxjs/operators'
-import { Update } from 'patch-db-client'
+import { Update } from 'src/app/services/patch-db/patch-db.service'
 import { DataModel } from './data-model'
 import { defer, EMPTY, from, interval, Observable } from 'rxjs'
 import { AuthService } from '../auth.service'

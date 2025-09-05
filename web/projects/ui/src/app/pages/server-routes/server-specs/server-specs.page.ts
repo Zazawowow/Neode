@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core'
 import { ModalController, ToastController } from '@ionic/angular'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import { ConfigService } from 'src/app/services/config.service'
 import { QRComponent } from 'src/app/components/qr/qr.component'
 import { copyToClipboard } from '@start9labs/shared'

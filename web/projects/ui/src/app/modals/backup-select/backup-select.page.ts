@@ -1,9 +1,20 @@
 import { Component } from '@angular/core'
 import { ModalController } from '@ionic/angular'
-import { map, take } from 'rxjs/operators'
-import { DataModel, PackageState } from 'src/app/services/patch-db/data-model'
-import { PatchDB } from 'patch-db-client'
-import { firstValueFrom } from 'rxjs'
+import {
+  PackageDataEntry,
+  PackageState,
+} from 'src/app/services/patch-db/data-model'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
+import { map } from 'rxjs/operators'
+import { Observable } from 'rxjs'
+
+interface PkgEntry extends PackageDataEntry {
+  id: string
+  title: string
+  icon: string
+  disabled: boolean
+  checked: boolean
+}
 
 @Component({
   selector: 'backup-select',
@@ -13,39 +24,31 @@ import { firstValueFrom } from 'rxjs'
 export class BackupSelectPage {
   hasSelection = false
   selectAll = false
-  pkgs: {
-    id: string
-    title: string
-    icon: string
-    disabled: boolean
-    checked: boolean
-  }[] = []
+  pkgs: PkgEntry[] = []
 
   constructor(
     private readonly modalCtrl: ModalController,
-    private readonly patch: PatchDB<DataModel>,
+    private readonly patch: PatchDB,
   ) {}
 
   async ngOnInit() {
-    this.pkgs = await firstValueFrom(
-      this.patch.watch$('package-data').pipe(
-        map(pkgs => {
-          return Object.values(pkgs)
-            .map(pkg => {
-              const { id, title } = pkg.manifest
-              return {
-                id,
-                title,
-                icon: pkg['static-files'].icon,
-                disabled: pkg.state !== PackageState.Installed,
-                checked: pkg.state === PackageState.Installed,
-              }
-            })
-            .sort((a, b) =>
-              b.title.toLowerCase() > a.title.toLowerCase() ? -1 : 1,
-            )
-        }),
-      ),
+    this.pkgs = await this.patch.watch$('package-data').pipe(
+      map(pkgs => {
+        return Object.values(pkgs)
+          .map(pkg => {
+            const { id, title } = pkg.manifest
+            return {
+              id,
+              title,
+              icon: pkg['static-files'].icon,
+              disabled: pkg.state !== PackageState.Installed,
+              checked: pkg.state === PackageState.Installed,
+            }
+          })
+          .sort((a, b) =>
+            b.title.toLowerCase() > a.title.toLowerCase() ? -1 : 1,
+          )
+      }),
     )
   }
 

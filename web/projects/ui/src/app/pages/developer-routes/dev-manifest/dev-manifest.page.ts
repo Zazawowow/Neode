@@ -2,7 +2,7 @@ import { Component } from '@angular/core'
 import { ActivatedRoute } from '@angular/router'
 import * as yaml from 'js-yaml'
 import { take } from 'rxjs/operators'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import { getProjectId } from 'src/app/util/get-project-id'
 import { DataModel } from 'src/app/services/patch-db/data-model'
 

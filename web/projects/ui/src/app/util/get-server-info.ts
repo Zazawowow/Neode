@@ -1,4 +1,4 @@
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import { DataModel, ServerInfo } from 'src/app/services/patch-db/data-model'
 import { firstValueFrom } from 'rxjs'
 

@@ -1,4 +1,4 @@
-import { Dump, Revision } from 'patch-db-client'
+import { Dump, Revision } from 'src/app/services/patch-db/patch-db.service'
 import { MarketplacePkg, StoreInfo } from '@start9labs/marketplace'
 import { PackagePropertiesVersioned } from 'src/app/util/properties.util'
 import { ConfigSpec } from 'src/app/pkg-config/config-types'

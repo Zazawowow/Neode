@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core'
 import { Observable } from 'rxjs'
 import { tap } from 'rxjs/operators'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import { AuthService } from 'src/app/services/auth.service'
 import { DataModel } from './patch-db/data-model'
 import { LocalStorageBootstrap } from './patch-db/local-storage-bootstrap'

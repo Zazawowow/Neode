@@ -9,7 +9,7 @@ import {
   InstalledPackageDataEntry,
   InterfaceDef,
 } from 'src/app/services/patch-db/data-model'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import { QRComponent } from 'src/app/components/qr/qr.component'
 import { getPackage } from '../../../util/get-package-data'
 

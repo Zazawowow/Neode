@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import { DataModel } from 'src/app/services/patch-db/data-model'
 import { filter, map, pairwise, startWith } from 'rxjs/operators'
 

@@ -17,7 +17,7 @@ import { Observable, filter, firstValueFrom } from 'rxjs'
 import { AuthService } from '../auth.service'
 import { DOCUMENT } from '@angular/common'
 import { DataModel } from '../patch-db/data-model'
-import { PatchDB, pathFromArray, Update } from 'patch-db-client'
+import { PatchDB, pathFromArray, Update } from 'src/app/services/patch-db/patch-db.service'
 import { getServerInfo } from 'src/app/util/get-server-info'
 
 @Injectable()

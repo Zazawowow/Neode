@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@angular/core'
 import { WINDOW } from '@ng-web-apis/common'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import { BehaviorSubject } from 'rxjs'
 import { ApiService } from './api/embassy-api.service'
 import { DataModel } from './patch-db/data-model'

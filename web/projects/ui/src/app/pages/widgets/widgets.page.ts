@@ -12,7 +12,7 @@ import {
   POLYMORPHEUS_CONTEXT,
   PolymorpheusComponent,
 } from '@tinkoff/ng-polymorpheus'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import { DataModel, Widget } from '../../services/patch-db/data-model'
 import { ApiService } from '../../services/api/embassy-api.service'
 import { ADD_WIDGET } from './built-in/add/add.component'

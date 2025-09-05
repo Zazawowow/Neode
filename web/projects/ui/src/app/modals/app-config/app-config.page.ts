@@ -18,7 +18,7 @@ import {
   DataModel,
   PackageDataEntry,
 } from 'src/app/services/patch-db/data-model'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import { UntypedFormGroup } from '@angular/forms'
 import {
   convertValuesRecursive,

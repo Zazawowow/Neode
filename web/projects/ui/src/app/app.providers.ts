@@ -1,57 +1,32 @@
-import { APP_INITIALIZER, Provider } from '@angular/core'
-import { UntypedFormBuilder } from '@angular/forms'
-import { Router, RouteReuseStrategy } from '@angular/router'
-import { IonicRouteStrategy, IonNav } from '@ionic/angular'
-import { RELATIVE_URL, THEME, WorkspaceConfig } from '@start9labs/shared'
-import { ApiService } from './services/api/embassy-api.service'
-import { MockApiService } from './services/api/embassy-mock-api.service'
-import { LiveApiService } from './services/api/embassy-live-api.service'
-import { AuthService } from './services/auth.service'
-import { ClientStorageService } from './services/client-storage.service'
-import { FilterPackagesPipe } from '../../../marketplace/src/pipes/filter-packages.pipe'
-import { ThemeSwitcherService } from './services/theme-switcher.service'
+import { Provider } from '@angular/core'
+import { ConfigService } from './config.service'
+import { PatchDataService } from './patch-data.service'
+import { SplitPaneTracker } from './split-pane.service'
+import { PatchMonitorService } from './patch-monitor.service'
+import { ConnectionService } from './connection.service'
+import { ClientStorageService } from './client-storage.service'
+import { ThemeSwitcherService } from './theme-switcher.service'
+import { PwaService } from './pwa.service'
+import { TimeService } from './time-service'
+import { DepErrorService } from './dep-error.service'
+import { EOSService } from './eos.service'
+import { TuiAlertService } from '@taiga-ui/core'
+import { getEmbassyApiProvider } from './api/embassy-api.provider'
 
-const {
-  useMocks,
-  ui: { api },
-} = require('../../../../config.json') as WorkspaceConfig
+const { useMocks } = require('../../../../config.json')
 
 export const APP_PROVIDERS: Provider[] = [
-  FilterPackagesPipe,
-  UntypedFormBuilder,
-  IonNav,
-  {
-    provide: RouteReuseStrategy,
-    useClass: IonicRouteStrategy,
-  },
-  {
-    provide: ApiService,
-    useClass: useMocks ? MockApiService : LiveApiService,
-  },
-  {
-    provide: APP_INITIALIZER,
-    deps: [AuthService, ClientStorageService, Router],
-    useFactory: appInitializer,
-    multi: true,
-  },
-  {
-    provide: RELATIVE_URL,
-    useValue: `/${api.url}/${api.version}`,
-  },
-  {
-    provide: THEME,
-    useExisting: ThemeSwitcherService,
-  },
+  ConfigService,
+  PatchDataService,
+  SplitPaneTracker,
+  PatchMonitorService,
+  ClientStorageService,
+  ConnectionService,
+  ThemeSwitcherService,
+  PwaService,
+  TimeService,
+  DepErrorService,
+  EOSService,
+  TuiAlertService,
+  ...getEmbassyApiProvider(useMocks),
 ]
-
-export function appInitializer(
-  auth: AuthService,
-  localStorage: ClientStorageService,
-  router: Router,
-): () => void {
-  return () => {
-    auth.init()
-    localStorage.init()
-    router.initialNavigation()
-  }
-}

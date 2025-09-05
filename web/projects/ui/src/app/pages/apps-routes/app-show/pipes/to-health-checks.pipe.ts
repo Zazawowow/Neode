@@ -7,7 +7,7 @@ import {
 } from 'src/app/services/patch-db/data-model'
 import { isEmptyObject } from '@start9labs/shared'
 import { map, startWith } from 'rxjs/operators'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import { Observable } from 'rxjs'
 
 @Pipe({

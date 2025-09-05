@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core'
 import { heightCollapse } from '../../util/animations'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from '../../services/patch-db/patch-db.service'
 import { map } from 'rxjs/operators'
 import { DataModel } from '../../services/patch-db/data-model'
 

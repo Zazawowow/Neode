@@ -10,7 +10,7 @@ import {
 } from '@ionic/angular'
 import { PackageProperties } from 'src/app/util/properties.util'
 import { QRComponent } from 'src/app/components/qr/qr.component'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import {
   DataModel,
   PackageMainStatus,

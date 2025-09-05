@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core'
 import { Emver } from '@start9labs/shared'
 import { distinctUntilChanged, map, shareReplay } from 'rxjs/operators'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import {
   DataModel,
   HealthCheckResult,

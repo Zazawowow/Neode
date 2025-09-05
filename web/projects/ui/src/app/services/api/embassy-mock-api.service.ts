@@ -7,7 +7,7 @@ import {
   pathFromArray,
   RemoveOperation,
   Update,
-} from 'patch-db-client'
+} from 'src/app/services/patch-db/patch-db.service'
 import {
   DataModel,
   InstallProgress,

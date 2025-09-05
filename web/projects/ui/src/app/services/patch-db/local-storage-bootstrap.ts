@@ -1,4 +1,4 @@
-import { Bootstrapper, DBCache } from 'patch-db-client'
+import { Bootstrapper, DBCache } from 'src/app/services/patch-db/patch-db.service'
 import { DataModel } from 'src/app/services/patch-db/data-model'
 import { Injectable } from '@angular/core'
 import { StorageService } from '../storage.service'

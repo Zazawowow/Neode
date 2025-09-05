@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core'
 import { map, shareReplay, startWith, switchMap } from 'rxjs/operators'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import { DataModel } from './patch-db/data-model'
 import { ApiService } from './api/embassy-api.service'
 import { combineLatest, interval, of } from 'rxjs'

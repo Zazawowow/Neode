@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core'
 import { SplitPaneTracker } from 'src/app/services/split-pane.service'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import { DataModel } from 'src/app/services/patch-db/data-model'
 import { TuiDialogService } from '@taiga-ui/core'
 import { WIDGETS_COMPONENT } from '../../pages/widgets/widgets.page'

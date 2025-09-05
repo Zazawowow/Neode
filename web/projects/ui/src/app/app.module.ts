@@ -1,93 +1,74 @@
+import { NgModule } from '@angular/core'
+import { BrowserModule } from '@angular/platform-browser'
+import { RouteReuseStrategy } from '@angular/router'
 import {
   TUI_SANITIZER,
   TuiDialogModule,
-  TuiNotificationsModule,
-  TuiRootModule,
   TuiModeModule,
+  TuiRootModule,
   TuiThemeNightModule,
 } from '@taiga-ui/core'
-import { HttpClientModule } from '@angular/common/http'
-import { NgModule } from '@angular/core'
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations'
-import { IonicModule } from '@ionic/angular'
-import { MonacoEditorModule } from '@materia-ui/ngx-monaco-editor'
-import {
-  DarkThemeModule,
-  EnterModule,
-  LightThemeModule,
-  MarkdownModule,
-  ResponsiveColModule,
-  SharedPipesModule,
-} from '@start9labs/shared'
+import { IonicModule, IonicRouteStrategy } from '@ionic/angular'
+import { HttpClientModule } from '@angular/common/http'
 
 import { AppComponent } from './app.component'
 import { AppRoutingModule } from './app-routing.module'
-import { OSWelcomePageModule } from './modals/os-welcome/os-welcome.module'
-import { GenericInputComponentModule } from './modals/generic-input/generic-input.component.module'
-import { MarketplaceModule } from './marketplace.module'
-import { PreloaderModule } from './app/preloader/preloader.module'
-import { FooterModule } from './app/footer/footer.module'
+import { TuiMobileDialogModule } from '@taiga-ui/addon-mobile'
+import { TuiLetModule } from '@taiga-ui/cdk'
+import { MarketplaceModule } from './pages/marketplace-routes/marketplace.module'
+import { PreloadAllModules } from '@angular/router'
 import { MenuModule } from './app/menu/menu.module'
 import { APP_PROVIDERS } from './app.providers'
-import { PatchDB } from './services/patch-db/patch-db.service'
-import { MockPatchDB } from './services/mock-patch-db.service'
+import { PatchDbModule } from './services/patch-db/patch-db.module'
 import { ToastContainerModule } from './components/toast-container/toast-container.module'
 import { ConnectionBarComponentModule } from './components/connection-bar/connection-bar.component.module'
 import { WidgetsPageModule } from './pages/widgets/widgets.module'
 import { ServiceWorkerModule } from '@angular/service-worker'
 import { environment } from '../environments/environment'
-import { getEmbassyApiProvider } from './services/api/embassy-api.provider'
-
-const { useMocks } = require('../../../../config.json')
+import { NgDompurifySanitizer } from '@tinkoff/ng-dompurify'
 
 @NgModule({
   declarations: [AppComponent],
   imports: [
     HttpClientModule,
+    BrowserModule,
     BrowserAnimationsModule,
-    IonicModule.forRoot({
-      mode: 'md',
-    }),
     AppRoutingModule,
-    MenuModule,
-    PreloaderModule,
-    FooterModule,
-    EnterModule,
-    OSWelcomePageModule,
-    MarkdownModule,
-    GenericInputComponentModule,
-    MonacoEditorModule,
-    SharedPipesModule,
-    MarketplaceModule,
-    PatchDB,
-    ToastContainerModule,
-    ConnectionBarComponentModule,
     TuiRootModule,
     TuiDialogModule,
+    TuiMobileDialogModule,
+    TuiLetModule,
     TuiModeModule,
     TuiThemeNightModule,
+    MenuModule,
+    IonicModule.forRoot({
+      mode: 'md',
+      scrollAssist: false,
+      scrollPadding: false,
+    }),
+    MarketplaceModule.forRoot(),
+    PatchDbModule,
+    ToastContainerModule,
+    ConnectionBarComponentModule,
     WidgetsPageModule,
-    ResponsiveColModule,
-    DarkThemeModule,
-    LightThemeModule,
     ServiceWorkerModule.register('ngsw-worker.js', {
-      enabled: environment.useServiceWorker,
+      enabled: environment.production,
       // Register the ServiceWorker as soon as the application is stable
       // or after 30 seconds (whichever comes first).
       registrationStrategy: 'registerWhenStable:30000',
     }),
   ],
   providers: [
-    getEmbassyApiProvider(useMocks),
-    !useMocks
-      ? []
-      : [
-          {
-            provide: PatchDB,
-            useClass: MockPatchDB,
-          },
-        ],
-    APP_PROVIDERS,
+    {
+      provide: RouteReuseStrategy,
+      useClass: IonicRouteStrategy,
+    },
+    {
+      provide: TUI_SANITIZER,
+      useClass: NgDompurifySanitizer,
+    },
+    ...APP_PROVIDERS,
   ],
   bootstrap: [AppComponent],
 })

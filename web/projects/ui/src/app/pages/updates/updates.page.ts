@@ -1,5 +1,5 @@
 import { Component, Inject } from '@angular/core'
-import { PatchDB } from 'patch-db-client'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import {
   DataModel,
   PackageDataEntry,

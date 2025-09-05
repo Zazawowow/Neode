@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs'
-import { Update } from 'patch-db-client'
+import { Update } from 'src/app/services/patch-db/patch-db.service'
 import { RR } from './api.types'
 import { DataModel } from 'src/app/services/patch-db/data-model'
 import { Log } from '@start9labs/shared'

@@ -7,17 +7,12 @@ import {
   ModalController,
   NavController,
 } from '@ionic/angular'
-import { PatchDB } from 'patch-db-client'
-import {
-  Action,
-  DataModel,
-  PackageDataEntry,
-  PackageMainStatus,
-} from 'src/app/services/patch-db/data-model'
+import { Action, DataModel, PackageDataEntry, PackageMainStatus } from 'src/app/services/patch-db/data-model'
 import { GenericFormPage } from 'src/app/modals/generic-form/generic-form.page'
 import { isEmptyObject, ErrorToastService, getPkgId } from '@start9labs/shared'
 import { ActionSuccessPage } from 'src/app/modals/action-success/action-success.page'
 import { hasCurrentDeps } from 'src/app/util/has-deps'
+import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 
 @Component({
   selector: 'app-actions',
