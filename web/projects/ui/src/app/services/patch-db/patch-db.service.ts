@@ -1,13 +1,32 @@
 import { InjectionToken } from '@angular/core'
 import { Observable } from 'rxjs'
+import { DataModel } from './data-model'
 
 // Re-exporting types that were previously in 'patch-db-client'
-export { Update } from '../api/api.types'
-export class Bootstrapper {
-  init(): any {}
+export type Update<T> = {
+  [K in keyof T]?: Update<T[K]>
+} & {
+  __newValue?: T
+  __oldValue?: T
+  __op?: 'add' | 'remove' | 'replace'
 }
-export class DBCache {}
-export class Dump {}
+export class Bootstrapper<T> {
+  init(): DBCache<T> | Promise<DBCache<T>> {
+    return {
+      sequence: 0,
+      data: {} as T,
+    }
+  }
+}
+export class DBCache<T> {
+  sequence: number
+  data: T
+}
+export class Dump<T> {
+  data: T
+  sequence: number
+  'last-modified': string
+}
 export class Revision {}
 export class Operation {}
 export class PatchOp {
@@ -23,4 +42,6 @@ export function pathFromArray(arr: string[]): string {
 export abstract class PatchDB<T = any> {
   abstract cache$: Observable<T>
   abstract watch$(...args: string[]): Observable<any>
+  abstract start(bootstrapper: Bootstrapper<T>): void
+  abstract stop(): void
 }

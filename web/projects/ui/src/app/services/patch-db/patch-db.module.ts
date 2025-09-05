@@ -1,20 +1,9 @@
-import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
-import { Injector, NgModule } from '@angular/core'
-import { PATCH_SOURCE, sourceFactory } from './patch-db.factory'
+import { NgModule } from '@angular/core'
+import { CommonModule } from '@angular/common'
 
-// This module is purely for providers organization purposes
 @NgModule({
-  providers: [
-    {
-      provide: PATCH_SOURCE,
-      deps: [Injector],
-      useFactory: sourceFactory,
-    },
-    {
-      provide: PatchDB,
-      deps: [PATCH_SOURCE],
-      useClass: PatchDB,
-    },
-  ],
+  declarations: [],
+  imports: [CommonModule],
+  providers: [],
 })
 export class PatchDbModule {}
