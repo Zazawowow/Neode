@@ -8,108 +8,54 @@ services:
       - "80"
     ports:
       - "8100:80"
-    command: 
+    command:
       - sh
       - -c
       - |
         set -e
         apk add --no-cache git nginx net-tools
         
-        # Clone repo if not exists, otherwise pull updates
+        # Clone repo with submodules
+        echo "Cloning repository and submodules..."
         if [ ! -d ".git" ]; then
-          git clone https://github.com/Zazawowow/Neode.git .
+          git clone --recurse-submodules https://github.com/Zazawowow/Neode.git .
         else
           git pull origin master || true
+          git submodule update --init --recursive
         fi
         
         cd web
         
-        # Clean install with all dependencies including devDependencies
         echo "Installing all dependencies..."
-        rm -rf node_modules
-        
-        # Use npm install to get all dependencies including devDependencies
-        echo "Running npm install with legacy peer deps and dev dependencies..."
         npm install --legacy-peer-deps --include=dev
         
-        # Verify we have all packages (should be 1400+, not 216)
-        echo "Installed packages count: $(npm list --depth=0 2>/dev/null | wc -l)"
-        
-        # Verify Angular CLI is available
-        echo "Checking for Angular CLI..."
-        if ! npx ng version >/dev/null 2>&1; then
-          echo "Angular CLI not working, installing globally..."
-          npm install -g @angular/cli@14 --legacy-peer-deps
-        fi
-        
-        # Handle patch-db dependency
+        # Handle patch-db dependency by building it
         if [ -d "../patch-db/client" ]; then
-          echo "Building patch-db dependencies..."
-          npm run build:deps || echo "Warning: build:deps failed, continuing..."
+          echo "Building patch-db dependency from source..."
+          npm run build:deps
         else
-          echo "Warning: patch-db/client not found, creating final comprehensive mocks..."
-          
-          # Remove any existing symlink created by npm install
-          rm -rf node_modules/patch-db-client 2>/dev/null || true
-          
-          # Create mock patch-db-client module...
-          mkdir -p node_modules/patch-db-client
-          echo '{"name": "patch-db-client", "version": "1.0.0", "main": "index.js", "types": "index.d.ts"}' > node_modules/patch-db-client/package.json
-          echo 'const { of, BehaviorSubject } = require("rxjs"); const mockPkg = { manifest: { id: "test", title: "Test App" }, "static-files": { icon: "/test.png" }, state: "installed", key: "test" }; const mockData = { ui: { gaming: { snake: { "high-score": 0 } }, marketplace: { "selected-url": "test", "known-hosts": { "test": { name: "test" } } }, dev: {} }, "server-info": { id: "test", version: "1.0.0", "tor-address": "test.onion", "lan-address": "192.168.1.1", "ip-info": { eth0: { ipv4: ["192.168.1.1"], ipv6: ["::1"] } }, "ca-fingerprint": "test", "status-info": { updated: false, "update-progress": null, "backup-progress": null } }, "package-data": { test: mockPkg } }; function getByPath(root, segments){ let cur = root; for(const s of segments){ if(cur == null) return undefined; cur = cur[s]; } return cur; } class PatchDB { constructor() { this.cache$ = new BehaviorSubject(mockData); } watch$(...args) { if (args.length === 0) return of(mockData); const val = getByPath(mockData, args); if (args.includes("high-score")) return of(0); return of(val !== undefined ? val : {}); } start() {} stop() {} } class Update {} class Bootstrapper { init() { return { sequence: 0 }; } } class DBCache { constructor() { this.sequence = 0; } } class Dump {} class Revision {} class Operation {} class PatchOp { static ADD = "add"; static REMOVE = "remove"; static REPLACE = "replace"; } class RemoveOperation {} function pathFromArray() { return ""; } module.exports = { PatchDB, Update, Bootstrapper, DBCache, Dump, Revision, Operation, PatchOp, RemoveOperation, pathFromArray };' > node_modules/patch-db-client/index.js
-          echo 'import { Observable } from "rxjs"; export class PatchDB<T = any> { watch$(): Observable<T>; watch$(path1: string): Observable<any>; watch$(path1: string, path2: string): Observable<any>; watch$(path1: string, path2: string, path3: string): Observable<any>; watch$(path1: string, path2: string, path3: string, path4: string): Observable<any>; watch$(path1: string, path2: string, path3: string, path4: string, path5: string): Observable<any>; watch$(path1: string, path2: string, path3: string, path4: string, path5: string, path6: string): Observable<any>; start(bootstrapper: any): void; stop(): void; get cache$(): Observable<any>; } export class Update<T = any> {} export class Bootstrapper<T = any> { init(): { sequence: number }; } export class DBCache<T = any> { sequence: number; } export class Dump<T = any> {} export class Revision {} export class Operation<T = any> {} export class PatchOp { static ADD: string; static REMOVE: string; static REPLACE: string; } export class RemoveOperation {} export function pathFromArray(arr: any[]): string;' > node_modules/patch-db-client/index.d.ts
-
-          # Create @start9labs/shared mock...
-          mkdir -p node_modules/@start9labs/shared
-          echo '{"name": "@start9labs/shared", "version": "1.0.0", "main": "index.js", "types": "index.d.ts"}' > node_modules/@start9labs/shared/package.json
-          echo 'function isEmptyObject(obj) { return obj && typeof obj === "object" && Object.keys(obj).length === 0; } function pauseFor(ms) { return new Promise(resolve => setTimeout(resolve, ms)); } function copyToClipboard(text) { return Promise.resolve(true); } function sameUrl(a, b) { return a === b; } function getErrorMessage(e) { return "error"; } function isObject(o) { return o !== null && typeof o === "object"; } function toUrl(u) { return u; } function getPkgId(p) { return "id"; } function toLocalIsoString(d) { return new Date().toISOString(); } function debounce(fn, ms) { return fn; } class Emver { static satisfies(version, range) { return true; } static compare(a, b) { return 0; } } const emver = new Emver(); emver.satisfies = Emver.satisfies; emver.compare = Emver.compare; class ErrorToastService { present(e) {return Promise.resolve({})} } class HttpService { request() { return Promise.resolve({}); } rpcRequest() { return Promise.resolve({}); } httpRequest() { return Promise.resolve({}); } } class Log { constructor() { this.timestamp = new Date(); this.message = ""; } static info() {} static error() {} } class DownloadHTMLService {} const HttpOptions = {}; const Method = { GET: "GET", POST: "POST" }; const RpcError = {}; const RPCOptions = {}; function isRpcError(b) { return false; } const WorkspaceConfig = {}; const StartOSDiskInfo = {}; const LogsRes = {}; const ServerLogsReq = {}; const SharedPipesModule = { ngModule: true }; const EmverPipesModule = { ngModule: true }; const EmverDisplayPipe = { pipe: true }; const MarkdownPipeModule = { ngModule: true }; const TextSpinnerComponentModule = { ngModule: true }; const UnitConversionPipesModule = { ngModule: true }; const AlertModule = { ngModule: true }; const ToastModule = { ngModule: true }; const ResponsiveColModule = { ngModule: true }; const TickerModule = { ngModule: true }; const MarkdownComponent = { component: true }; const THEME = {}; const RELATIVE_URL = ""; module.exports = { isEmptyObject, pauseFor, copyToClipboard, sameUrl, Emver, emver, ErrorToastService, HttpService, Log, HttpOptions, Method, RpcError, RPCOptions, isRpcError, WorkspaceConfig, StartOSDiskInfo, LogsRes, ServerLogsReq, SharedPipesModule, EmverPipesModule, EmverDisplayPipe, MarkdownPipeModule, TextSpinnerComponentModule, getErrorMessage, isObject, toUrl, getPkgId, toLocalIsoString, DownloadHTMLService, UnitConversionPipesModule, AlertModule, ToastModule, ResponsiveColModule, TickerModule, debounce, MarkdownComponent, THEME, RELATIVE_URL };' > node_modules/@start9labs/shared/index.js
-          echo 'export function isEmptyObject(obj: any): boolean; export function pauseFor(ms: number): Promise<void>; export function copyToClipboard(text: string): Promise<boolean>; export function sameUrl(a: string, b: string): boolean; export function getErrorMessage(e: any): string; export function isObject(o: any): boolean; export function toUrl(u: string): string; export function getPkgId(p: any): string; export function toLocalIsoString(d: Date): string; export function debounce(fn: Function, ms: number): Function; export class Emver { static satisfies(version: string, range: string): boolean; static compare(a: string, b: string): number; } export const emver: { satisfies: (version: string, range: string) => boolean; compare: (a: string, b: string) => number; }; export class ErrorToastService { present(e?: any): Promise<any>; } export class HttpService { request(): Promise<any>; rpcRequest<T>(options: any, urlOverride?: string): Promise<T>; httpRequest<T>(opts: any): Promise<T>; } export class Log { timestamp: Date; message: string; static info(): void; static error(): void; } export class DownloadHTMLService {} export const HttpOptions: any; export const Method: any; export const RpcError: any; export const RPCOptions: any; export function isRpcError(body: any): boolean; export declare type WorkspaceConfig = any; export declare type StartOSDiskInfo = any; export declare type LogsRes = any; export declare type ServerLogsReq = any; export const SharedPipesModule: any; export const EmverPipesModule: any; export const EmverDisplayPipe: any; export const MarkdownPipeModule: any; export const TextSpinnerComponentModule: any; export const UnitConversionPipesModule: any; export const AlertModule: any; export const ToastModule: any; export const ResponsiveColModule: any; export const TickerModule: any; export const MarkdownComponent: any; export const THEME: any; export const RELATIVE_URL: string;' > node_modules/@start9labs/shared/index.d.ts
-          
-          # Create @start9labs/marketplace mock...
-          mkdir -p node_modules/@start9labs/marketplace
-          echo '{"name": "@start9labs/marketplace", "version": "1.0.0", "main": "index.js", "types": "index.d.ts"}' > node_modules/@start9labs/marketplace/package.json
-          echo 'const MarketplacePkg = {}; const StoreInfo = {}; const DependencyMetadata = {}; class AbstractMarketplaceService { getPackage$(...args) { return require("rxjs").of({}); } } const MimeTypePipeModule = { ngModule: true }; const FilterPackagesPipeModule = { ngModule: true }; const CategoriesModule = { ngModule: true }; const ItemModule = { ngModule: true }; const SearchModule = { ngModule: true }; const SkeletonModule = { ngModule: true }; const AboutModule = { ngModule: true }; const AdditionalModule = { ngModule: true }; const DependenciesModule = { ngModule: true }; const PackageModule = { ngModule: true }; const ReleaseNotesModule = { ngModule: true }; const StoreData = {}; const Marketplace = {}; const MarketplaceManifest = {}; const StoreIdentity = {}; module.exports = { MarketplacePkg, StoreInfo, DependencyMetadata, AbstractMarketplaceService, MimeTypePipeModule, FilterPackagesPipeModule, CategoriesModule, ItemModule, SearchModule, SkeletonModule, AboutModule, AdditionalModule, DependenciesModule, PackageModule, ReleaseNotesModule, StoreData, Marketplace, MarketplaceManifest, StoreIdentity };' > node_modules/@start9labs/marketplace/index.js
-          echo 'import { Observable } from "rxjs"; export declare type MarketplacePkg = any; export declare type StoreInfo = any; export declare type DependencyMetadata = any; export declare class AbstractMarketplaceService { getPackage$(pkgId: string, version?: string, url?: string): Observable<any>; } export const MimeTypePipeModule: any; export const FilterPackagesPipeModule: any; export const CategoriesModule: any; export const ItemModule: any; export const SearchModule: any; export const SkeletonModule: any; export const AboutModule: any; export const AdditionalModule: any; export const DependenciesModule: any; export const PackageModule: any; export const ReleaseNotesModule: any; export declare type StoreData = any; export declare type Marketplace = any; export declare interface MarketplaceManifest<T = any> { id: string; title: string; version: string; description?: { short: string; long: string; }; "release-notes": string; license: string; "wrapper-repo": string; "upstream-repo": string; "support-site": string; "marketing-site": string; author: string; dependencies: { [id: string]: { version: string; optional?: boolean; description?: string; }; }; "donation-url"?: string | null; alerts?: any; } export declare type StoreIdentity = any;' > node_modules/@start9labs/marketplace/index.d.ts
-          
-          # Create missing local modules with complete type definitions
-          echo "Creating hyper-detailed local modules..."
-          mkdir -p projects/ui/src/app/services/patch-db
-          echo 'export interface DataModel { ui: any; "server-info": any; "package-data": any; } export interface ServerInfo { id: string; version: string; "password-hash"?: string; "tor-address"?: string; } export interface PackageDataEntry { manifest: Manifest; state: string; key: string; "static-files"?: any; installed?: InstalledPackageDataEntry; "install-progress"?: InstallProgress; } export enum PackageState { Installed = "installed", Installing = "installing", Stopped = "stopped", Updating = "updating", Restoring = "restoring", Removing = "removing" } export enum PackageMainStatus { Running = "running", Stopped = "stopped", Starting = "starting", BackingUp = "backing-up", Restarting = "restarting", Stopping = "stopping" } export enum DockerIoFormat { Yaml = "yaml", Cbor = "cbor" } export enum HealthResult { Success = "success", Failure = "failure", Loading = "loading", Starting = "starting", Disabled = "disabled" } export enum ServerStatus { Updated = "updated", Running = "running" } export interface Action { name: string; description: string; warning?: string; "allowed-statuses"?: any; "input-spec"?: any; [key: string]: any; } export interface InstalledPackageDataEntry extends PackageDataEntry { version: string; manifest: Manifest; installed: any; status?: Status; ["interface-addresses"]?: any; "dependency-info"?: any; "current-dependencies"?: any; "current-dependents"?: any; "marketplace-url"?: string; "last-backup"?: any; } export interface InterfaceDef { name: string; ui?: any; description?: string; "tor-config"?: any; "lan-config"?: any; protocols?: any[]; } export interface Manifest { id: string; title: string; version: string; dependencies?: any; assets?: any; description?: any; "release-notes"?: any; license?: any; "wrapper-repo"?: any; "upstream-repo"?: any; "support-site"?: any; "marketing-site"?: any; "author"?: any; "git-hash"?: any; interfaces?: { [key: string]: InterfaceDef }; config?: any; alerts?: any; main?: any; "donation-url"?: string | null; "health-checks"?: { [key: string]: any }; volumes?: any; replaces?: any; } export interface InstallProgress { downloadProgress?: number; validateProgress?: number; unpackProgress?: number; totalProgress?: number; downloaded?: number; validated?: number; unpacked?: number; size?: number; "download-complete"?: boolean; "validation-complete"?: boolean; "unpack-complete"?: boolean; } export interface HealthCheckResult { result: string; } export interface Status { main: any; configured?: boolean; "dependency-config-errors"?: any; } export interface UIStore { name: string; [key: string]: any; } export interface DevData { name: string; [key: string]: any; } export interface DevProjectData { name: string; [key: string]: any; } export interface Widget { id: string; meta?: any; } export interface UIData { [key: string]: any; } export interface ServerStatusInfo { [key:string]: any; } export interface MainStatusStarting { restarting?: any; [key: string]: any; }' > projects/ui/src/app/services/patch-db/data-model.ts
-          mkdir -p projects/ui/src/app/types
-          echo 'export interface ProgressData { result?: string; downloadProgress?: number; validateProgress?: number; unpackProgress?: number; totalProgress?: number; [key: string]: any; }' > projects/ui/src/app/types/progress-data.ts
-          
-          echo "All mocks created successfully"
+          echo "FATAL: patch-db/client submodule not found. Build cannot continue."
+          exit 1
         fi
         
-        # Ensure config.json exists at multiple locations for import resolution
-        echo "Creating config.json files..."
-        echo '{"enableDidFlow": true, "api": "mock"}' > ../config.json
+        # Ensure config.json exists
+        echo "Creating config.json..."
         echo '{"enableDidFlow": true, "api": "mock"}' > config.json
-        echo '{"enableDidFlow": true, "api": "mock"}' > projects/config.json
-        
-        # Build with simple command now that mocks are complete
+
+        # Build the UI
         echo "Building UI application..."
         npm run build:ui
         
         # Setup nginx
+        echo "Setting up nginx..."
         mkdir -p /usr/share/nginx/html
         cp -r dist/raw/ui/* /usr/share/nginx/html/
         cp -r projects/shared/assets /usr/share/nginx/html/
         
-        # Configure nginx
         rm -f /etc/nginx/conf.d/default.conf
-        echo 'server { listen 80 default_server; server_name _; root /usr/share/nginx/html; index index.html; location / { try_files $uri $uri/ /index.html; } location /assets { alias /usr/share/nginx/html/assets; expires 1y; } location /health { access_log off; return 200 "healthy"; add_header Content-Type text/plain; } }' > /etc/nginx/conf.d/neode.conf
-        echo 'events { worker_connections 1024; } http { include /etc/nginx/mime.types; include /etc/nginx/conf.d/*.conf; default_type application/octet-stream; }' > /etc/nginx/nginx.conf
+        echo 'server { listen 80 default_server; server_name _; root /usr/share/nginx/html; index index.html; location / { try_files $uri $uri/ /index.html; } }' > /etc/nginx/conf.d/neode.conf
         
-        # Test and start nginx
-        nginx -t
-        echo "Starting nginx on port 80..."
-        
-        # Ensure nginx is listening on all interfaces
-        echo "Checking nginx configuration..."
-        cat /etc/nginx/conf.d/neode.conf
-        
-        # Start nginx in foreground
-        echo "Starting nginx on 0.0.0.0:80..."
+        echo "Starting nginx..."
         exec nginx -g 'daemon off;'
     container_name: neode-web
     restart: unless-stopped
