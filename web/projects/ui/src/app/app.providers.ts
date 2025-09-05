@@ -6,7 +6,6 @@ import { PatchMonitorService } from './services/patch-monitor.service'
 import { ConnectionService } from './services/connection.service'
 import { ClientStorageService } from './services/client-storage.service'
 import { ThemeSwitcherService } from './services/theme-switcher.service'
-import { PwaService } from './services/pwa.service'
 import { TimeService } from './services/time.service'
 import { DepErrorService } from './services/dep-error.service'
 import { EOSService } from './services/eos.service'
@@ -23,7 +22,6 @@ export const APP_PROVIDERS: Provider[] = [
   ClientStorageService,
   ConnectionService,
   ThemeSwitcherService,
-  PwaService,
   TimeService,
   DepErrorService,
   EOSService,

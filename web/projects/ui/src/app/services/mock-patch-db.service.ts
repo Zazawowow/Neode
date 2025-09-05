@@ -57,4 +57,12 @@ export class MockPatchDB implements PatchDB<any> {
       obj,
     )
   }
+
+  start(bootstrapper: any): void {
+    // Mock implementation - no actual initialization needed
+  }
+
+  stop(): void {
+    // Mock implementation - no cleanup needed
+  }
 }

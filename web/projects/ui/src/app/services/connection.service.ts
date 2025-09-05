@@ -1,14 +1,6 @@
-import { Injectable, NgZone } from '@angular/core'
-import {
-  distinctUntilChanged,
-  map,
-  shareReplay,
-  startWith,
-  tap,
-} from 'rxjs/operators'
-import { BehaviorSubject, combineLatest, Observable, of } from 'rxjs'
-import { S9Server } from 'src/app/models/s9-server'
-import { isPlatform, Platform } from '@ionic/angular'
+import { Injectable } from '@angular/core'
+import { combineLatest, fromEvent, merge, ReplaySubject } from 'rxjs'
+import { distinctUntilChanged, map, startWith } from 'rxjs/operators'
 
 @Injectable({
   providedIn: 'root',
@@ -31,8 +23,8 @@ export class ConnectionService {
     distinctUntilChanged(),
   )
 
-  constructor(private readonly ngZone: NgZone) {
-    this.listen()
+  setNetwork(isOnline: boolean): void {
+    // This method can be used by other parts of the app to manually update network status
   }
 
   connectionType(connections: {
@@ -68,8 +60,7 @@ export class ConnectionService {
     }
   }
 
-  listen(): void {
-    window.addEventListener('online', () => this.setNetwork(true))
-    window.addEventListener('offline', () => this.setNetwork(false))
+  setWebsocket(isConnected: boolean): void {
+    this.websocketConnected$.next(isConnected)
   }
 }

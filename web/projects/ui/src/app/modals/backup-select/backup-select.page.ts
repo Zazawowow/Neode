@@ -7,7 +7,7 @@ import {
 import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 import { firstValueFrom, map, Observable } from 'rxjs'
 
-interface PkgEntry extends PackageDataEntry {
+interface PkgEntry {
   id: string
   title: string
   icon: string

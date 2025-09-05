@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core'
 import { Router } from '@angular/router'
 import { TuiAlertService, TuiNotification } from '@taiga-ui/core'
-import { from } from 'rxjs'
-import { exhaustMap, filter, take, tap } from 'rxjs/operators'
+import { from, Subject } from 'rxjs'
+import { exhaustMap, filter, take, tap, pairwise, map, endWith } from 'rxjs/operators'
 import { DataModel } from 'src/app/services/patch-db/data-model'
 import { PatchDB } from 'src/app/services/patch-db/patch-db.service'
 
