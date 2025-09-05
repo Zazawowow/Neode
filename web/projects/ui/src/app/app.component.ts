@@ -33,6 +33,10 @@ export class AppComponent implements OnDestroy {
   typingLine2 = false
   typingLine3 = false
   typingLine4 = false
+  cursorLine1 = false
+  cursorLine2 = false
+  cursorLine3 = false
+  cursorLine4 = false
   readonly subscription = merge(this.patchData, this.patchMonitor).subscribe()
   readonly sidebarOpen$ = this.splitPane.sidebarOpen$
   readonly widgetDrawer$ = this.clientStorageService.widgetDrawer$

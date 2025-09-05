@@ -29,54 +29,6 @@ services:
         echo "Installing all dependencies..."
         npm install --legacy-peer-deps --include=dev
         
-        # Create a working patch-db-client stub to bypass dependency issues
-        echo "Creating patch-db-client stub for container deployment..."
-        mkdir -p node_modules/patch-db-client
-        
-        # Create package.json
-        echo '{"name": "patch-db-client", "version": "1.0.0", "main": "index.js", "types": "index.d.ts"}' > node_modules/patch-db-client/package.json
-        
-        # Create minimal stub for patch-db-client with enhanced mock data
-        printf '%s\n' \
-          'const { of, BehaviorSubject } = require("rxjs");' \
-          'const mockData = { ui: { name: "Neode", theme: "dark", marketplace: { "selected-url": "https://registry.start9.com/", "known-hosts": { "https://registry.start9.com/": { name: "Start9 Registry" }, "https://community-registry.start9.com/": { name: "Community Registry" } } } }, "server-info": { id: "mock", version: "0.3.5.1", "ntp-synced": true, "status-info": { restarting: false, "shutting-down": false, "backup-progress": null } }, "package-data": { "mock-pkg": { "manifest": { "id": "mock-pkg", "title": "Mock Package", "version": "1.0.0", "actions": {} }, "state": "installed", "static-files": { "icon": "" }, "install-progress": null } } };' \
-          'class PatchDB {' \
-          '  constructor(source) { this.source = source; this["cache$"] = new BehaviorSubject(mockData); }' \
-          '  ["watch$"](...args) { if (args.length === 0) return of(mockData); return of(this.getNestedValue(mockData, args)); }' \
-          '  getNestedValue(obj, path) { return path.reduce((current, key) => (current && typeof current === "object") ? current[key] : undefined, obj); }' \
-          '  start() {} stop() {}' \
-          '}' \
-          'class Update {} class Bootstrapper { init() { return { sequence: 0, data: mockData }; } }' \
-          'class DBCache {} class Dump {} class Revision {} class Operation {}' \
-          'class PatchOp { static ADD = "add"; static REMOVE = "remove"; static REPLACE = "replace"; }' \
-          'class RemoveOperation {}' \
-          'function pathFromArray(arr) { return arr ? arr.join(".") : ""; }' \
-          'module.exports = { PatchDB, Update, Bootstrapper, DBCache, Dump, Revision, Operation, PatchOp, RemoveOperation, pathFromArray };' \
-          > node_modules/patch-db-client/index.js
-        
-        # Create TypeScript definitions with proper overloads  
-        printf '%s\n' \
-          'import { Observable } from "rxjs";' \
-          'export class PatchDB<T = any> {' \
-          '  constructor(source: Observable<any>);' \
-          '  "cache$": Observable<T>;' \
-          '  "watch$"(): Observable<T>;' \
-          '  "watch$"(path: string): Observable<any>;' \
-          '  "watch$"(path: string, subPath: string): Observable<any>;' \
-          '  "watch$"(path: string, subPath: string, subPath2: string): Observable<any>;' \
-          '  "watch$"(...args: string[]): Observable<any>;' \
-          '  start(bootstrapper?: any): void; stop(): void;' \
-          '}' \
-          'export class Update<T = any> {}' \
-          'export class Bootstrapper<T = any> { init(): any; }' \
-          'export class DBCache<T = any> {}' \
-          'export class Dump<T = any> {} export class Revision {} export class Operation<T = any> {}' \
-          'export class PatchOp { static readonly ADD: string; static readonly REMOVE: string; static readonly REPLACE: string; }' \
-          'export class RemoveOperation {} export function pathFromArray(arr: string[]): string;' \
-          > node_modules/patch-db-client/index.d.ts
-        
-        echo "patch-db-client stub created successfully"
-        
         # Ensure config.json exists with proper structure
         echo "Creating config.json..."
         echo '{
@@ -100,35 +52,6 @@ services:
             }
           }
         }' > config.json
-
-        # Debug: Check what dependencies we have
-        echo "Checking patch-db-client availability..."
-        ls -la node_modules/patch-db-client/ 2>/dev/null || echo "patch-db-client not found in node_modules"
-        
-        # Fix splash screen timing and cursor animation
-        echo "Fixing splash screen timing and terminal cursor effect..."
-        
-        # Fix the app.component.html to properly hide content during splash
-        sed -i 's/<div class="app-content">/<div class="app-content" [class.app-content--hidden]="showSplash">/' projects/ui/src/app/app.component.html
-        
-        # Also hide all other content during splash
-        sed -i 's/<ion-footer>/<ion-footer *ngIf="!showSplash">/' projects/ui/src/app/app.component.html
-        sed -i 's/<toast-container><\/toast-container>/<toast-container *ngIf="!showSplash"><\/toast-container>/' projects/ui/src/app/app.component.html
-        
-        # Add cursor state tracking to TypeScript, injecting them directly into the class
-        sed -i '/export class AppComponent/a \  public cursorLine1 = false;\n  public cursorLine2 = false;\n  public cursorLine3 = false;\n  public cursorLine4 = false;' projects/ui/src/app/app.component.ts
-        
-        # Simplify timing - just use sed to modify the existing splash timeout
-        sed -i 's/}, 25000)/}, 15300)/' projects/ui/src/app/app.component.ts
-        
-        # Update the HTML template to include cursor states
-        sed -i 's/<span class="text" \[class\.typing\]="typingLine1">/<span class="text" [class.typing]="typingLine1" [class.cursor-blink]="cursorLine1">/' projects/ui/src/app/app.component.html
-        sed -i 's/<span class="text" \[class\.typing\]="typingLine2">/<span class="text" [class.typing]="typingLine2" [class.cursor-blink]="cursorLine2">/' projects/ui/src/app/app.component.html
-        sed -i 's/<span class="text" \[class\.typing\]="typingLine3">/<span class="text" [class.typing]="typingLine3" [class.cursor-blink]="cursorLine3">/' projects/ui/src/app/app.component.html
-        sed -i 's/<span class="text" \[class\.typing\]="typingLine4">/<span class="text" [class.typing]="typingLine4" [class.cursor-blink]="cursorLine4">/' projects/ui/src/app/app.component.html
-        
-        # Update the CSS for better cursor animation and remove ALL text effects
-        printf '\n/* Clean terminal text - no shadows */\n.text { color: #ffffff !important; text-shadow: none !important; }\n.text.typing { animation: typing 2s steps(40, end) forwards !important; border-right: 2px solid #00ff41 !important; }\n.text.cursor-blink { border-right: 2px solid #00ff41 !important; animation: cursor-blink 0.5s infinite !important; }\n@keyframes cursor-blink { 0%%, 50%% { border-right-color: #00ff41; } 51%%, 100%% { border-right-color: transparent; } }\n@keyframes typing { 0%% { width: 0; border-right: 2px solid #00ff41; } 100%% { width: 100%%; border-right: 2px solid #00ff41; } }\n.text:not(.typing):not(.cursor-blink) { border-right: none !important; }\n' >> projects/ui/src/app/app.component.scss
         
         # Build the UI with error handling
         echo "Building UI application..."
