@@ -228,12 +228,14 @@
   /* Action Buttons */
   .path-action-button {
     font-size: 18px;
-    font-weight: 500;
+  font-weight: 500;
     line-height: 1.4;
-    border-radius: 12px;
+    border-radius: 16px;
     background: rgba(0, 0, 0, 0.25);
     color: rgba(255, 255, 255, 0.96);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    box-shadow:
+      0 8px 24px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border: none;
@@ -246,7 +248,7 @@
   }
 
   .path-action-button--skip {
-    padding: 12px 24px;
+    padding: 12px 40px;
     font-size: 16px;
   }
 
@@ -264,7 +266,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    border-radius: 12px;
+    border-radius: inherit;
     padding: 2px;
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), transparent);
     -webkit-mask: 
@@ -276,7 +278,11 @@
   }
 
   .path-action-button:hover {
+    transform: translateY(-2px);
     background: rgba(0, 0, 0, 0.35);
+    box-shadow:
+      0 12px 32px rgba(0, 0, 0, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25);
   }
 
   .path-action-button:hover::before {
@@ -286,6 +292,32 @@
   .path-action-button:active {
     background: rgba(0, 0, 0, 0.55);
     transform: translateY(1px);
+  }
+
+  /* Active Navigation Tab Style - matches hover container */
+  .nav-tab-active {
+    position: relative;
+    background: rgba(0, 0, 0, 0.35) !important;
+    box-shadow:
+      0 6px 16px rgba(0, 0, 0, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+    color: rgba(255, 255, 255, 1) !important;
+    font-weight: 600 !important;
+  }
+
+  .nav-tab-active::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent);
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 }
 
@@ -427,6 +459,22 @@ body::after {
     radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.15) 100%);
   will-change: transform, opacity;
   animation: bg-glitch-scan-repeat 5s ease-out infinite;
+}
+
+/* Disable glitch effect on dashboard */
+.dashboard-view ~ body::before,
+.dashboard-view ~ body::after,
+.dashboard-view ~ html::before {
+  animation: none !important;
+  opacity: 0 !important;
+}
+
+/* Alternative approach - disable on body when dashboard is active */
+body:has(.dashboard-view)::before,
+body:has(.dashboard-view)::after,
+html:has(.dashboard-view)::before {
+  animation: none !important;
+  opacity: 0 !important;
 }
 
 /* Repeating glitch animations - every 5 seconds (subtle) */

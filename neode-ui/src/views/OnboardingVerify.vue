@@ -10,11 +10,11 @@
     <!-- Main Glass Container -->
     <div class="max-w-[800px] w-full relative z-10 path-glass-container">
       <!-- Header -->
-      <div class="text-center mb-6 flex-shrink-0">
+      <div v-if="!verified" class="text-center mb-6 flex-shrink-0">
         <h1 class="text-[26px] font-semibold text-white/96 mb-2 drop-shadow-[0_2px_6px_rgba(0,0,0,0.4)]">
           Verify Your Identity
         </h1>
-        <p v-if="!verified" class="text-[20px] text-white/75 leading-relaxed max-w-[600px] mx-auto">
+        <p class="text-[20px] text-white/75 leading-relaxed max-w-[600px] mx-auto">
           Sign a challenge to verify your decentralized identity is working correctly.
         </p>
       </div>
@@ -41,11 +41,16 @@
         <!-- Verification Success -->
         <div v-if="verified" class="w-full max-w-[600px]">
           <div class="text-center mb-6">
-            <svg class="w-20 h-20 mx-auto mb-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="filter: drop-shadow(0 2px 12px rgba(34, 197, 94, 0.4));">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p class="text-2xl font-semibold text-white/96 mb-2">Verified!</p>
-            <p class="text-sm text-white/70">Your identity has been successfully verified and is ready to use.</p>
+            <div class="flex justify-center mb-6">
+              <div class="path-option-card cursor-default w-20 h-20 rounded-full flex items-center justify-center">
+                <svg class="w-10 h-10 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            <p class="text-[20px] text-white/80 leading-relaxed max-w-[600px] mx-auto mb-6">
+              Your identity has been successfully verified and is ready to use.
+            </p>
           </div>
 
           <!-- Signature Display -->

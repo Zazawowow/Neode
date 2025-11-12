@@ -10,11 +10,11 @@
     <!-- Main Glass Container -->
     <div class="max-w-[800px] w-full relative z-10 path-glass-container">
       <!-- Header -->
-      <div v-if="!generatedDid" class="text-center mb-6 flex-shrink-0">
-        <h1 class="text-[26px] font-semibold text-white/96 mb-2 drop-shadow-[0_2px_6px_rgba(0,0,0,0.4)]">
+      <div v-if="!generatedDid" class="text-center flex-shrink-0">
+        <h1 class="text-[26px] font-semibold text-white/96 mb-6 drop-shadow-[0_2px_6px_rgba(0,0,0,0.4)]">
           Take control of your new identity
         </h1>
-        <p class="text-sm text-white/75 leading-relaxed max-w-[600px] mx-auto">
+        <p class="text-[20px] text-white/75 leading-relaxed max-w-[600px] mx-auto mb-6">
           Generate a Decentralized Identifier (DID) for secure, passwordless authentication. Your identity, your control.
         </p>
       </div>
@@ -41,12 +41,17 @@
         <!-- Generated DID Display -->
         <div v-if="generatedDid" class="w-full max-w-[600px] space-y-4">
           <!-- Success Message -->
-          <div class="text-center mb-4">
-            <svg class="w-16 h-16 mx-auto mb-3 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="filter: drop-shadow(0 2px 8px rgba(255, 255, 255, 0.3));">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p class="text-lg font-semibold text-white/96 mb-1">Identity Created Successfully</p>
-            <p class="text-sm text-white/70">Your decentralized identifier has been generated</p>
+          <div class="text-center mb-6">
+            <div class="flex justify-center mb-6">
+              <div class="path-option-card cursor-default w-20 h-20 rounded-full flex items-center justify-center">
+                <svg class="w-10 h-10 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            <p class="text-[20px] text-white/80 leading-relaxed max-w-[600px] mx-auto mb-6">
+              Your decentralized identifier has been generated
+            </p>
           </div>
 
           <!-- DID Display Card -->
@@ -58,12 +63,9 @@
                   {{ generatedDid }}
                 </p>
               </div>
-              <div class="flex items-center gap-2 text-xs text-white/60">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>This identifier is stored securely on your device</span>
-              </div>
+              <p class="text-base text-white/60">
+                This identifier is stored securely on your device
+              </p>
             </div>
           </div>
         </div>

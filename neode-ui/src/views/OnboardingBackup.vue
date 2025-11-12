@@ -14,7 +14,7 @@
         <h1 class="text-[26px] font-semibold text-white/96 mb-2 drop-shadow-[0_2px_6px_rgba(0,0,0,0.4)]">
           Backup Your Identity
         </h1>
-        <p class="text-sm text-white/75 leading-relaxed max-w-[600px] mx-auto">
+        <p class="text-[20px] text-white/75 leading-relaxed max-w-[600px] mx-auto">
           Create a secure backup of your identity. Set a passphrase and download your encrypted backup file.
         </p>
       </div>
@@ -41,12 +41,9 @@
                   class="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 pl-12 text-white/95 placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-black/50 transition-all"
                 />
               </div>
-              <div class="flex items-start gap-2 mt-3 text-xs text-white/60">
-                <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Keep this passphrase safe. You'll need it to restore your identity from backup.</span>
-              </div>
+              <p class="text-base text-white/60 mt-3">
+                Keep this passphrase safe. You'll need it to restore your identity from backup.
+              </p>
             </div>
           </div>
 

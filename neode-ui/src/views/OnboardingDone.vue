@@ -13,8 +13,8 @@
       <div class="text-center space-y-6">
         <!-- Success Icon -->
         <div class="flex justify-center mb-6">
-          <div class="path-option-card cursor-default w-24 h-24 rounded-full flex items-center justify-center">
-            <svg class="w-12 h-12 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+          <div class="path-option-card cursor-default w-20 h-20 rounded-full flex items-center justify-center">
+            <svg class="w-10 h-10 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>

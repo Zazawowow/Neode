@@ -1,5 +1,10 @@
 <template>
   <div class="min-h-screen flex items-center justify-center p-4 relative z-10">
+    <!-- Background -->
+    <div
+      class="fixed inset-0 bg-cover bg-center -z-10"
+      style="background-image: url(/assets/img/bg-1.jpg)"
+    />
     <!-- Dark overlay -->
     <div class="absolute inset-0 bg-black/35 z-0 pointer-events-none" />
 

@@ -1,8 +1,15 @@
 <template>
-  <div class="min-h-screen flex">
-    <!-- Sidebar -->
-    <aside class="w-70 glass border-r border-glass-border shadow-glass-sm flex-shrink-0">
-      <div class="p-6">
+  <div class="min-h-screen flex relative dashboard-view">
+    <!-- Background -->
+    <div
+      class="fixed inset-0 bg-cover bg-center -z-10"
+      style="background-image: url(/assets/img/bg-4.jpg)"
+    />
+    <div class="fixed inset-0 bg-black/30 -z-10" />
+
+    <!-- Sidebar - Desktop Only -->
+    <aside class="hidden md:flex w-[256px] border-r border-glass-border shadow-glass-sm flex-shrink-0 relative flex-col" style="background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);">
+      <div class="p-6 flex-1">
         <div class="flex items-center gap-3 mb-8">
           <div class="logo-gradient-border flex-shrink-0">
             <img src="/assets/img/logo-neode.png" alt="Neode" class="w-14 h-14" />
@@ -19,7 +26,7 @@
             :key="item.path"
             :to="item.path"
             class="flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-            active-class="bg-white/15 text-white font-medium"
+            exact-active-class="nav-tab-active"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path 
@@ -36,8 +43,8 @@
         </nav>
       </div>
 
-      <!-- User Section -->
-      <div class="absolute bottom-0 left-0 right-0 p-6 border-t border-glass-border">
+      <!-- User Section - Desktop Only -->
+      <div class="p-6 border-t border-glass-border">
         <button
           @click="handleLogout"
           class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors"
@@ -51,10 +58,10 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto">
+    <main class="flex-1 overflow-y-auto relative pb-20 md:pb-0">
       <!-- Connection Status Banner -->
-      <div v-if="isOffline" class="bg-yellow-500/20 border-b border-yellow-500/40 px-6 py-3 text-yellow-200">
-        <div class="flex items-center gap-2">
+      <div v-if="isOffline" class="path-option-card mx-6 mt-6 px-6 py-3 border-l-4 border-yellow-500">
+        <div class="flex items-center gap-2 text-yellow-200">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
@@ -64,10 +71,35 @@
         </div>
       </div>
 
-      <div class="p-8">
+      <div class="p-4 md:p-8">
         <RouterView />
       </div>
     </main>
+
+    <!-- Mobile Bottom Tab Bar -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 border-t border-glass-border shadow-glass z-50" style="background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);">
+      <div class="flex justify-around items-center px-2 py-3">
+        <RouterLink
+          v-for="item in navItems"
+          :key="item.path"
+          :to="item.path"
+          class="flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-lg text-white/70 transition-colors min-w-0"
+          exact-active-class="nav-tab-active"
+        >
+          <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path 
+              v-for="(path, index) in getIconPath(item.icon)" 
+              :key="index"
+              stroke-linecap="round" 
+              stroke-linejoin="round" 
+              stroke-width="2" 
+              :d="path" 
+            />
+          </svg>
+          <span class="text-xs font-medium truncate max-w-full">{{ item.label }}</span>
+        </RouterLink>
+      </div>
+    </nav>
   </div>
 </template>
 
