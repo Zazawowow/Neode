@@ -1,0 +1,291 @@
+/* Content styling */
+.content {
+  --background: transparent;
+  position: relative;
+  background-image: url('/assets/img/bg-3.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 0;
+    pointer-events: none;
+  }
+  
+  // Make ion-content's scroll element a flex container
+  &::part(scroll) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+  }
+}
+
+.content-wrapper {
+  max-width: 1200px;
+  width: calc(100% - 48px);
+  margin: 40px auto;
+  padding: 40px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Intro section */
+.intro-section {
+  text-align: center;
+  flex-shrink: 0;
+  
+  h2 {
+    color: rgba(255, 255, 255, 0.96);
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 12px 0;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
+  
+  p {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 14px;
+    line-height: 1.5;
+    margin: 0;
+  }
+}
+
+/* Options grid - 2 rows x 3 columns */
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+/* Option cards */
+.option-card {
+  position: relative;
+  background: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: none !important;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  border-radius: 16px;
+  margin: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  height: 100%;
+  
+  /* Gradient border: black to transparent */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), transparent);
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 12px 32px rgba(0, 0, 0, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      
+    &::before {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent);
+    }
+  }
+  
+  &.option-card--selected {
+    background: rgba(255, 255, 255, 0.12) !important;
+    box-shadow:
+      0 12px 32px rgba(0, 0, 0, 0.6),
+      0 0 30px rgba(255, 255, 255, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    transform: translateY(-2px);
+    
+    &::before {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), transparent);
+    }
+    
+    .option-icon {
+      color: rgba(255, 255, 255, 0.96);
+      filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.4));
+    }
+    
+    .option-title {
+      color: rgba(255, 255, 255, 1);
+    }
+  }
+  
+  ion-card-content {
+    padding: 16px 12px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.option-icon-wrapper {
+  margin-bottom: 12px;
+}
+
+.option-icon {
+  font-size: 40px;
+  color: rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
+}
+
+.option-title {
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.option-description {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 15px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+/* Action buttons */
+.action-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+  flex-shrink: 0;
+}
+
+.back-btn,
+.continue-btn {
+  flex: 1;
+  min-width: 0; /* Allow flex items to shrink below content size */
+  max-width: 50%; /* Each button takes exactly half the space */
+  height: 48px;
+  font-size: 15px;
+  font-weight: 500;
+  --border-radius: 12px;
+  --background: rgba(0, 0, 0, 0.35);
+  --background-hover: rgba(0, 0, 0, 0.45);
+  --background-activated: rgba(0, 0, 0, 0.55);
+  --color: rgba(255, 255, 255, 0.96);
+  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: none !important;
+  position: relative;
+  
+  /* Apply gradient border using global class */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    padding: 2px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), transparent);
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  
+  &:hover::before {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent);
+  }
+}
+
+/* Tablet - 2 columns */
+@media (max-width: 992px) {
+  .options-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Mobile - 1 column */
+@media (max-width: 768px) {
+  .content-wrapper {
+    width: calc(100% - 32px);
+    margin: 24px auto;
+    padding: 24px;
+    gap: 16px;
+    border-radius: 20px;
+  }
+  
+  .intro-section {
+    h2 {
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+    
+    p {
+      font-size: 13px;
+    }
+  }
+  
+  .options-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .option-card {
+    ion-card-content {
+      padding: 14px 12px;
+    }
+  }
+  
+  .option-icon {
+    font-size: 36px;
+  }
+  
+  .option-title {
+    font-size: 15px;
+  }
+  
+  .option-description {
+    font-size: 12px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .back-btn,
+  .continue-btn {
+    height: 44px;
+    font-size: 14px;
+  }
+}

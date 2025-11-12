@@ -15,7 +15,7 @@ export class UnauthGuard implements CanActivate {
 
   canActivate(): Observable<boolean | UrlTree> {
     return this.authService.isVerified$.pipe(
-      map(verified => !verified || this.router.parseUrl('')),
+      map(verified => !verified || this.router.parseUrl('/services')),
     )
   }
 }

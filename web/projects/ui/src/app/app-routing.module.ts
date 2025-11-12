@@ -6,9 +6,25 @@ import { IdentityFeatureGuard } from './guards/identity-feature.guard'
 
 const routes: Routes = [
   {
-    redirectTo: 'services',
-    pathMatch: 'full',
     path: '',
+    pathMatch: 'full',
+    redirectTo: 'onboarding/intro',
+  },
+  {
+    path: 'onboarding/intro',
+    canActivate: [UnauthGuard],
+    loadChildren: () =>
+      import(
+        './pages/onboarding/onboarding-intro/onboarding-intro.module'
+      ).then(m => m.OnboardingIntroPageModule),
+  },
+  {
+    path: 'onboarding/options',
+    canActivate: [UnauthGuard],
+    loadChildren: () =>
+      import(
+        './pages/onboarding/onboarding-options/onboarding-options.module'
+      ).then(m => m.OnboardingOptionsPageModule),
   },
   {
     path: 'intro',

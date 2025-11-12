@@ -1,90 +1,492 @@
 ---
-description: cod8ng
+description: Neode Coding Standards - Vue 3 Edition
 globs:
 alwaysApply: true
 ---
 # Neode Coding Standards
 
 ## Project Overview
-Neode is a modern fork of StartOS focused on enhanced UI/UX and streamlined user experience.
+Neode is a modern fork of StartOS with a clean, fast Vue 3 + Vite + Tailwind UI focused on exceptional UX and glassmorphism design.
+
+## Architecture
+
+### Frontend Stack (NEW)
+- **Framework**: Vue 3 (Composition API)
+- **Build Tool**: Vite (⚡ instant HMR)
+- **Styling**: Tailwind CSS + Custom glassmorphism utilities
+- **State**: Pinia stores
+- **Routing**: Vue Router
+- **TypeScript**: Strict mode enabled
+
+### Backend Integration
+- **API**: JSON-RPC over HTTP (`/rpc/v1`)
+- **Real-time**: WebSocket (`/ws/db`) with JSON Patch
+- **Auth**: Cookie-based sessions
+- **Proxy**: Vite dev server proxies to backend (port 5959)
+
+## Refactoring
+- based on the project progress and changes refactor the code accordingly for the best architecture and security periodically, explain what you are doing as it's performed and the reasons
 
 ## Design Principles
 
 ### Visual Design
 - **Font**: Avenir Next (primary), system fallbacks
-- **Spacing**: 4px grid system, 16px default padding
+- **Spacing**: 4px grid system (16px = spacing-4, 24px = spacing-6)
 - **Glass Effects**: iOS-style glassmorphism
-  ```scss
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  ```css
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
   ```
-- **Animations**: Smooth 2s splash screens, subtle draw/glitch effects
-- **Backgrounds**: Persistent, high-quality imagery
+- **Animations**: Smooth transitions (0.3-0.5s), typing effects, fade-ins
+- **Backgrounds**: Persistent high-quality imagery (`/assets/img/bg.jpg`)
+- **Colors**: White text with opacity (80%-96% for hierarchy)
 
 ### UI Patterns
-- **Containers**: Modern glass cards over traditional dark boxes
-- **Transitions**: Smooth fade/slide animations (0.3-0.5s)
-- **Responsive**: Mobile-first with desktop enhancements
+- **Containers**: Glass cards (`.glass-card`) over dark boxes
+- **Buttons**: Glass buttons (`.glass-button`) with hover effects
+- **Transitions**: Vue transitions with smooth fade/slide
+- **Responsive**: Mobile-first with Tailwind breakpoints
 - **Accessibility**: High contrast text on glass, clear focus states
+
+### Global Styles
+- Always create global styles for common componenets on the way
+- When we establish a styling of a component make sure it's easily reusable so it can be changed from a single point and updates everywhere
+
+### Glassmorphism Utilities
+```html
+<!-- Predefined glass card -->
+<div class="glass-card p-6">
+  Content with automatic glass styling
+</div>
+
+<!-- Manual glass styling -->
+<div class="bg-glass-dark backdrop-blur-glass border border-glass-border shadow-glass rounded-2xl">
+  Custom glass element
+</div>
+
+<!-- Glass button -->
+<button class="glass-button px-6 py-3 rounded-lg">
+  Click me
+</button>
+
+<!-- Gradient cards (transparent to black) -->
+<div class="gradient-card p-6">
+  Diagonal gradient from transparent to black
+</div>
+
+<div class="gradient-card-dark p-6">
+  Vertical gradient, darker version
+</div>
+
+<!-- Gradient button -->
+<button class="gradient-button px-6 py-3 rounded-lg">
+  Hover effect included
+</button>
+```
 
 ## Development Workflow
 
 ### Priority Order
-1. **UI/UX First**: Polish user experience before backend complexity
-2. **Iterative**: Lightweight implementations that can be enhanced
-3. **Testing**: Use mock mode for rapid UI development
-4. **Integration**: Connect to backend after UI is solid
+1. **UI/UX First**: Build beautiful interfaces that feel great
+2. **Component-Based**: Small, reusable Vue components
+3. **Type Safety**: Leverage TypeScript for all API calls
+4. **Fast Iteration**: Use Vite's HMR for instant feedback
 
 ### Project Structure
 ```
 /Users/tx1138/Code/Neode/
-├── web/projects/shared/assets/     # Global images, fonts, icons
-├── web/projects/ui/               # Main application UI
-├── web/config.json               # Mock/live API toggle
-└── core/                         # Rust backend (future integration)
+├── neode-ui/                    # NEW: Vue 3 UI (PRIMARY)
+│   ├── src/
+│   │   ├── api/                # RPC client & WebSocket
+│   │   ├── stores/             # Pinia state management
+│   │   ├── views/              # Page components
+│   │   ├── components/         # Reusable components
+│   │   ├── router/             # Vue Router config
+│   │   ├── types/              # TypeScript definitions
+│   │   └── style.css           # Tailwind + custom styles
+│   ├── public/assets/          # Static assets
+│   └── vite.config.ts          # Vite configuration
+├── web/                        # OLD: Angular UI (keep for reference)
+└── core/                       # Rust backend
 ```
 
 ### Development Commands
 ```bash
-# Start UI dev server with mocks
-npm --prefix web run start:ui
+# Start Vue UI dev server (PRIMARY)
+cd neode-ui && npm run dev
+# → http://localhost:8100 with instant HMR
 
 # Build for production
-npm --prefix web run build:ui
+npm run build
+# → Outputs to ../web/dist/neode-ui/
 
-# Stop dev server
-lsof -nPi :8100 | awk 'NR>1 {print $2}' | xargs kill
+# Type check
+npm run type-check
+
+# LEGACY: Angular UI (avoid using)
+cd web && npm run start:ui
 ```
 
 ## Code Standards
 
-### CSS/SCSS
-- Use 4px grid for all spacing
-- Prefer CSS custom properties for theming
-- Use glassmorphism mixins for consistency
-- Absolute paths for assets: `/assets/img/...`
+### Vue Components
+- **Use Composition API** with `<script setup lang="ts">`
+- **Props with TypeScript**: Define interfaces for props
+- **Reactive state**: Use `ref()` and `computed()`
+- **Lifecycle**: Use composables over lifecycle hooks when possible
+- **Emit types**: Type your component events
 
-### TypeScript/Angular
-- Prefer reactive patterns (Observables)
-- Use Ionic components for mobile-first design
-- Keep splash/animation logic in app.component
-- Mock API calls during UI development
+**Example:**
+```vue
+<template>
+  <div class="glass-card p-6">
+    <h2 class="text-xl font-semibold text-white mb-4">{{ title }}</h2>
+    <button @click="handleClick" class="glass-button px-4 py-2">
+      {{ buttonText }}
+    </button>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+
+interface Props {
+  title: string
+  count?: number
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  count: 0
+})
+
+const emit = defineEmits<{
+  click: [value: number]
+}>()
+
+const localCount = ref(props.count)
+const buttonText = computed(() => `Clicked ${localCount.value} times`)
+
+function handleClick() {
+  localCount.value++
+  emit('click', localCount.value)
+}
+</script>
+```
+
+### Styling with Tailwind
+- **Use utility classes** over custom CSS when possible
+- **Glass utilities**: Use `.glass-card` and `.glass-button`
+- **Spacing**: Follow 4px grid (p-4 = 16px, p-6 = 24px)
+- **Colors**: Use white with opacity for text hierarchy
+  - Headings: `text-white` or `text-white/96`
+  - Body: `text-white/80`
+  - Muted: `text-white/70` or `text-white/60`
+- **Responsive**: Use Tailwind breakpoints (`md:`, `lg:`)
+
+**Example:**
+```html
+<!-- Good: Utility-first -->
+<div class="glass-card p-6 md:p-8">
+  <h1 class="text-3xl font-bold text-white mb-4">Title</h1>
+  <p class="text-white/80 mb-6">Description</p>
+  <button class="glass-button px-6 py-3 rounded-lg hover:bg-black/70">
+    Action
+  </button>
+</div>
+
+<!-- Bad: Custom CSS for simple styling -->
+<div class="custom-container">
+  <h1 class="custom-title">Title</h1>
+  <button class="custom-button">Action</button>
+</div>
+```
+
+### State Management (Pinia)
+- **Create stores** in `src/stores/`
+- **Use Composition API** style stores
+- **Computed for derived state**: Don't duplicate data
+- **Actions for async**: All API calls in store actions
+- **Ref for primitives**: Use `ref()` for simple state
+
+**Example:**
+```typescript
+// src/stores/app.ts
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import { rpcClient } from '../api/rpc-client'
+
+export const useAppStore = defineStore('app', () => {
+  // State
+  const isAuthenticated = ref(false)
+  const serverName = ref<string | null>(null)
+
+  // Computed
+  const displayName = computed(() => serverName.value || 'Neode')
+
+  // Actions
+  async function login(password: string) {
+    await rpcClient.login(password)
+    isAuthenticated.value = true
+  }
+
+  return {
+    isAuthenticated,
+    serverName,
+    displayName,
+    login,
+  }
+})
+```
+
+### TypeScript
+- **Strict mode**: Always type props, state, and API responses
+- **API types**: Define in `src/types/api.ts`
+- **No `any`**: Use `unknown` if type is truly unknown
+- **Type imports**: Use `import type` when importing only types
+
+**Example:**
+```typescript
+// Good: Properly typed
+interface LoginRequest {
+  password: string
+  metadata: SessionMetadata
+}
+
+async function login(req: LoginRequest): Promise<void> {
+  await rpcClient.call({ method: 'auth.login', params: req })
+}
+
+// Bad: Using any
+async function login(req: any): Promise<any> {
+  return await rpcClient.call(req)
+}
+```
+
+### Routing
+- **Define routes** in `src/router/index.ts`
+- **Lazy load pages**: Use `() => import('../views/Page.vue')`
+- **Route guards**: Use `beforeEach` for auth checks
+- **Meta fields**: Use for public routes, page titles, etc.
+
+**Example:**
+```typescript
+const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    {
+      path: '/login',
+      component: () => import('../views/Login.vue'),
+      meta: { public: true }
+    },
+    {
+      path: '/dashboard',
+      component: () => import('../views/Dashboard.vue'),
+      children: [
+        {
+          path: 'apps',
+          component: () => import('../views/Apps.vue')
+        }
+      ]
+    }
+  ]
+})
+
+// Auth guard
+router.beforeEach((to, from, next) => {
+  const store = useAppStore()
+  const isPublic = to.meta.public
+  
+  if (!isPublic && !store.isAuthenticated) {
+    next('/login')
+  } else {
+    next()
+  }
+})
+```
+
+### API Integration
+- **RPC Client**: Use `src/api/rpc-client.ts` for all backend calls
+- **WebSocket**: State automatically syncs via Pinia store
+- **Error handling**: Always try/catch API calls
+- **Loading states**: Use ref for loading indicators
+
+**Example:**
+```typescript
+import { ref } from 'vue'
+import { useAppStore } from '@/stores/app'
+
+const loading = ref(false)
+const error = ref<string | null>(null)
+const store = useAppStore()
+
+async function handleAction() {
+  loading.value = true
+  error.value = null
+  
+  try {
+    await store.installPackage('bitcoin', marketplaceUrl, '1.0.0')
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Unknown error'
+  } finally {
+    loading.value = false
+  }
+}
+```
 
 ### Asset Management
-- Images: `web/projects/shared/assets/img/`
-- Icons: `web/projects/shared/assets/icon/`
-- Fonts: `web/projects/shared/assets/fonts/`
-- Animations: `web/projects/shared/assets/animations/`
+- **Images**: `neode-ui/public/assets/img/`
+- **Access in templates**: `/assets/img/filename.png`
+- **Logo**: `/assets/img/neode-logo.png`
+- **Background**: `/assets/img/bg.jpg`
+
+### Animations
+- **Use Vue transitions**: `<Transition name="fade">`
+- **Define in style.css**: Global animations
+- **Keep it smooth**: 0.3-0.5s for most transitions
+- **CSS animations**: Use `@keyframes` for complex sequences
+
+**Example:**
+```vue
+<template>
+  <Transition name="fade">
+    <div v-if="show" class="glass-card">
+      Fading in content
+    </div>
+  </Transition>
+</template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
+```
 
 ## Performance
-- Optimize images (WebP when possible)
-- Lazy load non-critical fonts
-- Use backdrop-filter sparingly
-- Minimize animation complexity
+
+### Optimization
+- **Lazy load routes**: All page components should be async
+- **Optimize images**: Use WebP when possible, compress PNGs
+- **Minimize bundle**: Tree-shake unused Tailwind classes (automatic)
+- **Backdrop filter**: Use sparingly (GPU intensive)
+- **Virtual scrolling**: For long lists (consider `vue-virtual-scroller`)
+
+### Build Configuration
+- **Vite optimizes**: Auto-chunking, tree-shaking, minification
+- **Proxy in dev**: Backend calls proxied automatically
+- **Build output**: Goes to `../web/dist/neode-ui/`
+
+## Testing Strategy
+
+### Development Testing
+1. **Visual inspection**: Check glassmorphism renders correctly
+2. **Routing**: Test all navigation paths
+3. **Responsive**: Test mobile/tablet/desktop breakpoints
+4. **State**: Verify store updates reflect in UI
+5. **API**: Test with mock data first, then real backend
+
+### Browser Testing
+- **Chrome/Brave**: Primary (best backdrop-filter support)
+- **Firefox**: Test glass effects
+- **Safari/iOS**: Verify mobile experience
+- **Tor Browser**: Test .onion address compatibility
+
+## Accessibility
+
+- **Keyboard navigation**: All interactive elements tabbable
+- **Focus states**: Clear visual focus indicators
+- **Color contrast**: White text on glass maintains WCAG AA
+- **ARIA labels**: Use for icon-only buttons
+- **Semantic HTML**: Use proper heading hierarchy
+
+## Git Workflow
+
+### Commit Messages
+```
+feat(ui): add glass card component
+fix(router): resolve navigation guard issue
+style(apps): improve spacing on app cards
+refactor(store): simplify auth state management
+```
+
+### Branch Strategy
+- `main`: Stable releases
+- `develop`: Active development
+- `feature/*`: New features
+- `fix/*`: Bug fixes
 
 ## Future Considerations
+
+### Roadmap
+- [ ] Complete marketplace UI
+- [ ] Server metrics visualization
+- [ ] Backup/restore interface
+- [ ] Multi-language support (i18n)
+- [ ] Dark/light theme toggle
+- [ ] PWA capabilities
+
+### Backend Integration
 - Plan for OS image builds on Debian
 - Keep UI changes separate from backend changes
+- Maintain API compatibility with StartOS
 - Consider preconfigured app marketplace
-- Maintain StartOS compatibility where possible
+
+### Migration Notes
+- **Angular UI**: Keep in `web/` for reference only
+- **New features**: Build in Vue (`neode-ui/`)
+- **Deprecation**: Eventually remove Angular build
+- **Backend**: No changes needed (same API)
+
+## Key Principles
+
+1. **Vue over Angular**: Always use Vue for new UI work
+2. **Utility-first CSS**: Tailwind classes over custom styles
+3. **Type everything**: Leverage TypeScript
+4. **Component composition**: Small, reusable pieces
+5. **User experience first**: Polish before complexity
+6. **Fast iteration**: Use Vite's instant feedback
+7. **Glassmorphism everywhere**: Consistent visual language
+8. **Responsive by default**: Mobile-first approach
+
+---
+
+## Quick Reference
+
+### Start Development
+```bash
+cd /Users/tx1138/Code/Neode/neode-ui
+npm run dev
+```
+
+### Create New Component
+```bash
+touch src/components/MyComponent.vue
+```
+
+### Create New Page
+```bash
+touch src/views/MyPage.vue
+# Then add route in src/router/index.ts
+```
+
+### Add Store
+```bash
+touch src/stores/myStore.ts
+```
+
+### Build for Production
+```bash
+npm run build
+```
+
+---
+
+**Remember**: We chose Vue + Vite + Tailwind to escape Angular's complexity and routing issues. Keep it simple, keep it fast, keep it beautiful. 🎨⚡

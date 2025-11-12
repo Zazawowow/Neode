@@ -43,8 +43,6 @@ export class AuthService {
   setUnverified(): void {
     this.authState$.next(AuthState.UNVERIFIED)
     this.storage.clear()
-    this.zone.run(() => {
-      this.router.navigate(['/login'], { replaceUrl: true })
-    })
+    // Don't force navigation - let routing guards handle it
   }
 }

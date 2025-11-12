@@ -1,0 +1,180 @@
+/* Match login page styling */
+.content {
+  --background: transparent;
+  position: relative;
+  min-height: 100vh;
+  z-index: 1;
+  background-image: url('/assets/img/bg-2.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 0;
+    pointer-events: none;
+  }
+}
+
+.grid { 
+  height: 100%; 
+  max-width: 640px; 
+  position: relative; 
+  z-index: 2; 
+}
+
+.row { 
+  height: 100vh; 
+  align-items: center; 
+  text-align: center; 
+  position: relative; 
+  z-index: 3; 
+}
+
+/* Card styling matching login */
+ion-card {
+  background: rgba(0, 0, 0, 0.35) !important;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  border-radius: 24px;
+  min-height: 16rem;
+  position: relative;
+  z-index: 5;
+  padding-top: 40px;
+}
+
+.card-wrap { 
+  position: relative; 
+  width: 100%; 
+}
+
+/* Logo badge above card */
+.logo-layer { 
+  position: absolute; 
+  left: 50%; 
+  top: -44px; 
+  z-index: 10; 
+  transform: translate(-50%, 0);
+}
+
+.logo-badge {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255,255,255,0.22);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.25);
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+}
+
+.logo-image { 
+  width: 56px; 
+  height: 56px; 
+}
+
+/* Title styling */
+.title { 
+  color: rgba(255,255,255,0.96); 
+  text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  font-size: 30px; /* 25% larger (was 24px) */
+}
+
+/* Intro text */
+.intro-text {
+  color: rgba(255,255,255,0.85);
+  font-size: 19px; /* 25% larger (was ~15px) */
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+  text-align: center;
+}
+
+/* Button styling with gradient border */
+.start-button {
+  --background: rgba(0, 0, 0, 0.35);
+  --background-hover: rgba(0, 0, 0, 0.45);
+  --background-activated: rgba(0, 0, 0, 0.55);
+  --color: rgba(255, 255, 255, 0.96);
+  --box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  height: 48px;
+  --border-radius: 12px;
+  margin: 28px auto 12px;
+  font-size: 15px;
+  font-weight: 500;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: none !important;
+  position: relative;
+  
+  /* Apply gradient border */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    padding: 2px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), transparent);
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+  
+  &:hover::before {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent);
+  }
+}
+
+/* Login link */
+.login-link {
+  margin-top: 16px;
+  
+  a {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s ease;
+    
+    &:hover {
+      color: rgba(255, 255, 255, 0.95);
+    }
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .grid {
+    max-width: 100%;
+    padding: 0 16px;
+  }
+  
+  .title {
+    font-size: 25px; /* 25% larger (was 20px) */
+  }
+  
+  .intro-text {
+    font-size: 17px; /* 25% larger (was ~14px) */
+    line-height: 1.5;
+  }
+  
+  .login-link a {
+    font-size: 13px;
+  }
+  
+  ion-card {
+    padding-top: 32px;
+  }
+}

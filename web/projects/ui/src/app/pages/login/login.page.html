@@ -79,14 +79,16 @@
               </form>
             </ion-card-content>
           </ion-card>
-          <div *ngIf="config.enableDidFlow" class="did-link ion-text-center ion-margin-top">
-            <a class="did-cta" routerLink="/setup">Set up your Decentralized ID</a>
-          </div>
           <div class="ion-text-center ion-margin-top">
             <a class="play-intro" routerLink="/intro">Play intro</a>
           </div>
+          <div *ngIf="config.enableDidFlow && !(did$ | async)" class="ion-text-center ion-margin-top">
+            <ion-text color="medium" style="font-size: 13px;">
+              <a routerLink="/setup" style="color: inherit; text-decoration: none;">Set up your Decentralized ID</a>
+            </ion-text>
+          </div>
           <div *ngIf="config.enableDidFlow && (did$ | async) as did" class="ion-text-center ion-margin-top">
-            <ion-text color="medium" class="mono">DID: {{ did.did }}</ion-text>
+            <ion-text color="medium" class="mono" style="font-size: 12px;">DID: {{ did.did }}</ion-text>
           </div>
         </div>
       </ion-col>

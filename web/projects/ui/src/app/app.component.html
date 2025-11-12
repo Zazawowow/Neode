@@ -44,6 +44,16 @@
       </div>
 
       <img *ngIf="showLogo" class="splash__logo" src="assets/img/logo-large.svg" alt="Logo" />
+      
+      <!-- Skip intro button -->
+      <button 
+        class="skip-intro-btn" 
+        [class.skip-intro-btn--hidden]="alienIntroComplete"
+        (click)="skipIntro()"
+        type="button"
+      >
+        Skip Intro
+      </button>
     </div>
     <div class="app-content" [class.app-content--hidden]="showSplash">
       <ion-split-pane

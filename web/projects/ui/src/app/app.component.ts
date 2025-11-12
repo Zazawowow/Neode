@@ -72,62 +72,101 @@ export class AppComponent implements OnDestroy {
     readonly themeSwitcher: ThemeSwitcherService,
     private readonly router: Router,
     private readonly route: ActivatedRoute,
-  ) {}
+  ) {
+    // CRITICAL: Check route IMMEDIATELY in constructor to prevent blank screen on refresh
+    // This runs before ngOnInit and before the template is rendered
+    const currentUrl = this.router.url || ''
+    const isOnboardingRoute = currentUrl.startsWith('/onboarding') || 
+                              currentUrl.startsWith('/login') || 
+                              currentUrl.startsWith('/setup')
+    
+    if (isOnboardingRoute) {
+      this.showSplash = false
+      document.body.classList.add('splash-complete')
+    }
+  }
 
   async ngOnInit() {
     // Initialize auth first so streams emit immediately
     this.authService.init?.()
 
-    // Skip intro if user is verified or they've seen it before, unless /intro route
     const seenIntro = localStorage.getItem('neode_intro_seen') === '1'
     const forceIntro = this.router.url.startsWith('/intro')
+    const currentUrl = this.router.url || ''
+    
+    // CRITICAL: If we're on an onboarding/login/setup page, ALWAYS skip splash immediately
+    // This prevents blank screens on refresh
+    const isOnboardingRoute = currentUrl.startsWith('/onboarding') || 
+                              currentUrl.startsWith('/login') || 
+                              currentUrl.startsWith('/setup')
+    
+    if (isOnboardingRoute) {
+      this.showSplash = false
+      document.body.classList.add('splash-complete')
+      // Don't run any other splash logic
+      this.initializeApp()
+      return
+    }
 
     // Force-play intro regardless of seen/verified
     if (forceIntro) {
       this.playIntroNow()
       return
     }
+    
     this.authService.isVerified$.pipe(take(1)).subscribe(verified => {
       if (verified || seenIntro) {
-        if (!forceIntro) {
-          this.showSplash = false
-          document.body.classList.add('splash-complete')
-        }
-        if (!verified) {
-          const currentUrl = this.router.url || ''
-          if (!forceIntro && !currentUrl.startsWith('/login') && !currentUrl.startsWith('/setup')) {
-            this.router.navigate(['/login'], { replaceUrl: true })
-          }
-        }
+        // Just hide splash, don't force navigation
+        this.showSplash = false
+        document.body.classList.add('splash-complete')
       } else {
-        // Only start intro when needed or forced
-        if (forceIntro) localStorage.removeItem('neode_intro_seen')
+        // Play intro for first-time users
         this.startAlienIntro()
-        // Original splash timing - now extended to accommodate intro
         setTimeout(() => {
           this.showSplash = false
           localStorage.setItem('neode_intro_seen', '1')
           document.body.classList.add('splash-complete')
-          this.authService.isVerified$.pipe(take(1)).subscribe(isVerified => {
-            if (!isVerified) {
-              const currentUrl = this.router.url || ''
-              if (currentUrl.startsWith('/login') || currentUrl.startsWith('/setup')) return
-              this.router.navigate(['/login'], { replaceUrl: true })
-            }
-          })
+          
+          // Only navigate if we're at root or a protected route
+          const currentUrl = this.router.url || ''
+          if (currentUrl === '/' || currentUrl === '') {
+            this.router.navigate(['/onboarding/intro'], { replaceUrl: true })
+          }
         }, 23200)
       }
     })
+    
+    this.initializeApp()
+  }
+  
+  private initializeApp() {
+    
     // Ensure client storage streams emit initial values so template can render
     this.clientStorageService.init()
 
-    // Start background streams
-    this.subscriptions.add((this.patchData as any).subscribe?.() ?? new Subscription())
-    this.subscriptions.add((this.patchMonitor as any).subscribe?.() ?? new Subscription())
+    // CRITICAL: Start background streams ONLY when authenticated
+    // These services depend on PatchDB which is only initialized after authentication
+    // Subscribing before authentication causes: "You provided an invalid object where a stream was expected"
+    // Services that extend Observable and use patch.watch$():
+    //   - PatchDataService: watches connection and patch data
+    //   - PatchMonitorService: starts/stops PatchDB based on auth state
+    //   - NotificationsToastService: watches notification count
+    //   - UpdateToastService: watches for system updates
+    this.authService.isVerified$
+      .pipe(
+        filter(verified => verified),
+        take(1),
+      )
+      .subscribe(() => {
+        // Safe to subscribe now - user is authenticated and PatchDB is ready
+        this.subscriptions.add((this.patchData as any).subscribe?.() ?? new Subscription())
+        this.subscriptions.add((this.patchMonitor as any).subscribe?.() ?? new Subscription())
 
-    this.patch
-      .watch$('ui', 'name')
-      .subscribe(name => this.titleService.setTitle(name || 'Neode'))
+        // Watch for UI name changes
+        this.patch
+          .watch$('ui', 'name')
+          .subscribe(name => this.titleService.setTitle(name || 'Neode'))
+      })
 
     // Allow replaying intro on-demand by navigating to /intro
     this.subscriptions.add(
@@ -163,9 +202,7 @@ export class AppComponent implements OnDestroy {
       document.body.classList.add('bg-glitch')
       localStorage.setItem('neode_intro_seen', '1')
       document.body.classList.add('splash-complete')
-      this.authService.isVerified$.pipe(take(1)).subscribe(isVerified => {
-        if (!isVerified) this.router.navigate(['/login'], { replaceUrl: true })
-      })
+      // Don't force navigation - let the user stay where they navigated
       setTimeout(() => document.body.classList.remove('bg-glitch'), 900)
     }, 23200)
   }
@@ -231,6 +268,23 @@ export class AppComponent implements OnDestroy {
 
   splitPaneVisible({ detail }: any) {
     this.splitPane.sidebarOpen$.next(detail.visible)
+  }
+
+  skipIntro() {
+    // Immediately complete the alien intro
+    this.alienIntroComplete = true
+    
+    // Stop all typing animations
+    this.typingLine1 = false
+    this.typingLine2 = false
+    this.typingLine3 = false
+    this.typingLine4 = false
+    
+    // Show all lines instantly
+    this.showLine1 = true
+    this.showLine2 = true
+    this.showLine3 = true
+    this.showLine4 = true
   }
 
   onResize(drawer: WidgetDrawer) {
