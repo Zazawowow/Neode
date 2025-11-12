@@ -1,26 +1,20 @@
-# Multi-stage build for Neode Web UI
+# Multi-stage build for Neode Web UI (Vue 3 + Vite)
 FROM node:18-alpine AS builder
-
-# Install git for patch-db dependency
-RUN apk add --no-cache git
 
 # Set working directory
 WORKDIR /app
 
-# Copy the entire repository for patch-db dependency
-COPY . ./
+# Copy package files
+COPY neode-ui/package*.json ./
 
-# Set working directory to web
-WORKDIR /app/web
-
-# Install dependencies (including devDependencies for building)
+# Install dependencies
 RUN npm ci
 
-# Build the dependencies first
-RUN npm run build:deps
+# Copy source code
+COPY neode-ui/ ./
 
-# Build the UI application
-RUN npm run build:ui
+# Build the Vue application
+RUN npm run build
 
 # Production stage
 FROM nginx:alpine
@@ -29,10 +23,7 @@ FROM nginx:alpine
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 
 # Copy built application from builder stage
-COPY --from=builder /app/web/dist/raw/ui /usr/share/nginx/html
-
-# Copy assets
-COPY --from=builder /app/web/projects/shared/assets /usr/share/nginx/html/assets
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Expose port 80
 EXPOSE 80
