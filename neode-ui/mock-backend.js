@@ -87,8 +87,23 @@ async function installPackage(id, url) {
     // Determine port mapping
     const portMap = id === 'atob' ? '8102:80' : '8103:80'
     
+    // Determine network - use neode-network if available (Portainer deployment)
+    const networkName = process.env.DOCKER_NETWORK || 'neode-network'
+    
+    // Check if network exists
+    let networkArg = ''
+    try {
+      const { stdout: networks } = await execPromise('docker network ls --format "{{.Name}}"')
+      if (networks.includes(networkName)) {
+        networkArg = `--network ${networkName}`
+        console.log(`[Package] Connecting container to ${networkName}`)
+      }
+    } catch (e) {
+      console.log('[Package] Could not check Docker networks, using default bridge')
+    }
+    
     // Start container
-    await execPromise(`docker run -d --name ${id}-test -p ${portMap} ${id}:${version}`)
+    await execPromise(`docker run -d --name ${id}-test -p ${portMap} ${networkArg} ${id}:${version}`)
     
     // Wait for container to be ready
     await new Promise(resolve => setTimeout(resolve, 2000))

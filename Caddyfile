@@ -1,0 +1,118 @@
+# Caddyfile for Neode - Automatic HTTPS & WebSocket Support
+# Caddy automatically handles:
+# - Let's Encrypt SSL certificates
+# - WebSocket upgrades
+# - HTTP to HTTPS redirects
+
+# Main Neode application
+{$DOMAIN:neode.l484.com} {
+	# Enable automatic HTTPS
+	# Caddy will obtain and renew Let's Encrypt certificates automatically
+	
+	# Logging
+	log {
+		output stdout
+		format json
+		level INFO
+	}
+	
+	# Handle WebSocket connections (Caddy does this automatically)
+	# But we add explicit handling for clarity
+	@websocket {
+		header Connection *Upgrade*
+		header Upgrade websocket
+	}
+	
+	# Proxy WebSocket connections
+	handle @websocket {
+		reverse_proxy neode-web:80 {
+			# WebSocket specific settings
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+	
+	# Proxy all other requests to neode-web
+	handle {
+		reverse_proxy neode-web:80 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+			
+			# Health check
+			health_uri /health
+			health_interval 10s
+			health_timeout 5s
+		}
+	}
+}
+
+# ATOB application proxy (HTTPS on port 8102)
+# This allows secure access to ATOB container
+{$DOMAIN:neode.l484.com}:8102 {
+	log {
+		output stdout
+		format json
+		level INFO
+	}
+	
+	# Proxy to ATOB container on Docker network
+	# The container is named 'atob-test' and runs on neode-network
+	handle {
+		reverse_proxy atob-test:80 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+			
+			# Gracefully handle if container doesn't exist
+			@error status 502 503 504
+			handle_response @error {
+				respond "ATOB application is not running. Please install it from the Marketplace." 503
+			}
+		}
+	}
+}
+
+# Alternative: HTTPS on port 8100 (legacy compatibility)
+{$DOMAIN:neode.l484.com}:8100 {
+	log {
+		output stdout
+		format json
+		level INFO
+	}
+	
+	# Same as main application
+	@websocket {
+		header Connection *Upgrade*
+		header Upgrade websocket
+	}
+	
+	handle @websocket {
+		reverse_proxy neode-web:80 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+	
+	handle {
+		reverse_proxy neode-web:80 {
+			header_up Host {host}
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+}
+
+# HTTP to HTTPS redirect (automatic)
+# Caddy handles this by default, but we make it explicit
+http://{$DOMAIN:neode.l484.com} {
+	redir https://{host}{uri} permanent
+}
+
