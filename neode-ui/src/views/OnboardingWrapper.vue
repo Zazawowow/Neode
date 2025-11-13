@@ -2,24 +2,34 @@
   <div class="min-h-screen relative overflow-hidden">
     <!-- Background layers with 3D perspective -->
     <div class="bg-perspective-container">
-      <!-- Default background -->
+      <!-- Default background (intro/options) -->
       <div 
         class="bg-layer"
         :class="{
-          'bg-transitioning-out': showAltBackground,
-          'bg-transitioning-in': !showAltBackground
+          'bg-transitioning-in': showDefaultBg,
+          'bg-transitioning-out': !showDefaultBg
         }"
         style="background-image: url('/assets/img/bg-4.jpg');"
       ></div>
       
-      <!-- Alternate background for certain screens -->
+      <!-- Alternate background (path/did/backup/verify/done) -->
       <div 
         class="bg-layer"
         :class="{
-          'bg-transitioning-in': showAltBackground,
-          'bg-transitioning-out': !showAltBackground
+          'bg-transitioning-in': showAltBg,
+          'bg-transitioning-out': !showAltBg
         }"
         style="background-image: url('/assets/img/bg-3.jpg');"
+      ></div>
+      
+      <!-- Login background -->
+      <div 
+        class="bg-layer"
+        :class="{
+          'bg-transitioning-in': showLoginBg,
+          'bg-transitioning-out': !showLoginBg
+        }"
+        style="background-image: url('/assets/img/bg-1.jpg');"
       ></div>
       
       <!-- Glitch overlay layers -->
@@ -44,11 +54,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const showAltBackground = ref(false)
+const currentBackground = ref<'default' | 'alt' | 'login'>('default')
 const isGlitching = ref(false)
 
 // Screens that should trigger background swap and glitch
@@ -60,16 +70,35 @@ const altBackgroundScreens = [
   '/onboarding/done'
 ]
 
+const loginScreen = '/login'
+
+// Computed background states
+const showDefaultBg = computed(() => currentBackground.value === 'default')
+const showAltBg = computed(() => currentBackground.value === 'alt')
+const showLoginBg = computed(() => currentBackground.value === 'login')
+
 // Watch route changes for background swaps and glitch
 watch(() => route.path, (newPath, oldPath) => {
   const isAltScreen = altBackgroundScreens.includes(newPath)
   const wasAltScreen = altBackgroundScreens.includes(oldPath)
+  const isLogin = newPath === loginScreen
+  const wasLogin = oldPath === loginScreen
   
-  // Update background
-  showAltBackground.value = isAltScreen
+  // Determine previous background
+  const prevBackground = currentBackground.value
   
-  // Trigger glitch when transitioning TO an alt background screen
-  if (isAltScreen && !wasAltScreen) {
+  // Update background based on current route
+  if (isLogin) {
+    currentBackground.value = 'login'
+  } else if (isAltScreen) {
+    currentBackground.value = 'alt'
+  } else {
+    currentBackground.value = 'default'
+  }
+  
+  // Trigger glitch when transitioning between different backgrounds
+  const backgroundChanged = currentBackground.value !== prevBackground
+  if (backgroundChanged && (isAltScreen || isLogin)) {
     // Trigger glitch after the 3D transition completes
     setTimeout(() => {
       isGlitching.value = true
@@ -77,6 +106,18 @@ watch(() => route.path, (newPath, oldPath) => {
         isGlitching.value = false
       }, 500) // Match glitch duration
     }, 700 + 50) // Wait for 3D transition (700ms) + small delay
+  }
+})
+
+// Initialize background on mount based on current route
+onMounted(() => {
+  const path = route.path
+  if (path === loginScreen) {
+    currentBackground.value = 'login'
+  } else if (altBackgroundScreens.includes(path)) {
+    currentBackground.value = 'alt'
+  } else {
+    currentBackground.value = 'default'
   }
 })
 </script>

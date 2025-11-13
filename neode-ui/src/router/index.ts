@@ -9,48 +9,47 @@ const router = createRouter({
       redirect: '/login',
     },
     {
-      path: '/login',
-      name: 'login',
-      component: () => import('../views/Login.vue'),
-      meta: { public: true },
-    },
-    {
-      path: '/onboarding',
+      path: '/',
       component: () => import('../views/OnboardingWrapper.vue'),
       meta: { public: true },
       children: [
         {
-          path: 'intro',
+          path: 'login',
+          name: 'login',
+          component: () => import('../views/Login.vue'),
+        },
+        {
+          path: 'onboarding/intro',
           name: 'onboarding-intro',
           component: () => import('../views/OnboardingIntro.vue'),
         },
         {
-          path: 'options',
+          path: 'onboarding/options',
           name: 'onboarding-options',
           component: () => import('../views/OnboardingOptions.vue'),
         },
         {
-          path: 'path',
+          path: 'onboarding/path',
           name: 'onboarding-path',
           component: () => import('../views/OnboardingPath.vue'),
         },
         {
-          path: 'did',
+          path: 'onboarding/did',
           name: 'onboarding-did',
           component: () => import('../views/OnboardingDid.vue'),
         },
         {
-          path: 'backup',
+          path: 'onboarding/backup',
           name: 'onboarding-backup',
           component: () => import('../views/OnboardingBackup.vue'),
         },
         {
-          path: 'verify',
+          path: 'onboarding/verify',
           name: 'onboarding-verify',
           component: () => import('../views/OnboardingVerify.vue'),
         },
         {
-          path: 'done',
+          path: 'onboarding/done',
           name: 'onboarding-done',
           component: () => import('../views/OnboardingDone.vue'),
         },
