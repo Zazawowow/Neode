@@ -111,7 +111,7 @@
       <div class="p-4 md:p-8 perspective-container-wrapper">
         <div class="perspective-container">
           <RouterView v-slot="{ Component, route }">
-            <Transition :name="getTransitionName(route)" mode="out-in">
+            <Transition :name="getTransitionName(route)">
               <component :is="Component" :key="route.path" class="view-container" />
             </Transition>
           </RouterView>
@@ -166,8 +166,8 @@ watch(() => route.path, (newPath) => {
   // Change background immediately
   showAltBackground.value = isAppDetails
   
-  // Trigger glitch AFTER background transition completes (450ms + 50ms delay)
-  if (isAppDetails !== wasAppDetails) {
+  // Trigger glitch ONLY when going forward (to app details), not back
+  if (isAppDetails && !wasAppDetails) {
     setTimeout(() => {
       isGlitching.value = true
       setTimeout(() => {
@@ -302,6 +302,10 @@ function getTransitionName(currentRoute: any) {
   transform-style: preserve-3d;
   backface-visibility: hidden;
   will-change: transform, opacity;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
 }
 
 /* Forward transition: Current screen pulls forward, new screen emerges from back */
@@ -396,16 +400,17 @@ function getTransitionName(currentRoute: any) {
 
 /* Slide down: Moving down the menu (content slides up like a scroll) */
 .slide-down-enter-active {
-  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .slide-down-leave-active {
-  transition: all 0.3s ease-out;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .slide-down-enter-from {
   opacity: 0;
-  transform: translateY(100vh);
+  transform: translateY(40vh);
 }
 
 .slide-down-enter-to {
@@ -420,21 +425,22 @@ function getTransitionName(currentRoute: any) {
 
 .slide-down-leave-to {
   opacity: 0;
-  transform: translateY(-80vh);
+  transform: translateY(-30vh);
 }
 
 /* Slide up: Moving up the menu (content slides down like a scroll) */
 .slide-up-enter-active {
-  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .slide-up-leave-active {
-  transition: all 0.3s ease-out;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .slide-up-enter-from {
   opacity: 0;
-  transform: translateY(-100vh);
+  transform: translateY(-40vh);
 }
 
 .slide-up-enter-to {
@@ -449,7 +455,7 @@ function getTransitionName(currentRoute: any) {
 
 .slide-up-leave-to {
   opacity: 0;
-  transform: translateY(80vh);
+  transform: translateY(30vh);
 }
 
 /* Background 3D container */
