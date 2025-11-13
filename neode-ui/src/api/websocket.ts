@@ -17,6 +17,16 @@ export class WebSocketClient {
 
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
+      // Close existing connection if any
+      if (this.ws) {
+        this.ws.close()
+        this.ws = null
+      }
+      
+      // Reset shouldReconnect flag when explicitly connecting
+      this.shouldReconnect = true
+      this.reconnectAttempts = 0
+      
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
       const host = window.location.host
       const wsUrl = `${protocol}//${host}${this.url}`
@@ -64,10 +74,16 @@ export class WebSocketClient {
 
   disconnect(): void {
     this.shouldReconnect = false
+    this.reconnectAttempts = 0
     if (this.ws) {
       this.ws.close()
       this.ws = null
     }
+  }
+  
+  reset(): void {
+    this.disconnect()
+    this.callbacks.clear()
   }
 
   isConnected(): boolean {

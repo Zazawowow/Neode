@@ -96,9 +96,18 @@ const router = createRouter({
 })
 
 // Auth guard
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const store = useAppStore()
   const isPublic = to.meta.public
+
+  // Check session on first load or when not authenticated
+  if (!store.isAuthenticated && !isPublic) {
+    const hasSession = await store.checkSession()
+    if (hasSession) {
+      next()
+      return
+    }
+  }
 
   if (!isPublic && !store.isAuthenticated) {
     next('/login')

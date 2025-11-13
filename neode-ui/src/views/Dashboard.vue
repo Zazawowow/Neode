@@ -1,11 +1,39 @@
 <template>
   <div class="min-h-screen flex relative dashboard-view">
-    <!-- Background -->
-    <div
-      class="fixed inset-0 bg-cover bg-center -z-10"
-      style="background-image: url(/assets/img/bg-4.jpg)"
-    />
-    <div class="fixed inset-0 bg-black/30 -z-10" />
+    <!-- Background container with 3D perspective -->
+    <div class="bg-perspective-container">
+      <!-- Background - default -->
+      <div
+        ref="bgDefault"
+        class="bg-layer"
+        :class="{ 'bg-transitioning-out': showAltBackground }"
+        style="background-image: url(/assets/img/bg-4.jpg)"
+      />
+      <!-- Background - alternate for app details -->
+      <div
+        ref="bgAlt"
+        class="bg-layer"
+        :class="{ 'bg-transitioning-in': showAltBackground }"
+        style="background-image: url(/assets/img/bg-3.jpg)"
+      />
+      <div class="fixed inset-0 bg-black/30 -z-10" />
+      
+      <!-- Glitch overlays - trigger on background change -->
+      <div 
+        class="bg-glitch-layer-1"
+        :class="{ 'glitch-active': isGlitching }"
+        style="background-image: url(/assets/img/bg-3.jpg)"
+      />
+      <div 
+        class="bg-glitch-layer-2"
+        :class="{ 'glitch-active': isGlitching }"
+        style="background-image: url(/assets/img/bg-3.jpg)"
+      />
+      <div 
+        class="bg-glitch-scan"
+        :class="{ 'glitch-active': isGlitching }"
+      />
+    </div>
 
     <!-- Sidebar - Desktop Only -->
     <aside class="hidden md:flex w-[256px] border-r border-glass-border shadow-glass-sm flex-shrink-0 relative flex-col" style="background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);">
@@ -58,7 +86,7 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto relative pb-20 md:pb-0">
+    <main class="flex-1 overflow-y-auto overflow-x-hidden relative pb-20 md:pb-0">
       <!-- Mobile Header with Logo - Mobile Only -->
       <header class="md:hidden sticky top-0 z-40 border-b border-glass-border shadow-glass-sm" style="background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);">
         <div class="flex items-center justify-center py-4">
@@ -80,8 +108,14 @@
         </div>
       </div>
 
-      <div class="p-4 md:p-8">
-        <RouterView />
+      <div class="p-4 md:p-8 perspective-container-wrapper">
+        <div class="perspective-container">
+          <RouterView v-slot="{ Component, route }">
+            <Transition :name="getTransitionName(route)" mode="out-in">
+              <component :is="Component" :key="route.path" class="view-container" />
+            </Transition>
+          </RouterView>
+        </div>
       </div>
     </main>
 
@@ -113,12 +147,35 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h } from 'vue'
-import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { computed, h, ref, watch } from 'vue'
+import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '../stores/app'
 
 const router = useRouter()
+const route = useRoute()
 const store = useAppStore()
+
+// Background swap for app details
+const showAltBackground = ref(false)
+const isGlitching = ref(false)
+
+watch(() => route.path, (newPath) => {
+  const isAppDetails = newPath.includes('/apps/') && !newPath.endsWith('/apps')
+  const wasAppDetails = showAltBackground.value
+  
+  // Change background immediately
+  showAltBackground.value = isAppDetails
+  
+  // Trigger glitch AFTER background transition completes (450ms + 50ms delay)
+  if (isAppDetails !== wasAppDetails) {
+    setTimeout(() => {
+      isGlitching.value = true
+      setTimeout(() => {
+        isGlitching.value = false
+      }, 375) // Glitch duration - 25% faster
+    }, 500) // Wait for background 3D transition to complete
+  }
+})
 
 const serverName = computed(() => store.serverName)
 const version = computed(() => store.serverInfo?.version || '0.0.0')
@@ -172,5 +229,378 @@ async function handleLogout() {
   await store.logout()
   router.push('/login')
 }
+
+// Track previous route for transition logic
+let previousPath = ''
+
+// Tab order for vertical transitions
+const tabOrder = [
+  '/dashboard',
+  '/dashboard/apps',
+  '/dashboard/marketplace',
+  '/dashboard/server',
+  '/dashboard/settings'
+]
+
+// Determine transition direction based on route depth
+function getTransitionName(currentRoute: any) {
+  const currentPath = currentRoute.path
+  const isAppDetails = currentPath.includes('/apps/') && !currentPath.endsWith('/apps')
+  const isAppsList = currentPath === '/dashboard/apps'
+  const wasAppDetails = previousPath.includes('/apps/') && !previousPath.endsWith('/apps')
+  const wasAppsList = previousPath === '/dashboard/apps'
+  
+  let transitionName = 'none'
+  
+  // Horizontal depth transition: apps list <-> app details
+  if (wasAppsList && isAppDetails) {
+    transitionName = 'depth-forward'
+  } else if (wasAppDetails && isAppsList) {
+    transitionName = 'depth-back'
+  }
+  // Vertical transition: between main tabs
+  else {
+    const currentIndex = tabOrder.indexOf(currentPath)
+    const previousIndex = tabOrder.indexOf(previousPath)
+    
+    if (currentIndex !== -1 && previousIndex !== -1 && currentIndex !== previousIndex) {
+      // Moving down the menu (visual down)
+      if (currentIndex > previousIndex) {
+        transitionName = 'slide-down'
+      }
+      // Moving up the menu (visual up)
+      else {
+        transitionName = 'slide-up'
+      }
+    }
+  }
+  
+  // Update previous path for next transition
+  previousPath = currentPath
+  
+  return transitionName
+}
 </script>
+
+<style>
+/* Wrapper to contain perspective without clipping */
+.perspective-container-wrapper {
+  position: relative;
+  overflow: visible;
+}
+
+/* Perspective container for 3D depth effect */
+.perspective-container {
+  perspective: 2000px;
+  perspective-origin: 50% 50%;
+  position: relative;
+  min-height: 100vh;
+  overflow: visible;
+}
+
+.view-container {
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+}
+
+/* Forward transition: Current screen pulls forward, new screen emerges from back */
+.depth-forward-enter-active,
+.depth-forward-leave-active {
+  transition: all 0.45s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.depth-forward-enter-from {
+  opacity: 0;
+  transform: translateZ(-800px) scale(0.75);
+  filter: blur(4px);
+}
+
+.depth-forward-enter-to {
+  opacity: 1;
+  transform: translateZ(0) scale(1);
+  filter: blur(0px);
+}
+
+.depth-forward-leave-from {
+  opacity: 1;
+  transform: translateZ(0) scale(1);
+  filter: blur(0px);
+}
+
+.depth-forward-leave-to {
+  opacity: 0;
+  transform: translateZ(400px) scale(1.2);
+  filter: blur(8px);
+}
+
+/* Back transition: Current screen pulls back, previous screen comes forward */
+.depth-back-enter-active,
+.depth-back-leave-active {
+  transition: all 0.45s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.depth-back-enter-from {
+  opacity: 0;
+  transform: translateZ(400px) scale(1.2);
+  filter: blur(8px);
+}
+
+.depth-back-enter-to {
+  opacity: 1;
+  transform: translateZ(0) scale(1);
+  filter: blur(0px);
+}
+
+.depth-back-leave-from {
+  opacity: 1;
+  transform: translateZ(0) scale(1);
+  filter: blur(0px);
+}
+
+.depth-back-leave-to {
+  opacity: 0;
+  transform: translateZ(-800px) scale(0.75);
+  filter: blur(4px);
+}
+
+/* Enhanced effect with rotation for more console-like feel */
+@media (min-width: 768px) {
+  .depth-forward-enter-from {
+    transform: translateZ(-800px) scale(0.75) rotateX(8deg);
+  }
+  
+  .depth-forward-leave-to {
+    transform: translateZ(400px) scale(1.2) rotateX(-5deg);
+  }
+  
+  .depth-back-enter-from {
+    transform: translateZ(400px) scale(1.2) rotateX(-5deg);
+  }
+  
+  .depth-back-leave-to {
+    transform: translateZ(-800px) scale(0.75) rotateX(8deg);
+  }
+}
+
+/* No transition for other cases */
+.none-enter-active,
+.none-leave-active {
+  transition: none;
+}
+
+.none-enter-from,
+.none-leave-to {
+  opacity: 1;
+}
+
+/* Slide down: Moving down the menu (content slides up like a scroll) */
+.slide-down-enter-active {
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.slide-down-leave-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-down-enter-from {
+  opacity: 0;
+  transform: translateY(100vh);
+}
+
+.slide-down-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.slide-down-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(-80vh);
+}
+
+/* Slide up: Moving up the menu (content slides down like a scroll) */
+.slide-up-enter-active {
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.slide-up-leave-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-up-enter-from {
+  opacity: 0;
+  transform: translateY(-100vh);
+}
+
+.slide-up-enter-to {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.slide-up-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(80vh);
+}
+
+/* Background 3D container */
+.bg-perspective-container {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  perspective: 1000px;
+  perspective-origin: 50% 50%;
+  overflow: hidden;
+}
+
+/* Background layers with 3D transitions */
+.bg-layer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transition: all 0.45s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transform-style: preserve-3d;
+  will-change: transform, opacity;
+}
+
+/* Default state - bg-4 visible, bg-3 hidden back */
+.bg-layer:first-child {
+  opacity: 1;
+  transform: translateZ(0) scale(1);
+}
+
+.bg-layer:nth-child(2) {
+  opacity: 0;
+  transform: translateZ(-200px) scale(0.9) rotateY(-15deg);
+}
+
+/* Transitioning out - bg-4 moves away */
+.bg-layer.bg-transitioning-out {
+  opacity: 0;
+  transform: translateZ(200px) scale(1.1) rotateY(15deg) !important;
+}
+
+/* Transitioning in - bg-3 comes forward */
+.bg-layer.bg-transitioning-in {
+  opacity: 1;
+  transform: translateZ(0) scale(1) rotateY(0deg) !important;
+}
+
+/* Background glitch effect layers - World Fair style */
+.bg-glitch-layer-1,
+.bg-glitch-layer-2,
+.bg-glitch-scan {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+}
+
+.bg-glitch-layer-1 {
+  background-size: cover;
+  background-position: center;
+  mix-blend-mode: lighten;
+  filter: brightness(1.8) contrast(2) saturate(1.5) hue-rotate(180deg);
+  will-change: transform, clip-path, opacity;
+}
+
+.bg-glitch-layer-2 {
+  background-size: cover;
+  background-position: center;
+  mix-blend-mode: color-dodge;
+  filter: brightness(2) contrast(2) saturate(2) hue-rotate(90deg);
+  will-change: transform, clip-path, opacity;
+}
+
+.bg-glitch-scan {
+  background: 
+    linear-gradient(90deg, 
+      rgba(255,0,255,0.2) 0%, 
+      rgba(0,255,255,0.2) 25%, 
+      rgba(255,255,0,0.2) 50%,
+      rgba(0,255,255,0.2) 75%, 
+      rgba(255,0,255,0.2) 100%
+    ),
+    repeating-linear-gradient(0deg, 
+      rgba(255,255,255,0.05) 0px, 
+      rgba(255,255,255,0.05) 2px, 
+      transparent 2px, 
+      transparent 4px
+    );
+  will-change: transform, opacity;
+}
+
+/* Trigger glitch animation when active */
+.bg-glitch-layer-1.glitch-active {
+  animation: bg-glitch-shift 0.375s steps(15, end) forwards;
+}
+
+.bg-glitch-layer-2.glitch-active {
+  animation: bg-glitch-shift-2 0.375s steps(12, end) forwards;
+}
+
+.bg-glitch-scan.glitch-active {
+  animation: bg-glitch-scan 0.375s linear forwards;
+}
+
+/* World Fair style - visible but tasteful glitch */
+@keyframes bg-glitch-shift {
+  0% { transform: translate(0,0); clip-path: inset(0% 0 0 0); opacity: 0; }
+  5% { opacity: 0.5; }
+  12% { transform: translate(15px,-8px); clip-path: inset(12% 0 70% 0); }
+  20% { transform: translate(-20px,10px); clip-path: inset(45% 0 35% 0); }
+  28% { transform: translate(18px,-5px); clip-path: inset(68% 0 15% 0); }
+  36% { transform: translate(-15px,12px); clip-path: inset(20% 0 60% 0); }
+  44% { transform: translate(22px,-10px); clip-path: inset(52% 0 28% 0); }
+  52% { transform: translate(-18px,8px); clip-path: inset(10% 0 75% 0); }
+  60% { transform: translate(12px,-6px); clip-path: inset(58% 0 22% 0); }
+  68% { transform: translate(-10px,15px); clip-path: inset(32% 0 48% 0); }
+  76% { transform: translate(16px,-4px); clip-path: inset(72% 0 12% 0); }
+  84% { transform: translate(-12px,7px); clip-path: inset(18% 0 65% 0); }
+  92% { transform: translate(8px,-3px); clip-path: inset(42% 0 40% 0); }
+  96% { opacity: 0.4; }
+  100% { transform: translate(0,0); clip-path: inset(0% 0 0 0); opacity: 0; }
+}
+
+@keyframes bg-glitch-shift-2 {
+  0% { transform: translate(0,0) skewX(0deg); clip-path: inset(0% 0 0 0); opacity: 0; }
+  8% { opacity: 0.5; }
+  15% { transform: translate(-18px,10px) skewX(4deg); clip-path: inset(25% 0 55% 0); }
+  23% { transform: translate(22px,-12px) skewX(-5deg); clip-path: inset(50% 0 30% 0); }
+  31% { transform: translate(-16px,8px) skewX(3deg); clip-path: inset(72% 0 12% 0); }
+  39% { transform: translate(20px,-15px) skewX(-4deg); clip-path: inset(18% 0 65% 0); }
+  47% { transform: translate(-22px,12px) skewX(5deg); clip-path: inset(42% 0 38% 0); }
+  55% { transform: translate(18px,-8px) skewX(-3deg); clip-path: inset(62% 0 20% 0); }
+  63% { transform: translate(-14px,14px) skewX(4deg); clip-path: inset(30% 0 52% 0); }
+  71% { transform: translate(16px,-6px) skewX(-2deg); clip-path: inset(8% 0 78% 0); }
+  79% { transform: translate(-12px,10px) skewX(3deg); clip-path: inset(55% 0 28% 0); }
+  87% { transform: translate(10px,-4px) skewX(-2deg); clip-path: inset(35% 0 45% 0); }
+  95% { opacity: 0.4; }
+  100% { transform: translate(0,0) skewX(0deg); clip-path: inset(0% 0 0 0); opacity: 0; }
+}
+
+@keyframes bg-glitch-scan {
+  0% { opacity: 0; transform: translateX(-120%); }
+  5% { opacity: 0.5; }
+  15% { opacity: 0.55; transform: translateX(-80%); }
+  30% { opacity: 0.6; transform: translateX(-40%); }
+  50% { opacity: 0.6; transform: translateX(0%); }
+  70% { opacity: 0.55; transform: translateX(40%); }
+  85% { opacity: 0.5; transform: translateX(80%); }
+  95% { opacity: 0.45; }
+  100% { opacity: 0; transform: translateX(120%); }
+}
+</style>
 

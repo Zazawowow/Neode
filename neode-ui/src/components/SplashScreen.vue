@@ -48,12 +48,14 @@
       <Transition name="fade">
         <div 
           v-if="showWelcome" 
-          class="absolute inset-0 z-[15] flex items-center justify-center font-mono text-4xl md:text-5xl gap-3"
+          class="absolute inset-0 z-[15] flex items-center justify-center font-mono text-4xl md:text-5xl"
           :class="{ 'animate-fade-out': fadeWelcome }"
         >
-          <span class="inline-block text-white text-center" :class="{ 'typing-text': typingWelcome }">
+          <div class="typing-container">
+            <span class="text-white" :class="{ 'typing-text': typingWelcome }">
             Welcome Noderunner
           </span>
+          </div>
         </div>
       </Transition>
 
@@ -120,18 +122,18 @@ function skipIntro() {
   typingLine3.value = false
   typingLine4.value = false
   
-  // Continue with welcome fade out after delay
+  // Continue with welcome fade out after typing (2s) + cursor continues (1.5s) + 3 blinks (1.35s)
   setTimeout(() => {
     fadeWelcome.value = true
     typingWelcome.value = false
-  }, 2200)
+  }, 4850)
   
   // Show logo
   setTimeout(() => {
     showWelcome.value = false
     showLogo.value = true
     showBackground.value = true
-  }, 3200)
+  }, 5850)
   
   // Complete splash
   setTimeout(() => {
@@ -139,7 +141,7 @@ function skipIntro() {
     document.body.classList.add('splash-complete')
     localStorage.setItem('neode_intro_seen', '1')
     emit('complete')
-  }, 6600)
+  }, 9250)
 }
 
 function startAlienIntro() {
@@ -183,18 +185,18 @@ function startAlienIntro() {
     typingWelcome.value = true
   }, 23300)
 
-  // Fade out welcome
+  // Fade out welcome - typing (2s) + cursor continues (1.5s) + 3 blinks (1.35s) = 4.85s
   setTimeout(() => {
     fadeWelcome.value = true
     typingWelcome.value = false
-  }, 25500)
+  }, 28150)
 
   // Show logo (1 second after welcome starts fading)
   setTimeout(() => {
     showWelcome.value = false
     showLogo.value = true
     showBackground.value = true
-  }, 27300)
+  }, 29950)
 
   // Complete splash
   setTimeout(() => {
@@ -202,7 +204,7 @@ function startAlienIntro() {
     document.body.classList.add('splash-complete')
     localStorage.setItem('neode_intro_seen', '1')
     emit('complete')
-  }, 30700)
+  }, 33350)
 }
 
 onMounted(() => {
@@ -237,6 +239,14 @@ onMounted(() => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* Container to keep the typing text centered */
+.typing-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
 }
 </style>
 

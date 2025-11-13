@@ -9,10 +9,11 @@ import { rpcClient } from '../api/rpc-client'
 export const useAppStore = defineStore('app', () => {
   // State
   const data = ref<DataModel | null>(null)
-  const isAuthenticated = ref(false)
+  const isAuthenticated = ref(localStorage.getItem('neode-auth') === 'true')
   const isConnected = ref(false)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
+  let isWsSubscribed = false
 
   // Computed
   const serverInfo = computed(() => data.value?.['server-info'])
@@ -31,6 +32,7 @@ export const useAppStore = defineStore('app', () => {
     try {
       await rpcClient.login(password)
       isAuthenticated.value = true
+      localStorage.setItem('neode-auth', 'true')
       
       // Connect WebSocket after successful login
       await connectWebSocket()
@@ -52,40 +54,57 @@ export const useAppStore = defineStore('app', () => {
       console.error('Logout error:', err)
     } finally {
       isAuthenticated.value = false
+      localStorage.removeItem('neode-auth')
       data.value = null
       wsClient.disconnect()
+      isConnected.value = false
     }
   }
 
   async function connectWebSocket(): Promise<void> {
     try {
+      console.log('[Store] Connecting WebSocket...')
+      isConnected.value = false
+      
       await wsClient.connect()
-      isConnected.value = true
+      console.log('[Store] WebSocket connected, waiting for data...')
 
-      // Subscribe to updates
-      wsClient.subscribe((update: any) => {
-        // Handle mock backend format: {type: 'initial', data: {...}}
-        if (update?.type === 'initial' && update?.data) {
-          console.log('[Mock Backend] Received initial data:', update.data)
-          data.value = update.data
-        }
-        // Handle real backend format: {rev: 0, data: {...}}
-        else if (update?.data && update?.rev !== undefined) {
-          console.log('[Real Backend] Received dump at revision', update.rev)
-          data.value = update.data
-        }
-        // Handle patch updates (both backends)
-        else if (data.value && update?.patch) {
-          try {
-            console.log('[WebSocket] Applying patch at revision', update.rev || 'unknown')
-          data.value = applyDataPatch(data.value, update.patch)
-          } catch (err) {
-            console.error('Failed to apply WebSocket patch:', err)
+      // Subscribe to updates (only once per store instance)
+      if (!isWsSubscribed) {
+        console.log('[Store] Subscribing to WebSocket updates')
+        isWsSubscribed = true
+        wsClient.subscribe((update: any) => {
+          // Handle mock backend format: {type: 'initial', data: {...}}
+          if (update?.type === 'initial' && update?.data) {
+            console.log('[Store] Received initial data from mock backend')
+            data.value = update.data
+            isConnected.value = true
           }
+          // Handle real backend format: {rev: 0, data: {...}}
+          else if (update?.data && update?.rev !== undefined) {
+            console.log('[Store] Received dump from real backend at revision', update.rev)
+            data.value = update.data
+      isConnected.value = true
+          }
+          // Handle patch updates (both backends)
+          else if (data.value && update?.patch) {
+          try {
+              console.log('[Store] Applying patch at revision', update.rev || 'unknown')
+          data.value = applyDataPatch(data.value, update.patch)
+              // Mark as connected once we receive any valid patch
+              if (!isConnected.value) {
+                isConnected.value = true
+              }
+          } catch (err) {
+              console.error('[Store] Failed to apply WebSocket patch:', err)
+            }
+          }
+        })
+      } else {
+        console.log('[Store] Already subscribed, reusing existing subscription')
         }
-      })
     } catch (err) {
-      console.error('WebSocket connection failed:', err)
+      console.error('[Store] WebSocket connection failed:', err)
       isConnected.value = false
       // Don't throw - allow app to work without real-time updates
     }
@@ -122,6 +141,52 @@ export const useAppStore = defineStore('app', () => {
         },
         theme: 'dark',
       },
+    }
+  }
+  
+  // Check session validity on app load
+  async function checkSession(): Promise<boolean> {
+    console.log('[Store] Checking session...')
+    
+    if (!localStorage.getItem('neode-auth')) {
+      console.log('[Store] No auth token found')
+      return false
+    }
+    
+    try {
+      // Try to make an authenticated request to verify session
+      console.log('[Store] Validating session with backend...')
+      await rpcClient.call({ method: 'server.echo', params: { message: 'ping' } })
+      isAuthenticated.value = true
+      console.log('[Store] Session valid!')
+      
+      // Reconnect WebSocket
+      await connectWebSocket()
+      
+      // Wait for WebSocket to receive initial data
+      const maxWait = 3000 // 3 seconds max
+      const checkInterval = 100 // Check every 100ms
+      let waited = 0
+      
+      console.log('[Store] Waiting for WebSocket data...')
+      while (!isConnected.value && waited < maxWait) {
+        await new Promise(resolve => setTimeout(resolve, checkInterval))
+        waited += checkInterval
+      }
+      
+      if (isConnected.value) {
+        console.log('[Store] WebSocket ready with data!')
+      } else {
+        console.warn('[Store] WebSocket timeout - continuing anyway')
+      }
+      
+      return true
+    } catch (err) {
+      console.error('[Store] Session check failed:', err)
+      // Session invalid, clear auth
+      localStorage.removeItem('neode-auth')
+      isAuthenticated.value = false
+      return false
     }
   }
 
@@ -192,6 +257,7 @@ export const useAppStore = defineStore('app', () => {
     // Actions
     login,
     logout,
+    checkSession,
     connectWebSocket,
     installPackage,
     uninstallPackage,
