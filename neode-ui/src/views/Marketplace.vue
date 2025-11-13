@@ -2,8 +2,8 @@
   <div>
     <div class="mb-8 flex justify-between items-center">
       <div>
-        <h1 class="text-3xl font-bold text-white mb-2">Marketplace</h1>
-        <p class="text-white/70">Discover and install new applications</p>
+      <h1 class="text-3xl font-bold text-white mb-2">Marketplace</h1>
+      <p class="text-white/70">Discover and install new applications</p>
       </div>
       <button 
         @click="showSideloadModal = true"

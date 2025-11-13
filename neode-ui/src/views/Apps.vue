@@ -60,6 +60,13 @@
         <!-- Quick Actions -->
         <div class="mt-4 flex gap-2">
           <button
+            v-if="canLaunch(pkg)"
+            @click.stop="launchApp(id as string, pkg)"
+            class="flex-1 px-4 py-2 gradient-button rounded-lg text-sm font-medium"
+          >
+            Launch
+          </button>
+          <button
             v-if="pkg.state === 'stopped'"
             @click.stop="startApp(id as string)"
             class="flex-1 px-4 py-2 bg-green-500/20 border border-green-500/40 rounded-lg text-green-200 text-sm font-medium hover:bg-green-500/30 transition-colors"
@@ -72,12 +79,6 @@
             class="flex-1 px-4 py-2 bg-red-500/20 border border-red-500/40 rounded-lg text-red-200 text-sm font-medium hover:bg-red-500/30 transition-colors"
           >
             Stop
-          </button>
-          <button
-            @click.stop="restartApp(id as string)"
-            class="flex-1 px-4 py-2 glass-button rounded-lg text-sm font-medium hover:bg-black/70 transition-colors"
-          >
-            Restart
           </button>
         </div>
       </div>
@@ -95,6 +96,23 @@ const router = useRouter()
 const store = useAppStore()
 
 const packages = computed(() => store.packages)
+
+function canLaunch(pkg: any): boolean {
+  const hasUI = pkg.manifest.interfaces?.main?.ui
+  const isRunning = pkg.state === 'running'
+  return hasUI && isRunning
+}
+
+function launchApp(id: string, pkg: any) {
+  // Special handling for ATOB - opens the web app directly
+  if (id === 'atob') {
+    window.open('https://app.atobitcoin.io', '_blank', 'noopener,noreferrer')
+    return
+  }
+  
+  // For other apps, navigate to app details which has launch functionality
+  router.push(`/dashboard/apps/${id}`)
+}
 
 function getStatusClass(state: PackageState): string {
   switch (state) {

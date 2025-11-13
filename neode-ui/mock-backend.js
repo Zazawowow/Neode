@@ -59,11 +59,74 @@ const mockData = {
       title: 'Bitcoin Core',
       version: '24.0.0',
       status: 'running',
+      state: 'installed',
+      manifest: {
+        id: 'bitcoin',
+        title: 'Bitcoin Core',
+        version: '24.0.0',
+        description: {
+          short: 'A full Bitcoin node',
+          long: 'Store, validate, and relay blocks and transactions on the Bitcoin network.',
+        },
+        icon: '/assets/img/bitcoin.svg',
+      },
     },
     'lightning': {
       title: 'Lightning Network',
       version: '0.15.0',
       status: 'stopped',
+      state: 'installed',
+      manifest: {
+        id: 'lightning',
+        title: 'Core Lightning',
+        version: '0.15.0',
+        description: {
+          short: 'Lightning Network implementation',
+          long: 'Fast, low-cost Bitcoin payments using Lightning Network.',
+        },
+        icon: '/assets/img/c-lightning.png',
+      },
+    },
+    'atob': {
+      title: 'A to B Bitcoin',
+      version: '0.1.0',
+      status: 'running',
+      state: 'installed',
+      manifest: {
+        id: 'atob',
+        title: 'A to B Bitcoin',
+        version: '0.1.0',
+        description: {
+          short: 'A to B Bitcoin tools and services',
+          long: 'A to B Bitcoin provides tools and services for Bitcoin transactions. This package provides access to the A to B platform through your Neode server.',
+        },
+        icon: '/assets/img/atob.png',
+        'wrapper-repo': 'https://git.nostrdev.com/a2b/atob',
+        'upstream-repo': 'https://git.nostrdev.com/a2b/atob',
+        interfaces: {
+          main: {
+            name: 'Web Interface',
+            description: 'A to B Bitcoin web interface',
+            ui: true,
+            'tor-config': {
+              'port-mapping': {
+                80: '80',
+              },
+            },
+            'lan-config': {
+              443: {
+                ssl: true,
+                internal: 80,
+              },
+            },
+          },
+        },
+      },
+      'static-files': {
+        license: '/public/package-data/atob/0.1.0/LICENSE.md',
+        icon: '/assets/img/atob.png',
+        instructions: '/public/package-data/atob/0.1.0/INSTRUCTIONS.md',
+      },
     },
   },
   ui: {
@@ -163,7 +226,7 @@ app.post('/rpc/v1', (req, res) => {
             title: 'Bitcoin Core',
             description: 'A full Bitcoin node. Store, validate, and relay blocks and transactions on the Bitcoin network.',
             version: '25.0.0',
-            icon: '/assets/img/bitcoin.png',
+            icon: '/assets/img/bitcoin.svg',
             author: 'Start9 Labs',
             license: 'MIT',
           },
@@ -192,6 +255,15 @@ app.post('/rpc/v1', (req, res) => {
             version: '1.11.7',
             icon: '/assets/img/btcpay.png',
             author: 'BTCPay Server Foundation',
+            license: 'MIT',
+          },
+          {
+            id: 'atob',
+            title: 'ATOB',
+            description: 'A containerized application for the Nostr ecosystem.',
+            version: '0.1.0',
+            icon: '/assets/img/atob.png',
+            author: 'Nostr Devs',
             license: 'MIT',
           },
         ]

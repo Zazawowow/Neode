@@ -16,11 +16,45 @@
       <h1 class="text-3xl font-bold text-white mb-2">{{ pkg.manifest.title }}</h1>
       <p class="text-white/70 mb-4">{{ pkg.manifest.description.long }}</p>
       <span
-        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+        class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mb-6"
         :class="getStatusClass(pkg.state)"
       >
         {{ pkg.state }}
       </span>
+
+      <!-- Launch Button -->
+      <div v-if="canLaunch" class="mt-6">
+        <button
+          @click="launchApp"
+          class="gradient-button px-8 py-3 rounded-lg text-lg font-semibold"
+        >
+          Launch {{ pkg.manifest.title }}
+        </button>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="mt-6 flex gap-3 justify-center">
+        <button
+          v-if="pkg.state === 'stopped'"
+          @click="startApp"
+          class="px-6 py-2 bg-green-500/20 border border-green-500/40 rounded-lg text-green-200 font-medium hover:bg-green-500/30 transition-colors"
+        >
+          Start
+        </button>
+        <button
+          v-if="pkg.state === 'running'"
+          @click="stopApp"
+          class="px-6 py-2 bg-red-500/20 border border-red-500/40 rounded-lg text-red-200 font-medium hover:bg-red-500/30 transition-colors"
+        >
+          Stop
+        </button>
+        <button
+          @click="restartApp"
+          class="px-6 py-2 glass-button rounded-lg font-medium hover:bg-black/70 transition-colors"
+        >
+          Restart
+        </button>
+      </div>
     </div>
 
     <div v-else class="glass-card p-12 text-center">
@@ -43,8 +77,60 @@ const store = useAppStore()
 const appId = computed(() => route.params.id as string)
 const pkg = computed(() => store.packages[appId.value])
 
+// Check if app has a UI interface and is running
+const canLaunch = computed(() => {
+  if (!pkg.value) return false
+  const hasUI = pkg.value.manifest.interfaces?.main?.ui
+  const isRunning = pkg.value.state === 'running'
+  return hasUI && isRunning
+})
+
 function goBack() {
   router.back()
+}
+
+function launchApp() {
+  if (!pkg.value) return
+  
+  // Special handling for ATOB - opens the web app directly
+  if (appId.value === 'atob') {
+    window.open('https://app.atobitcoin.io', '_blank', 'noopener,noreferrer')
+    return
+  }
+  
+  // For other apps, construct the launch URL
+  // In a real deployment, this would use the Tor or LAN address from interfaces
+  const torAddress = pkg.value.manifest.interfaces?.main?.['tor-config']
+  const lanConfig = pkg.value.manifest.interfaces?.main?.['lan-config']
+  
+  if (torAddress || lanConfig) {
+    // In development, just alert - in production would open the actual interface
+    alert(`Would launch ${pkg.value.manifest.title} interface`)
+  }
+}
+
+async function startApp() {
+  try {
+    await store.startPackage(appId.value)
+  } catch (err) {
+    console.error('Failed to start app:', err)
+  }
+}
+
+async function stopApp() {
+  try {
+    await store.stopPackage(appId.value)
+  } catch (err) {
+    console.error('Failed to stop app:', err)
+  }
+}
+
+async function restartApp() {
+  try {
+    await store.restartPackage(appId.value)
+  } catch (err) {
+    console.error('Failed to restart app:', err)
+  }
 }
 
 function getStatusClass(state: PackageState): string {

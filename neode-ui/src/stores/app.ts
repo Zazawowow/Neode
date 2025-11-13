@@ -66,7 +66,7 @@ export const useAppStore = defineStore('app', () => {
       wsClient.subscribe((update) => {
         if (data.value && update?.patch) {
           try {
-            data.value = applyDataPatch(data.value, update.patch)
+          data.value = applyDataPatch(data.value, update.patch)
           } catch (err) {
             console.error('Failed to apply WebSocket patch:', err)
           }

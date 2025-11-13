@@ -6,10 +6,13 @@
   "scripts": {
     "dev": "vite",
     "dev:mock": "concurrently \"node mock-backend.js\" \"vite\"",
+    "dev:real": "echo 'Start backend: cd ../core && cargo run --release' && vite",
     "backend:mock": "node mock-backend.js",
+    "backend:real": "cd ../core && cargo run --release",
     "build": "vue-tsc -b && vite build",
     "build:docker": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
     "fast-json-patch": "^3.1.1",
