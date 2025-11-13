@@ -33,9 +33,9 @@ server {
     # Max upload size
     client_max_body_size 100M;
     
-    # Proxy to Caddy on port 9443 (HTTPS)
+    # Proxy to neode-web container on port 9991 (HTTP)
     location / {
-        proxy_pass https://localhost:9443;
+        proxy_pass http://localhost:9991;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -43,9 +43,6 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
-        
-        # SSL verification for backend
-        proxy_ssl_verify off;
         
         # Timeouts
         proxy_connect_timeout 60s;
@@ -73,12 +70,11 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/neode.l484.com/privkey.pem;
     
     location / {
-        proxy_pass https://localhost:8102;
+        proxy_pass http://localhost:8102;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_ssl_verify off;
     }
 }
 EOF

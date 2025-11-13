@@ -72,8 +72,8 @@ services:
       dockerfile: Dockerfile.portainer
     container_name: neode-web
     hostname: neode-web
-    expose:
-      - "80"
+    ports:
+      - "9991:80"     # Expose for external nginx proxy
     restart: unless-stopped
     depends_on:
       neode-backend:
@@ -90,108 +90,8 @@ services:
       retries: 3
       start_period: 120s
 
-  # Caddy Reverse Proxy (HTTPS + WebSocket)
-  caddy:
-    image: caddy:2-alpine
-    container_name: neode-caddy
-    hostname: neode-caddy
-    command:
-      - sh
-      - -c
-      - |
-        # Create Caddyfile inline
-        cat > /etc/caddy/Caddyfile <<'EOF'
-        # Main Neode application
-        {$$DOMAIN:neode.l484.com} {
-          log {
-            output stdout
-            format json
-            level INFO
-          }
-          
-          @websocket {
-            header Connection *Upgrade*
-            header Upgrade websocket
-          }
-          
-          handle @websocket {
-            reverse_proxy neode-web:80 {
-              header_up Host {host}
-              header_up X-Real-IP {remote_host}
-              header_up X-Forwarded-For {remote_host}
-              header_up X-Forwarded-Proto {scheme}
-            }
-          }
-          
-          handle {
-            reverse_proxy neode-web:80 {
-              header_up Host {host}
-              header_up X-Real-IP {remote_host}
-              header_up X-Forwarded-For {remote_host}
-              header_up X-Forwarded-Proto {scheme}
-            }
-          }
-        }
-        
-        # ATOB proxy
-        {$$DOMAIN:neode.l484.com}:8102 {
-          handle {
-            reverse_proxy atob-test:80 {
-              header_up Host {host}
-              header_up X-Real-IP {remote_host}
-            }
-          }
-          handle_errors {
-            respond "ATOB not running. Install from Marketplace." 503
-          }
-        }
-        
-        # Legacy port 8100
-        {$$DOMAIN:neode.l484.com}:8100 {
-          @websocket {
-            header Connection *Upgrade*
-            header Upgrade websocket
-          }
-          handle @websocket {
-            reverse_proxy neode-web:80
-          }
-          handle {
-            reverse_proxy neode-web:80
-          }
-        }
-        EOF
-        
-        echo "Starting Caddy..."
-        caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
-    ports:
-      - "9080:80"     # HTTP (internal, maps to 9080 externally)
-      - "9443:443"    # HTTPS (internal, maps to 9443 externally)
-      - "8100:8100"   # Alt HTTPS port (for legacy compatibility)
-      - "8102:8102"   # ATOB proxy
-    restart: unless-stopped
-    depends_on:
-      - neode-web
-    networks:
-      - neode-network
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
-    environment:
-      - DOMAIN=${DOMAIN:-neode.l484.com}
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
-
 networks:
   neode-network:
     driver: bridge
 
-volumes:
-  caddy_data:
-    driver: local
-  caddy_config:
-    driver: local
 

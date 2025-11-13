@@ -22,10 +22,9 @@ In Portainer:
 5. Click **"Update"**
 
 The stack will now use:
-- Port **9080** for HTTP (instead of 80)
-- Port **9443** for HTTPS (instead of 443)
-- Port **8100** for legacy access
+- Port **9991** for Neode UI (HTTP)
 - Port **8102** for ATOB
+- Caddy is internal only (no port conflicts)
 
 ### 2. Update External Nginx (One Command)
 
@@ -39,7 +38,7 @@ cd /Users/tx1138/Code/Neode
 
 This script:
 - ✅ Backs up your current nginx config
-- ✅ Creates new config that proxies to Caddy on port 9443
+- ✅ Creates new config that proxies to port 9991
 - ✅ Tests the config
 - ✅ Reloads nginx automatically
 
@@ -69,21 +68,19 @@ Internet (HTTPS/WSS)
     ↓
 External Nginx (Ports 80/443)
     ↓
-Caddy in Docker (Ports 9080/9443)
-    ↓
-Neode Web Container (Port 80)
-    ↓
-Mock Backend (Port 5959)
+Neode Web Container (Port 9991)
+    ├── Internal Nginx (handles /ws proxy)
+    └── Mock Backend (Port 5959)
+        └── Docker Socket (ATOB on port 8102)
 ```
 
 ## Alternative: Direct Access (No Nginx Update)
 
-If you can't update nginx right now, you can access Neode directly via alternative ports:
+If you can't update nginx right now, you can access Neode directly:
 
-1. **Open**: `https://neode.l484.com:9443`
-2. **Or**: `https://neode.l484.com:8100`
+**Open**: `http://neode.l484.com:9991`
 
-⚠️ **Note**: SSL certificate might show a warning since Caddy is using a self-signed cert. To fix this, you need to configure Let's Encrypt in the Caddyfile.
+⚠️ **Note**: This is HTTP only, no SSL. For production, you should use the nginx proxy.
 
 ## Troubleshooting
 
@@ -121,8 +118,8 @@ docker logs neode-caddy
 # Check nginx error log
 sudo tail -f /var/log/nginx/error.log
 
-# Test direct connection to Caddy
-curl -k https://localhost:9443
+# Test direct connection to Neode
+curl http://localhost:9991
 ```
 
 ## Rollback
@@ -145,7 +142,7 @@ If you prefer to manually update nginx, add this to your config:
 ```nginx
 # Inside your server block for neode.l484.com
 location / {
-    proxy_pass https://localhost:9443;
+    proxy_pass http://localhost:9991;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
@@ -169,7 +166,7 @@ sudo nginx -s reload
 
 ## Summary
 
-1. ✅ Deploy Portainer stack (uses ports 9080/9443)
+1. ✅ Deploy Portainer stack (uses port 9991)
 2. ✅ Run `./UPDATE_NGINX_PROXY.sh` on your server
 3. ✅ Access `https://neode.l484.com` (standard ports!)
 4. ✅ Everything works including WebSocket
