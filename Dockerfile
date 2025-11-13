@@ -15,11 +15,14 @@ COPY neode-ui/ ./
 
 # Build the Vue application with Docker flag
 ENV DOCKER_BUILD=true
-RUN npm run build && \
-    echo "Build complete. Listing dist contents:" && \
+RUN echo "Starting Vite build..." && \
+    npm run build || (echo "ERROR: npm run build failed!" && exit 1) && \
+    echo "Build complete. Checking dist directory..." && \
+    ls -la . && \
+    echo "Listing dist contents:" && \
     ls -la dist/ && \
     echo "Checking index.html exists:" && \
-    test -f dist/index.html && echo "✓ index.html found" || echo "✗ index.html NOT found"
+    test -f dist/index.html && echo "✓ index.html found" || (echo "✗ index.html NOT found" && exit 1)
 
 # Production stage
 FROM nginx:alpine
