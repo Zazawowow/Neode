@@ -5,6 +5,7 @@ services:
   neode-backend:
     image: node:22-alpine
     container_name: neode-backend
+    hostname: neode-backend
     working_dir: /app
     command:
       - sh
@@ -48,6 +49,7 @@ services:
       context: https://github.com/Zazawowow/Neode.git
       dockerfile: Dockerfile.portainer
     container_name: neode-web
+    hostname: neode-web
     ports:
       - "8100:80"
     restart: unless-stopped

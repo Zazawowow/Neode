@@ -160,6 +160,21 @@ class RPCClient {
       params: { id },
     })
   }
+
+  async getMarketplace(url: string): Promise<any> {
+    return this.call({
+      method: 'marketplace.get',
+      params: { url },
+    })
+  }
+
+  async sideloadPackage(manifest: any, icon: string): Promise<string> {
+    return this.call({
+      method: 'package.sideload',
+      params: { manifest, icon },
+      timeout: 120000, // 2 minutes for upload
+    })
+  }
 }
 
 export const rpcClient = new RPCClient()

@@ -147,6 +147,15 @@ export const useAppStore = defineStore('app', () => {
     return rpcClient.getMetrics()
   }
 
+  // Marketplace actions
+  async function getMarketplace(url: string): Promise<any> {
+    return rpcClient.getMarketplace(url)
+  }
+
+  async function sideloadPackage(manifest: any, icon: string): Promise<string> {
+    return rpcClient.sideloadPackage(manifest, icon)
+  }
+
   return {
     // State
     data,
@@ -177,6 +186,8 @@ export const useAppStore = defineStore('app', () => {
     restartServer,
     shutdownServer,
     getMetrics,
+    getMarketplace,
+    sideloadPackage,
   }
 })
 
