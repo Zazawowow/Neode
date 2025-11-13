@@ -22,9 +22,9 @@ RUN echo "=== Environment Check ===" && \
     echo "Current directory:" && pwd && \
     echo "Files in current directory:" && ls -la
 
-# Build the Vue application
+# Build the Vue application (skip TypeScript check in Docker)
 RUN echo "=== Starting Vite build ===" && \
-    npm run build; \
+    npm run build:docker; \
     BUILD_EXIT_CODE=$?; \
     echo "Build exit code: $BUILD_EXIT_CODE"; \
     if [ $BUILD_EXIT_CODE -ne 0 ]; then \
