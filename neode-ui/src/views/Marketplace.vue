@@ -1,301 +1,198 @@
 <template>
-  <div>
-    <div class="mb-8 flex justify-between items-center">
-      <div>
-      <h1 class="text-3xl font-bold text-white mb-2">Marketplace</h1>
-      <p class="text-white/70">Discover and install new applications</p>
-      </div>
-      <button 
-        @click="showSideloadModal = true"
-        class="glass-button px-6 py-3 rounded-lg flex items-center gap-2"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-        </svg>
-        Sideload Package
-      </button>
+  <div class="marketplace-container">
+    <div class="mb-8">
+      <h1 class="text-4xl font-bold text-white mb-2">Marketplace</h1>
+      <p class="text-white/70">Discover and install apps for your Neode server</p>
     </div>
 
-    <!-- Marketplace Tabs -->
-    <div class="glass-card p-2 mb-6 flex gap-2">
-      <button
-        v-for="marketplace in marketplaces"
-        :key="marketplace.url"
-        @click="selectedMarketplace = marketplace.url"
-        :class="[
-          'px-6 py-3 rounded-lg transition-all',
-          selectedMarketplace === marketplace.url
-            ? 'bg-white/20 text-white'
-            : 'text-white/70 hover:text-white hover:bg-white/10'
-        ]"
-      >
-        {{ marketplace.name }}
-      </button>
-    </div>
-
-    <!-- Loading State -->
-    <div v-if="loading" class="glass-card p-12 text-center">
-      <div class="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-      <p class="text-white/70">Loading marketplace...</p>
-    </div>
-
-    <!-- Error State -->
-    <div v-else-if="error" class="glass-card p-12 text-center">
-      <svg class="w-16 h-16 mx-auto text-red-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-      <h3 class="text-xl font-semibold text-white mb-2">Error Loading Marketplace</h3>
-      <p class="text-white/70 mb-4">{{ error }}</p>
-      <button @click="loadMarketplace" class="glass-button px-6 py-3 rounded-lg">
-        Try Again
-      </button>
-    </div>
-
-    <!-- Apps Grid -->
-    <div v-else-if="apps.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Available Apps -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div
-        v-for="app in apps"
+        v-for="app in availableApps"
         :key="app.id"
         class="glass-card p-6 hover:bg-white/10 transition-all cursor-pointer"
-        @click="selectedApp = app"
+        @click="viewApp(app)"
       >
-        <img
-          v-if="app.icon"
-          :src="app.icon"
-          :alt="app.title"
-          class="w-16 h-16 rounded-xl mb-4 object-cover"
-        />
-        <h3 class="text-xl font-semibold text-white mb-2">{{ app.title }}</h3>
-        <p class="text-white/70 text-sm mb-4 line-clamp-2">{{ app.description }}</p>
-        <div class="flex items-center justify-between">
-          <span class="text-white/60 text-sm">v{{ app.version }}</span>
-          <button
-            @click.stop="installApp(app)"
-            class="gradient-button px-4 py-2 rounded-lg text-sm"
-          >
-            Install
-          </button>
+        <div class="flex items-start gap-4 mb-4">
+          <img
+            :src="app.icon"
+            :alt="app.title"
+            class="w-16 h-16 rounded-lg object-cover"
+            @error="handleImageError"
+          />
+          <div class="flex-1">
+            <h3 class="text-xl font-semibold text-white mb-1">{{ app.title }}</h3>
+            <p class="text-sm text-white/60">v{{ app.version }}</p>
+          </div>
         </div>
+        
+        <p class="text-white/80 text-sm mb-4">{{ app.description.short }}</p>
+        
+        <button
+          v-if="isInstalled(app.id)"
+          disabled
+          class="w-full px-4 py-2 bg-white/20 rounded-lg text-white/60 text-sm font-medium cursor-not-allowed"
+        >
+          Already Installed
+        </button>
+        <button
+          v-else
+          @click.stop="installApp(app)"
+          :disabled="installing === app.id"
+          class="w-full px-4 py-2 gradient-button rounded-lg text-sm font-medium disabled:opacity-50"
+        >
+          {{ installing === app.id ? 'Installing...' : 'Install' }}
+        </button>
       </div>
     </div>
 
-    <!-- Empty State -->
-    <div v-else class="glass-card p-12 text-center">
-      <svg class="w-16 h-16 mx-auto text-white/40 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-      </svg>
-      <h3 class="text-xl font-semibold text-white mb-2">No Apps Available</h3>
-      <p class="text-white/70">Check back later or try a different marketplace</p>
-    </div>
-
-    <!-- Sideload Modal -->
-    <Transition name="fade">
-      <div
-        v-if="showSideloadModal"
-        class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-        @click.self="showSideloadModal = false"
-      >
-        <div class="glass-card p-8 max-w-lg w-full">
-          <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-white">Sideload Package</h2>
-            <button
-              @click="showSideloadModal = false"
-              class="text-white/70 hover:text-white transition"
-            >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <div class="mb-6">
-            <label class="block text-white mb-2">Upload .s9pk file</label>
-            <input
-              type="file"
-              accept=".s9pk"
-              @change="handleFileSelect"
-              class="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/20 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-white/10 file:text-white hover:file:bg-white/20 transition"
-            />
-          </div>
-
-          <div v-if="sideloadError" class="mb-4 p-4 rounded-lg bg-red-500/20 border border-red-500/50">
-            <p class="text-red-200 text-sm">{{ sideloadError }}</p>
-          </div>
-
-          <div v-if="sideloading" class="text-center py-4">
-            <div class="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
-            <p class="text-white/70">Uploading package...</p>
-          </div>
-        </div>
-      </div>
-    </Transition>
-
-    <!-- App Detail Modal -->
-    <Transition name="fade">
-      <div
-        v-if="selectedApp"
-        class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-        @click.self="selectedApp = null"
-      >
-        <div class="glass-card p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-          <div class="flex justify-between items-start mb-6">
-            <div class="flex items-start gap-4">
-              <img
-                v-if="selectedApp.icon"
-                :src="selectedApp.icon"
-                :alt="selectedApp.title"
-                class="w-20 h-20 rounded-xl object-cover"
-              />
-              <div>
-                <h2 class="text-2xl font-bold text-white mb-1">{{ selectedApp.title }}</h2>
-                <p class="text-white/60">v{{ selectedApp.version }}</p>
-              </div>
-            </div>
-            <button
-              @click="selectedApp = null"
-              class="text-white/70 hover:text-white transition"
-            >
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <p class="text-white/80 mb-6">{{ selectedApp.description }}</p>
-
+    <!-- Sideload Section -->
+    <div class="mt-12">
+      <div class="glass-card p-8">
+        <h2 class="text-2xl font-bold text-white mb-4">Sideload Package</h2>
+        <p class="text-white/70 mb-6">Install a package from an s9pk file URL</p>
+        
+        <div class="flex gap-4">
+          <input
+            v-model="sideloadUrl"
+            type="text"
+            placeholder="https://example.com/package.s9pk or /packages/package.s9pk"
+            class="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-white/40"
+          />
           <button
-            @click="installApp(selectedApp)"
-            class="gradient-button w-full py-3 rounded-lg"
+            @click="sideloadPackage"
+            :disabled="!sideloadUrl || sideloading"
+            class="px-8 py-3 gradient-button rounded-lg font-medium disabled:opacity-50"
           >
-            Install {{ selectedApp.title }}
+            {{ sideloading ? 'Installing...' : 'Install' }}
           </button>
         </div>
+        
+        <p v-if="sideloadError" class="mt-3 text-red-400 text-sm">{{ sideloadError }}</p>
+        <p v-if="sideloadSuccess" class="mt-3 text-green-400 text-sm">{{ sideloadSuccess }}</p>
       </div>
-    </Transition>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { useAppStore } from '../stores/app'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAppStore } from '@/stores/app'
+import { rpcClient } from '@/api/rpc-client'
 
+const router = useRouter()
 const store = useAppStore()
 
-// Default StartOS marketplace
-const DEFAULT_MARKETPLACE = 'https://registry.start9.com'
+const installing = ref<string | null>(null)
+const sideloadUrl = ref('')
+const sideloading = ref(false)
+const sideloadError = ref('')
+const sideloadSuccess = ref('')
 
-const marketplaces = ref([
-  { name: 'Start9 Registry', url: DEFAULT_MARKETPLACE },
-  { name: 'Community Registry', url: 'https://community-registry.start9.com' },
+// Available apps in marketplace
+const availableApps = ref([
+  {
+    id: 'atob',
+    title: 'A to B Bitcoin',
+    version: '0.1.0',
+    icon: '/assets/img/atob.png',
+    description: {
+      short: 'Bitcoin tools and services for seamless transactions',
+      long: 'A to B Bitcoin provides tools and services for Bitcoin transactions. Access the A to B platform through your Neode server with full privacy and control.'
+    },
+    s9pkUrl: '/packages/atob.s9pk'
+  }
 ])
 
-const selectedMarketplace = ref(DEFAULT_MARKETPLACE)
-const loading = ref(false)
-const error = ref<string | null>(null)
-const apps = ref<any[]>([])
-const selectedApp = ref<any | null>(null)
-const showSideloadModal = ref(false)
-const sideloading = ref(false)
-const sideloadError = ref<string | null>(null)
+const installedPackages = computed(() => {
+  return store.data?.['package-data'] || {}
+})
 
-async function loadMarketplace() {
-  loading.value = true
-  error.value = null
-  apps.value = []
+function isInstalled(appId: string): boolean {
+  return appId in installedPackages.value
+}
 
-  try {
-    // Check if authenticated
-    if (!store.isAuthenticated) {
-      error.value = 'Please login first to access the marketplace'
-      loading.value = false
-      return
-    }
-
-    const data = await store.getMarketplace(selectedMarketplace.value)
-    
-    // Parse marketplace data - format may vary
-    if (Array.isArray(data)) {
-      apps.value = data
-    } else if (data && typeof data === 'object') {
-      // Handle different marketplace response formats
-      apps.value = data.packages || data.apps || []
-    }
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Failed to load marketplace'
-    
-    // Check for specific error types
-    if (errorMessage.includes('Method not found')) {
-      error.value = 'Backend marketplace API not available. Ensure Neode backend is running and up to date.'
-    } else if (errorMessage.includes('authenticated') || errorMessage.includes('401')) {
-      error.value = 'Authentication required. Please login first.'
-    } else if (errorMessage.includes('Network') || errorMessage.includes('fetch')) {
-      error.value = 'Cannot connect to backend. Ensure Neode backend is running on port 5959.'
-    } else {
-      error.value = errorMessage
-    }
-    
-    console.error('Marketplace error:', err)
-  } finally {
-    loading.value = false
-  }
+function viewApp(app: any) {
+  // Could navigate to app details page
+  console.log('View app:', app)
 }
 
 async function installApp(app: any) {
+  if (installing.value || isInstalled(app.id)) return
+
+  installing.value = app.id
+  
   try {
-    const jobId = await store.installPackage(
-      app.id,
-      selectedMarketplace.value,
-      app.version
-    )
-    console.log('Installation started:', jobId)
-    selectedApp.value = null
-    // TODO: Show installation progress
+    console.log(`Installing ${app.title} from ${app.s9pkUrl}...`)
+    
+    await rpcClient.call({
+      method: 'package.install',
+      params: {
+        id: app.id,
+        url: app.s9pkUrl,
+        version: app.version
+      }
+    })
+    
+    console.log(`${app.title} installed successfully!`)
+    
+    // Navigate to apps page after short delay
+    setTimeout(() => {
+      router.push('/dashboard/apps')
+    }, 1500)
+    
   } catch (err) {
-    console.error('Installation error:', err)
-    alert(`Failed to install ${app.title}: ${err instanceof Error ? err.message : 'Unknown error'}`)
+    console.error('Installation failed:', err)
+    alert(`Failed to install ${app.title}: ${err}`)
+  } finally {
+    installing.value = null
   }
 }
 
-async function handleFileSelect(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  
-  if (!file) return
-  
-  sideloading.value = true
-  sideloadError.value = null
+async function sideloadPackage() {
+  if (!sideloadUrl.value || sideloading.value) return
 
+  sideloading.value = true
+  sideloadError.value = ''
+  sideloadSuccess.value = ''
+  
   try {
-    // Read file and convert to base64 for upload
-    const arrayBuffer = await file.arrayBuffer()
-    const blob = new Blob([arrayBuffer])
+    console.log(`Sideloading package from ${sideloadUrl.value}...`)
     
-    // TODO: Parse s9pk to extract manifest and icon
-    // For now, this is a placeholder - actual implementation needs s9pk parsing
-    alert('S9pk sideloading requires additional parsing. Use backend CLI: startos package.sideload')
+    await rpcClient.call({
+      method: 'package.sideload',
+      params: {
+        url: sideloadUrl.value
+      }
+    })
     
-  } catch (err) {
-    sideloadError.value = err instanceof Error ? err.message : 'Upload failed'
+    sideloadSuccess.value = 'Package installed successfully!'
+    sideloadUrl.value = ''
+    
+    // Navigate to apps page after short delay
+    setTimeout(() => {
+      router.push('/dashboard/apps')
+    }, 2000)
+    
+  } catch (err: any) {
+    console.error('Sideload failed:', err)
+    sideloadError.value = err.message || 'Failed to install package'
   } finally {
     sideloading.value = false
   }
 }
 
-watch(selectedMarketplace, () => {
-  loadMarketplace()
-})
-
-onMounted(() => {
-  loadMarketplace()
-})
+function handleImageError(event: Event) {
+  const img = event.target as HTMLImageElement
+  img.src = '/assets/img/neode-logo.png'
+}
 </script>
 
 <style scoped>
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.marketplace-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 </style>
-

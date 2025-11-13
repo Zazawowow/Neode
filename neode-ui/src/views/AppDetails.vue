@@ -54,6 +54,12 @@
         >
           Restart
         </button>
+        <button
+          @click="uninstallApp"
+          class="px-6 py-2 bg-red-600/20 border border-red-600/40 rounded-lg text-red-300 font-medium hover:bg-red-600/30 transition-colors"
+        >
+          Uninstall
+        </button>
       </div>
     </div>
 
@@ -92,9 +98,12 @@ function goBack() {
 function launchApp() {
   if (!pkg.value) return
   
-  // Special handling for ATOB - opens the web app directly
+  // Special handling for ATOB - opens local container or external app
   if (appId.value === 'atob') {
-    window.open('https://app.atobitcoin.io', '_blank', 'noopener,noreferrer')
+    // In development with Docker, use local container (from s9pk)
+    const isDev = import.meta.env.DEV
+    const atobUrl = isDev ? 'http://localhost:8102' : 'https://app.atobitcoin.io'
+    window.open(atobUrl, '_blank', 'noopener,noreferrer')
     return
   }
   
@@ -130,6 +139,21 @@ async function restartApp() {
     await store.restartPackage(appId.value)
   } catch (err) {
     console.error('Failed to restart app:', err)
+  }
+}
+
+async function uninstallApp() {
+  if (!confirm(`Are you sure you want to uninstall ${pkg.value?.manifest.title}?`)) {
+    return
+  }
+  
+  try {
+    await store.uninstallPackage(appId.value)
+    // Navigate back to apps after uninstall
+    router.push('/dashboard/apps')
+  } catch (err) {
+    console.error('Failed to uninstall app:', err)
+    alert('Failed to uninstall app')
   }
 }
 

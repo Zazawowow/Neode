@@ -10,6 +10,15 @@ import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import { WebSocketServer } from 'ws'
 import http from 'http'
+import { exec } from 'child_process'
+import { promisify } from 'util'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import fs from 'fs'
+
+const execPromise = promisify(exec)
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const app = express()
 const PORT = 5959
@@ -34,6 +43,176 @@ app.use(cookieParser())
 // Mock session storage
 const sessions = new Map()
 const MOCK_PASSWORD = 'password123'
+
+// WebSocket clients for broadcasting updates
+const wsClients = new Set()
+
+// Helper: Broadcast data update to all WebSocket clients
+function broadcastUpdate(patch) {
+  const message = JSON.stringify({
+    rev: Date.now(),
+    patch: patch
+  })
+  wsClients.forEach(client => {
+    if (client.readyState === 1) { // OPEN
+      client.send(message)
+    }
+  })
+}
+
+// Helper: Install package from s9pk
+async function installPackage(id, url) {
+  console.log(`[Docker] Installing ${id} from ${url}`)
+  
+  try {
+    // Resolve file path
+    let s9pkPath
+    if (url.startsWith('/packages/')) {
+      s9pkPath = path.join(__dirname, 'public', url)
+    } else if (url.startsWith('http')) {
+      // For HTTP URLs, you'd download first
+      throw new Error('HTTP downloads not yet implemented')
+    } else {
+      s9pkPath = url
+    }
+    
+    console.log(`[Docker] S9PK path: ${s9pkPath}`)
+    
+    if (!fs.existsSync(s9pkPath)) {
+      throw new Error(`S9PK file not found: ${s9pkPath}`)
+    }
+    
+    // Create temp directory for extraction
+    const tempDir = path.join(__dirname, `.tmp-${id}`)
+    await execPromise(`mkdir -p "${tempDir}"`)
+    
+    // Extract s9pk
+    console.log(`[Docker] Extracting s9pk...`)
+    await execPromise(`cd "${tempDir}" && tar -xzf "${s9pkPath}"`)
+    
+    // Load Docker image
+    const arch = process.arch === 'arm64' ? 'aarch64' : 'x86_64'
+    const imageTar = path.join(tempDir, `docker_images/${arch}.tar`)
+    
+    console.log(`[Docker] Loading image from ${imageTar}...`)
+    await execPromise(`docker load -i "${imageTar}"`)
+    
+    // Read manifest for container config
+    const manifestPath = path.join(tempDir, 'manifest.yaml')
+    const manifestContent = fs.readFileSync(manifestPath, 'utf-8')
+    
+    // Extract version from manifest (simple regex)
+    const versionMatch = manifestContent.match(/version:\s*["']?([^"'\n]+)["']?/)
+    const version = versionMatch ? versionMatch[1] : '0.1.0'
+    
+    // Stop and remove existing container if it exists
+    try {
+      await execPromise(`docker stop ${id}-test 2>/dev/null || true`)
+      await execPromise(`docker rm ${id}-test 2>/dev/null || true`)
+    } catch (e) {
+      // Ignore errors
+    }
+    
+    // Determine port mapping
+    const portMap = id === 'atob' ? '8102:80' : '8103:80'
+    
+    // Start container
+    console.log(`[Docker] Starting container ${id}-test...`)
+    await execPromise(`docker run -d --name ${id}-test -p ${portMap} ${id}:${version}`)
+    
+    // Wait a moment for container to start
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    
+    // Clean up temp directory
+    await execPromise(`rm -rf "${tempDir}"`)
+    
+    // Add to mock data
+    mockData['package-data'][id] = {
+      title: id === 'atob' ? 'A to B Bitcoin' : id,
+      version: version,
+      status: 'running',
+      state: 'running',
+      manifest: {
+        id: id,
+        title: id === 'atob' ? 'A to B Bitcoin' : id,
+        version: version,
+        description: {
+          short: id === 'atob' ? 'Bitcoin tools and services for seamless transactions' : `${id} application`,
+          long: id === 'atob' ? 'A to B Bitcoin provides tools and services for Bitcoin transactions.' : `${id} application`
+        },
+        icon: id === 'atob' ? '/assets/img/atob.png' : '/assets/img/neode-logo.png',
+        interfaces: {
+          main: {
+            name: 'Web Interface',
+            description: `${id} web interface`,
+            ui: true,
+            'tor-config': {
+              'port-mapping': {
+                80: '80',
+              },
+            },
+            'lan-config': {
+              443: {
+                ssl: true,
+                internal: 80,
+              },
+            },
+          },
+        },
+      },
+      'static-files': {
+        license: `/public/package-data/${id}/${version}/LICENSE.md`,
+        icon: id === 'atob' ? '/assets/img/atob.png' : '/assets/img/neode-logo.png',
+        instructions: `/public/package-data/${id}/${version}/INSTRUCTIONS.md`,
+      },
+    }
+    
+    // Broadcast update
+    broadcastUpdate([
+      {
+        op: 'add',
+        path: `/package-data/${id}`,
+        value: mockData['package-data'][id]
+      }
+    ])
+    
+    console.log(`[Docker] ✅ ${id} installed and running on port ${portMap.split(':')[0]}`)
+    return { success: true, containerId: `${id}-test` }
+    
+  } catch (error) {
+    console.error(`[Docker] Installation failed:`, error)
+    throw error
+  }
+}
+
+// Helper: Uninstall package
+async function uninstallPackage(id) {
+  console.log(`[Docker] Uninstalling ${id}`)
+  
+  try {
+    // Stop and remove container
+    await execPromise(`docker stop ${id}-test 2>/dev/null || true`)
+    await execPromise(`docker rm ${id}-test 2>/dev/null || true`)
+    
+    // Remove from mock data
+    delete mockData['package-data'][id]
+    
+    // Broadcast update
+    broadcastUpdate([
+      {
+        op: 'remove',
+        path: `/package-data/${id}`
+      }
+    ])
+    
+    console.log(`[Docker] ✅ ${id} uninstalled`)
+    return { success: true }
+    
+  } catch (error) {
+    console.error(`[Docker] Uninstall failed:`, error)
+    throw error
+  }
+}
 
 // Mock data
 const mockData = {
@@ -95,47 +274,6 @@ const mockData = {
         license: '/public/package-data/lightning/0.15.0/LICENSE.md',
         icon: '/assets/img/c-lightning.png',
         instructions: '/public/package-data/lightning/0.15.0/INSTRUCTIONS.md',
-      },
-    },
-    'atob': {
-      title: 'A to B Bitcoin',
-      version: '0.1.0',
-      status: 'running',
-      state: 'running',
-      manifest: {
-        id: 'atob',
-        title: 'A to B Bitcoin',
-        version: '0.1.0',
-        description: {
-          short: 'A to B Bitcoin tools and services',
-          long: 'A to B Bitcoin provides tools and services for Bitcoin transactions. This package provides access to the A to B platform through your Neode server.',
-        },
-        icon: '/assets/img/atob.png',
-        'wrapper-repo': 'https://git.nostrdev.com/a2b/atob',
-        'upstream-repo': 'https://git.nostrdev.com/a2b/atob',
-        interfaces: {
-          main: {
-            name: 'Web Interface',
-            description: 'A to B Bitcoin web interface',
-            ui: true,
-            'tor-config': {
-              'port-mapping': {
-                80: '80',
-              },
-            },
-            'lan-config': {
-              443: {
-                ssl: true,
-                internal: 80,
-              },
-            },
-          },
-        },
-      },
-      'static-files': {
-        license: '/public/package-data/atob/0.1.0/LICENSE.md',
-        icon: '/assets/img/atob.png',
-        instructions: '/public/package-data/atob/0.1.0/INSTRUCTIONS.md',
       },
     },
   },
@@ -288,23 +426,49 @@ app.post('/rpc/v1', (req, res) => {
       }
 
       case 'package.install': {
-        const { id, version } = params
-        console.log(`[Mock] Installing package: ${id}@${version}`)
+        const { id, url, version } = params
+        console.log(`[RPC] Installing package: ${id}@${version} from ${url}`)
+        
+        // Run installation in background
+        installPackage(id, url).catch(err => {
+          console.error(`[RPC] Installation failed:`, err)
+        })
+        
         return res.json({ result: `job-${Date.now()}` })
       }
 
-      case 'package.uninstall':
+      case 'package.uninstall': {
+        const { id } = params
+        console.log(`[RPC] Uninstalling package: ${id}`)
+        
+        // Run uninstallation in background
+        uninstallPackage(id).catch(err => {
+          console.error(`[RPC] Uninstall failed:`, err)
+        })
+        
+        return res.json({ result: 'ok' })
+      }
+
       case 'package.start':
       case 'package.stop':
       case 'package.restart': {
         const { id } = params
-        console.log(`[Mock] ${method} for package: ${id}`)
+        console.log(`[RPC] ${method} for package: ${id}`)
         return res.json({ result: 'ok' })
       }
 
       case 'package.sideload': {
-        const { manifest } = params
-        console.log(`[Mock] Sideloading package: ${manifest?.id}`)
+        const { url } = params
+        console.log(`[RPC] Sideloading package from: ${url}`)
+        
+        // Extract package ID from URL (simple approach)
+        const packageId = url.split('/').pop().replace('.s9pk', '')
+        
+        // Run installation in background
+        installPackage(packageId, url).catch(err => {
+          console.error(`[RPC] Sideload failed:`, err)
+        })
+        
         return res.json({ result: `request-${Date.now()}` })
       }
 
@@ -339,6 +503,9 @@ const wss = new WebSocketServer({ server, path: '/ws/db' })
 
 wss.on('connection', (ws) => {
   console.log('[WebSocket] Client connected')
+  
+  // Add to clients set
+  wsClients.add(ws)
 
   // Send initial data
   ws.send(JSON.stringify({
@@ -364,6 +531,7 @@ wss.on('connection', (ws) => {
 
   ws.on('close', () => {
     console.log('[WebSocket] Client disconnected')
+    wsClients.delete(ws)
     clearInterval(interval)
   })
 

@@ -64,14 +64,20 @@ export const useAppStore = defineStore('app', () => {
 
       // Subscribe to updates
       wsClient.subscribe((update: any) => {
-        // Handle initial data load
+        // Handle mock backend format: {type: 'initial', data: {...}}
         if (update?.type === 'initial' && update?.data) {
-          console.log('Received initial data from WebSocket:', update.data)
+          console.log('[Mock Backend] Received initial data:', update.data)
           data.value = update.data
         }
-        // Handle patch updates
+        // Handle real backend format: {rev: 0, data: {...}}
+        else if (update?.data && update?.rev !== undefined) {
+          console.log('[Real Backend] Received dump at revision', update.rev)
+          data.value = update.data
+        }
+        // Handle patch updates (both backends)
         else if (data.value && update?.patch) {
           try {
+            console.log('[WebSocket] Applying patch at revision', update.rev || 'unknown')
             data.value = applyDataPatch(data.value, update.patch)
           } catch (err) {
             console.error('Failed to apply WebSocket patch:', err)
