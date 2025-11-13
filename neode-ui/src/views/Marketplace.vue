@@ -1,5 +1,24 @@
 <template>
   <div class="marketplace-container">
+    <!-- Installation Progress Banner -->
+    <div v-if="installing" class="mb-6 glass-card p-4 border-l-4 border-blue-500">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <svg class="animate-spin h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <div>
+            <p class="text-white font-medium">Installing {{ installing }}...</p>
+            <p class="text-white/70 text-sm">Checking for Docker image and starting container</p>
+          </div>
+        </div>
+        <div class="text-white/60 text-sm">
+          {{ installAttempt }}/{{ maxAttempts }}s
+        </div>
+      </div>
+    </div>
+
     <div class="mb-8">
       <h1 class="text-4xl font-bold text-white mb-2">Marketplace</h1>
       <p class="text-white/70">Discover and install apps for your Neode server</p>
@@ -14,9 +33,9 @@
         @click="viewApp(app)"
       >
         <div class="flex items-start gap-4 mb-4">
-          <img
-            :src="app.icon"
-            :alt="app.title"
+        <img
+          :src="app.icon"
+          :alt="app.title"
             class="w-16 h-16 rounded-lg object-cover"
             @error="handleImageError"
           />
@@ -35,16 +54,23 @@
         >
           Already Installed
         </button>
-        <button
+            <button
           v-else
           @click.stop="installApp(app)"
-          :disabled="installing === app.id"
-          class="w-full px-4 py-2 gradient-button rounded-lg text-sm font-medium disabled:opacity-50"
+          :disabled="installing === app.id || installing !== null"
+          class="w-full px-4 py-2 gradient-button rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {{ installing === app.id ? 'Installing...' : 'Install' }}
-        </button>
+          <span v-if="installing === app.id" class="flex items-center justify-center gap-2">
+            <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            Installing...
+          </span>
+          <span v-else>Install</span>
+            </button>
       </div>
-    </div>
+          </div>
 
     <!-- Sideload Section -->
     <div class="mt-12">
@@ -85,6 +111,8 @@ const router = useRouter()
 const store = useAppStore()
 
 const installing = ref<string | null>(null)
+const installAttempt = ref(0)
+const maxAttempts = ref(30)
 const sideloadUrl = ref('')
 const sideloading = ref(false)
 const sideloadError = ref('')
@@ -106,10 +134,7 @@ const availableApps = ref([
 ])
 
 const installedPackages = computed(() => {
-  if (!store.data || !store.data['package-data']) {
-    return {}
-  }
-  return store.data['package-data']
+  return store.data?.['package-data'] || {}
 })
 
 function isInstalled(appId: string): boolean {
@@ -127,8 +152,6 @@ async function installApp(app: any) {
   installing.value = app.id
   
   try {
-    console.log(`Installing ${app.title} from ${app.s9pkUrl}...`)
-    
     await rpcClient.call({
       method: 'package.install',
       params: {
@@ -138,24 +161,38 @@ async function installApp(app: any) {
       }
     })
     
-    console.log(`${app.title} installed successfully!`)
+    // Wait for installation to complete (poll for package to appear)
+    installAttempt.value = 0
     
-    // Navigate to apps page after short delay
-    setTimeout(() => {
-      router.push('/dashboard/apps')
-    }, 1500)
+    const checkInstalled = setInterval(() => {
+      installAttempt.value++
+      
+      if (isInstalled(app.id)) {
+        clearInterval(checkInstalled)
+        installing.value = null
+        installAttempt.value = 0
+        setTimeout(() => {
+          router.push('/dashboard/apps')
+        }, 500)
+      } else if (installAttempt.value >= maxAttempts.value) {
+        clearInterval(checkInstalled)
+        installing.value = null
+        installAttempt.value = 0
+        alert('Installation timeout. Please check the backend logs or try refreshing the page.')
+      }
+    }, 1000)
     
   } catch (err) {
     console.error('Installation failed:', err)
     alert(`Failed to install ${app.title}: ${err}`)
-  } finally {
     installing.value = null
+    installAttempt.value = 0
   }
 }
 
 async function sideloadPackage() {
   if (!sideloadUrl.value || sideloading.value) return
-
+  
   sideloading.value = true
   sideloadError.value = ''
   sideloadSuccess.value = ''

@@ -62,48 +62,13 @@ function broadcastUpdate(patch) {
 
 // Helper: Install package from s9pk
 async function installPackage(id, url) {
-  console.log(`[Docker] Installing ${id} from ${url}`)
+  console.log(`[Package] Installing ${id}...`)
   
   try {
-    // Resolve file path
-    let s9pkPath
-    if (url.startsWith('/packages/')) {
-      s9pkPath = path.join(__dirname, 'public', url)
-    } else if (url.startsWith('http')) {
-      // For HTTP URLs, you'd download first
-      throw new Error('HTTP downloads not yet implemented')
-    } else {
-      s9pkPath = url
-    }
+    // For development, we'll use the pre-built Docker image
+    // In production, the real backend would extract the s9pk using StartOS SDK
     
-    console.log(`[Docker] S9PK path: ${s9pkPath}`)
-    
-    if (!fs.existsSync(s9pkPath)) {
-      throw new Error(`S9PK file not found: ${s9pkPath}`)
-    }
-    
-    // Create temp directory for extraction
-    const tempDir = path.join(__dirname, `.tmp-${id}`)
-    await execPromise(`mkdir -p "${tempDir}"`)
-    
-    // Extract s9pk
-    console.log(`[Docker] Extracting s9pk...`)
-    await execPromise(`cd "${tempDir}" && tar -xzf "${s9pkPath}"`)
-    
-    // Load Docker image
-    const arch = process.arch === 'arm64' ? 'aarch64' : 'x86_64'
-    const imageTar = path.join(tempDir, `docker_images/${arch}.tar`)
-    
-    console.log(`[Docker] Loading image from ${imageTar}...`)
-    await execPromise(`docker load -i "${imageTar}"`)
-    
-    // Read manifest for container config
-    const manifestPath = path.join(tempDir, 'manifest.yaml')
-    const manifestContent = fs.readFileSync(manifestPath, 'utf-8')
-    
-    // Extract version from manifest (simple regex)
-    const versionMatch = manifestContent.match(/version:\s*["']?([^"'\n]+)["']?/)
-    const version = versionMatch ? versionMatch[1] : '0.1.0'
+    const version = '0.1.0'
     
     // Stop and remove existing container if it exists
     try {
@@ -113,18 +78,26 @@ async function installPackage(id, url) {
       // Ignore errors
     }
     
+    // Check if Docker image exists
+    const { stdout } = await execPromise(`docker images -q ${id}:${version}`)
+    if (!stdout.trim()) {
+      throw new Error(`Docker image ${id}:${version} not found. Build it first: cd ~/atob-package && docker build -t ${id}:${version} .`)
+    }
+    
     // Determine port mapping
     const portMap = id === 'atob' ? '8102:80' : '8103:80'
     
     // Start container
-    console.log(`[Docker] Starting container ${id}-test...`)
     await execPromise(`docker run -d --name ${id}-test -p ${portMap} ${id}:${version}`)
     
-    // Wait a moment for container to start
+    // Wait for container to be ready
     await new Promise(resolve => setTimeout(resolve, 2000))
     
-    // Clean up temp directory
-    await execPromise(`rm -rf "${tempDir}"`)
+    // Verify container is running
+    const { stdout: containerStatus } = await execPromise(`docker ps --filter name=${id}-test --format "{{.Status}}"`)
+    if (!containerStatus.includes('Up')) {
+      throw new Error(`Container ${id}-test failed to start`)
+    }
     
     // Add to mock data
     mockData['package-data'][id] = {
@@ -140,7 +113,7 @@ async function installPackage(id, url) {
           short: id === 'atob' ? 'Bitcoin tools and services for seamless transactions' : `${id} application`,
           long: id === 'atob' ? 'A to B Bitcoin provides tools and services for Bitcoin transactions.' : `${id} application`
         },
-        icon: id === 'atob' ? '/assets/img/atob.png' : '/assets/img/neode-logo.png',
+        icon: id === 'atob' ? '/assets/img/atob.png' : '/assets/img/logo-neode.png',
         interfaces: {
           main: {
             name: 'Web Interface',
@@ -162,7 +135,7 @@ async function installPackage(id, url) {
       },
       'static-files': {
         license: `/public/package-data/${id}/${version}/LICENSE.md`,
-        icon: id === 'atob' ? '/assets/img/atob.png' : '/assets/img/neode-logo.png',
+        icon: id === 'atob' ? '/assets/img/atob.png' : '/assets/img/logo-neode.png',
         instructions: `/public/package-data/${id}/${version}/INSTRUCTIONS.md`,
       },
     }
@@ -176,18 +149,18 @@ async function installPackage(id, url) {
       }
     ])
     
-    console.log(`[Docker] ✅ ${id} installed and running on port ${portMap.split(':')[0]}`)
+    console.log(`[Package] ✅ ${id} installed and running on port ${portMap.split(':')[0]}`)
     return { success: true, containerId: `${id}-test` }
     
   } catch (error) {
-    console.error(`[Docker] Installation failed:`, error)
+    console.error(`[Package] Installation failed:`, error.message)
     throw error
   }
 }
 
 // Helper: Uninstall package
 async function uninstallPackage(id) {
-  console.log(`[Docker] Uninstalling ${id}`)
+  console.log(`[Package] Uninstalling ${id}...`)
   
   try {
     // Stop and remove container
@@ -205,11 +178,11 @@ async function uninstallPackage(id) {
       }
     ])
     
-    console.log(`[Docker] ✅ ${id} uninstalled`)
+    console.log(`[Package] ✅ ${id} uninstalled`)
     return { success: true }
     
   } catch (error) {
-    console.error(`[Docker] Uninstall failed:`, error)
+    console.error(`[Package] Uninstall failed:`, error.message)
     throw error
   }
 }
@@ -427,11 +400,10 @@ app.post('/rpc/v1', (req, res) => {
 
       case 'package.install': {
         const { id, url, version } = params
-        console.log(`[RPC] Installing package: ${id}@${version} from ${url}`)
         
         // Run installation in background
         installPackage(id, url).catch(err => {
-          console.error(`[RPC] Installation failed:`, err)
+          console.error(`[RPC] Installation failed:`, err.message)
         })
         
         return res.json({ result: `job-${Date.now()}` })
@@ -439,11 +411,10 @@ app.post('/rpc/v1', (req, res) => {
 
       case 'package.uninstall': {
         const { id } = params
-        console.log(`[RPC] Uninstalling package: ${id}`)
         
         // Run uninstallation in background
         uninstallPackage(id).catch(err => {
-          console.error(`[RPC] Uninstall failed:`, err)
+          console.error(`[RPC] Uninstall failed:`, err.message)
         })
         
         return res.json({ result: 'ok' })

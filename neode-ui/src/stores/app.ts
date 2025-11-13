@@ -78,7 +78,7 @@ export const useAppStore = defineStore('app', () => {
         else if (data.value && update?.patch) {
           try {
             console.log('[WebSocket] Applying patch at revision', update.rev || 'unknown')
-            data.value = applyDataPatch(data.value, update.patch)
+          data.value = applyDataPatch(data.value, update.patch)
           } catch (err) {
             console.error('Failed to apply WebSocket patch:', err)
           }
