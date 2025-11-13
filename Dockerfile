@@ -24,7 +24,15 @@ RUN echo "=== Environment Check ===" && \
 
 # Build the Vue application
 RUN echo "=== Starting Vite build ===" && \
-    npm run build 2>&1 || (echo "=== BUILD FAILED ===" && exit 1)
+    npm run build; \
+    BUILD_EXIT_CODE=$?; \
+    echo "Build exit code: $BUILD_EXIT_CODE"; \
+    if [ $BUILD_EXIT_CODE -ne 0 ]; then \
+        echo "=== BUILD FAILED ===" && \
+        echo "Checking package.json for build script..." && \
+        cat package.json | grep -A 3 "scripts" && \
+        exit 1; \
+    fi
 
 # Verify build output
 RUN echo "=== Build verification ===" && \
