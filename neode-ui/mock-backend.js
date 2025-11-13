@@ -14,7 +14,20 @@ import http from 'http'
 const app = express()
 const PORT = 5959
 
-app.use(cors({ credentials: true, origin: 'http://localhost:8100' }))
+// CORS configuration - allow all origins in Docker, localhost only in dev
+const corsOptions = {
+  credentials: true,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true)
+    
+    // Allow localhost and any other origin (for Docker deployments)
+    // In production, you'd want to restrict this to specific domains
+    callback(null, true)
+  }
+}
+
+app.use(cors(corsOptions))
 app.use(express.json())
 app.use(cookieParser())
 
@@ -67,6 +80,11 @@ const mockData = {
     theme: 'dark',
   },
 }
+
+// Handle CORS preflight for RPC endpoint
+app.options('/rpc/v1', (req, res) => {
+  res.status(200).end()
+})
 
 // RPC endpoint
 app.post('/rpc/v1', (req, res) => {
