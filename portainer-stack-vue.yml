@@ -164,8 +164,8 @@ services:
         echo "Starting Caddy..."
         caddy run --config /etc/caddy/Caddyfile --adapter caddyfile
     ports:
-      - "80:80"       # HTTP (redirects to HTTPS)
-      - "443:443"     # HTTPS
+      - "8080:80"     # HTTP (internal, maps to 8080 externally)
+      - "8443:443"    # HTTPS (internal, maps to 8443 externally)
       - "8100:8100"   # Alt HTTPS port (for legacy compatibility)
       - "8102:8102"   # ATOB proxy
     restart: unless-stopped
