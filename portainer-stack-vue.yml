@@ -46,7 +46,7 @@ services:
   neode-web:
     build:
       context: https://github.com/Zazawowow/Neode.git
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.portainer
     container_name: neode-web
     ports:
       - "8100:80"
