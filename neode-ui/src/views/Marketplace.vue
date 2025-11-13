@@ -106,7 +106,10 @@ const availableApps = ref([
 ])
 
 const installedPackages = computed(() => {
-  return store.data?.['package-data'] || {}
+  if (!store.data || !store.data['package-data']) {
+    return {}
+  }
+  return store.data['package-data']
 })
 
 function isInstalled(appId: string): boolean {
@@ -185,7 +188,7 @@ async function sideloadPackage() {
 
 function handleImageError(event: Event) {
   const img = event.target as HTMLImageElement
-  img.src = '/assets/img/neode-logo.png'
+  img.src = '/assets/img/logo-neode.png'
 }
 </script>
 
