@@ -56,6 +56,7 @@ export const useAppStore = defineStore('app', () => {
       isAuthenticated.value = false
       localStorage.removeItem('neode-auth')
       data.value = null
+      isWsSubscribed = false
       wsClient.disconnect()
       isConnected.value = false
     }
@@ -66,46 +67,48 @@ export const useAppStore = defineStore('app', () => {
       console.log('[Store] Connecting WebSocket...')
       isConnected.value = false
       
+      // Always ensure clean state before connecting
+      if (isWsSubscribed) {
+        console.log('[Store] Resetting previous subscription')
+        isWsSubscribed = false
+      }
+      
       await wsClient.connect()
-      console.log('[Store] WebSocket connected, waiting for data...')
+      console.log('[Store] WebSocket connected, subscribing to updates...')
 
-      // Subscribe to updates (only once per store instance)
-      if (!isWsSubscribed) {
-        console.log('[Store] Subscribing to WebSocket updates')
-        isWsSubscribed = true
-        wsClient.subscribe((update: any) => {
-          // Handle mock backend format: {type: 'initial', data: {...}}
-          if (update?.type === 'initial' && update?.data) {
-            console.log('[Store] Received initial data from mock backend')
-            data.value = update.data
-            isConnected.value = true
-          }
-          // Handle real backend format: {rev: 0, data: {...}}
-          else if (update?.data && update?.rev !== undefined) {
-            console.log('[Store] Received dump from real backend at revision', update.rev)
-            data.value = update.data
-      isConnected.value = true
-          }
-          // Handle patch updates (both backends)
-          else if (data.value && update?.patch) {
-          try {
-              console.log('[Store] Applying patch at revision', update.rev || 'unknown')
-          data.value = applyDataPatch(data.value, update.patch)
-              // Mark as connected once we receive any valid patch
-              if (!isConnected.value) {
-                isConnected.value = true
-              }
-          } catch (err) {
-              console.error('[Store] Failed to apply WebSocket patch:', err)
-            }
-          }
-        })
-      } else {
-        console.log('[Store] Already subscribed, reusing existing subscription')
+      // Subscribe to updates
+      isWsSubscribed = true
+      wsClient.subscribe((update: any) => {
+        // Handle mock backend format: {type: 'initial', data: {...}}
+        if (update?.type === 'initial' && update?.data) {
+          console.log('[Store] Received initial data from mock backend')
+          data.value = update.data
+          isConnected.value = true
         }
+        // Handle real backend format: {rev: 0, data: {...}}
+        else if (update?.data && update?.rev !== undefined) {
+          console.log('[Store] Received dump from real backend at revision', update.rev)
+          data.value = update.data
+          isConnected.value = true
+        }
+        // Handle patch updates (both backends)
+        else if (data.value && update?.patch) {
+          try {
+            console.log('[Store] Applying patch at revision', update.rev || 'unknown')
+            data.value = applyDataPatch(data.value, update.patch)
+            // Mark as connected once we receive any valid patch
+            if (!isConnected.value) {
+              isConnected.value = true
+            }
+          } catch (err) {
+            console.error('[Store] Failed to apply WebSocket patch:', err)
+          }
+        }
+      })
     } catch (err) {
       console.error('[Store] WebSocket connection failed:', err)
       isConnected.value = false
+      isWsSubscribed = false
       // Don't throw - allow app to work without real-time updates
     }
   }
@@ -160,11 +163,14 @@ export const useAppStore = defineStore('app', () => {
       isAuthenticated.value = true
       console.log('[Store] Session valid!')
       
+      // Reset connection state before reconnecting
+      isConnected.value = false
+      
       // Reconnect WebSocket
       await connectWebSocket()
       
-      // Wait for WebSocket to receive initial data
-      const maxWait = 3000 // 3 seconds max
+      // Wait for WebSocket to receive initial data with proper timeout
+      const maxWait = 5000 // 5 seconds max (increased from 3s)
       const checkInterval = 100 // Check every 100ms
       let waited = 0
       
@@ -172,20 +178,44 @@ export const useAppStore = defineStore('app', () => {
       while (!isConnected.value && waited < maxWait) {
         await new Promise(resolve => setTimeout(resolve, checkInterval))
         waited += checkInterval
+        
+        // Log progress every second
+        if (waited % 1000 === 0) {
+          console.log(`[Store] Still waiting... (${waited/1000}s)`)
+        }
       }
       
       if (isConnected.value) {
         console.log('[Store] WebSocket ready with data!')
+        return true
       } else {
-        console.warn('[Store] WebSocket timeout - continuing anyway')
+        console.warn('[Store] WebSocket timeout after 5s - forcing reconnect...')
+        // Try one more time with a fresh connection
+        isWsSubscribed = false
+        await connectWebSocket()
+        
+        // Give it 2 more seconds
+        waited = 0
+        while (!isConnected.value && waited < 2000) {
+          await new Promise(resolve => setTimeout(resolve, checkInterval))
+          waited += checkInterval
+        }
+        
+        if (isConnected.value) {
+          console.log('[Store] WebSocket reconnected successfully!')
+          return true
+        } else {
+          console.error('[Store] WebSocket failed to connect after retries')
+          // Continue anyway but mark as offline
+          return true
+        }
       }
-      
-      return true
     } catch (err) {
       console.error('[Store] Session check failed:', err)
       // Session invalid, clear auth
       localStorage.removeItem('neode-auth')
       isAuthenticated.value = false
+      isWsSubscribed = false
       return false
     }
   }

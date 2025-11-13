@@ -86,7 +86,7 @@
     </aside>
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto overflow-x-hidden relative pb-20 md:pb-0">
+    <main class="flex-1 overflow-hidden relative pb-20 md:pb-0">
       <!-- Mobile Header with Logo - Mobile Only -->
       <header class="md:hidden sticky top-0 z-40 border-b border-glass-border shadow-glass-sm" style="background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);">
         <div class="flex items-center justify-center py-4">
@@ -108,11 +108,15 @@
         </div>
       </div>
 
-      <div class="p-4 md:p-8 perspective-container-wrapper">
+      <div class="perspective-container-wrapper">
         <div class="perspective-container">
           <RouterView v-slot="{ Component, route }">
             <Transition :name="getTransitionName(route)">
-              <component :is="Component" :key="route.path" class="view-container" />
+              <div :key="route.path" class="view-wrapper">
+                <div class="p-4 md:p-8 overflow-y-auto h-full">
+                  <component :is="Component" class="view-container" />
+                </div>
+              </div>
             </Transition>
           </RouterView>
         </div>
@@ -286,7 +290,8 @@ function getTransitionName(currentRoute: any) {
 /* Wrapper to contain perspective without clipping */
 .perspective-container-wrapper {
   position: relative;
-  overflow: visible;
+  overflow: hidden;
+  height: 100%;
 }
 
 /* Perspective container for 3D depth effect */
@@ -294,75 +299,78 @@ function getTransitionName(currentRoute: any) {
   perspective: 2000px;
   perspective-origin: 50% 50%;
   position: relative;
-  min-height: 100vh;
-  overflow: visible;
+  height: 100%;
+  overflow: hidden;
 }
 
-.view-container {
+/* View wrapper - allows smooth transitions with absolute positioning */
+.view-wrapper {
+  position: absolute;
+  inset: 0;
   transform-style: preserve-3d;
   backface-visibility: hidden;
   will-change: transform, opacity;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+}
+
+.view-container {
+  height: 100%;
 }
 
 /* Forward transition: Current screen pulls forward, new screen emerges from back */
-.depth-forward-enter-active,
-.depth-forward-leave-active {
+.depth-forward-enter-active.view-wrapper,
+.depth-forward-leave-active.view-wrapper {
   transition: all 0.45s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-.depth-forward-enter-from {
+.depth-forward-enter-from.view-wrapper {
   opacity: 0;
   transform: translateZ(-800px) scale(0.75);
   filter: blur(4px);
 }
 
-.depth-forward-enter-to {
+.depth-forward-enter-to.view-wrapper {
   opacity: 1;
   transform: translateZ(0) scale(1);
   filter: blur(0px);
 }
 
-.depth-forward-leave-from {
+.depth-forward-leave-from.view-wrapper {
   opacity: 1;
   transform: translateZ(0) scale(1);
   filter: blur(0px);
 }
 
-.depth-forward-leave-to {
+.depth-forward-leave-to.view-wrapper {
   opacity: 0;
   transform: translateZ(400px) scale(1.2);
   filter: blur(8px);
 }
 
 /* Back transition: Current screen pulls back, previous screen comes forward */
-.depth-back-enter-active,
-.depth-back-leave-active {
+.depth-back-enter-active.view-wrapper,
+.depth-back-leave-active.view-wrapper {
   transition: all 0.45s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-.depth-back-enter-from {
+.depth-back-enter-from.view-wrapper {
   opacity: 0;
   transform: translateZ(400px) scale(1.2);
   filter: blur(8px);
 }
 
-.depth-back-enter-to {
+.depth-back-enter-to.view-wrapper {
   opacity: 1;
   transform: translateZ(0) scale(1);
   filter: blur(0px);
 }
 
-.depth-back-leave-from {
+.depth-back-leave-from.view-wrapper {
   opacity: 1;
   transform: translateZ(0) scale(1);
   filter: blur(0px);
 }
 
-.depth-back-leave-to {
+.depth-back-leave-to.view-wrapper {
   opacity: 0;
   transform: translateZ(-800px) scale(0.75);
   filter: blur(4px);
@@ -370,19 +378,19 @@ function getTransitionName(currentRoute: any) {
 
 /* Enhanced effect with rotation for more console-like feel */
 @media (min-width: 768px) {
-  .depth-forward-enter-from {
+  .depth-forward-enter-from.view-wrapper {
     transform: translateZ(-800px) scale(0.75) rotateX(8deg);
   }
   
-  .depth-forward-leave-to {
+  .depth-forward-leave-to.view-wrapper {
     transform: translateZ(400px) scale(1.2) rotateX(-5deg);
   }
   
-  .depth-back-enter-from {
+  .depth-back-enter-from.view-wrapper {
     transform: translateZ(400px) scale(1.2) rotateX(-5deg);
   }
   
-  .depth-back-leave-to {
+  .depth-back-leave-to.view-wrapper {
     transform: translateZ(-800px) scale(0.75) rotateX(8deg);
   }
 }
@@ -399,61 +407,61 @@ function getTransitionName(currentRoute: any) {
 }
 
 /* Slide down: Moving down the menu (content slides up like a scroll) */
-.slide-down-enter-active {
+.slide-down-enter-active.view-wrapper {
   transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.slide-down-leave-active {
+.slide-down-leave-active.view-wrapper {
   transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
               opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.slide-down-enter-from {
+.slide-down-enter-from.view-wrapper {
   opacity: 0;
   transform: translateY(40vh);
 }
 
-.slide-down-enter-to {
+.slide-down-enter-to.view-wrapper {
   opacity: 1;
   transform: translateY(0);
 }
 
-.slide-down-leave-from {
+.slide-down-leave-from.view-wrapper {
   opacity: 1;
   transform: translateY(0);
 }
 
-.slide-down-leave-to {
+.slide-down-leave-to.view-wrapper {
   opacity: 0;
   transform: translateY(-30vh);
 }
 
 /* Slide up: Moving up the menu (content slides down like a scroll) */
-.slide-up-enter-active {
+.slide-up-enter-active.view-wrapper {
   transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.slide-up-leave-active {
+.slide-up-leave-active.view-wrapper {
   transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94),
               opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.slide-up-enter-from {
+.slide-up-enter-from.view-wrapper {
   opacity: 0;
   transform: translateY(-40vh);
 }
 
-.slide-up-enter-to {
+.slide-up-enter-to.view-wrapper {
   opacity: 1;
   transform: translateY(0);
 }
 
-.slide-up-leave-from {
+.slide-up-leave-from.view-wrapper {
   opacity: 1;
   transform: translateY(0);
 }
 
-.slide-up-leave-to {
+.slide-up-leave-to.view-wrapper {
   opacity: 0;
   transform: translateY(30vh);
 }
