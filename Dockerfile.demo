@@ -13,11 +13,18 @@ RUN npm ci
 # Copy source code
 COPY neode-ui/ ./
 
-# Replace app.ts with app-demo.ts for demo mode
-RUN cp src/stores/app-demo.ts src/stores/app.ts
+# Replace API clients with demo versions (no network calls)
+RUN echo "=== Configuring Demo Mode ===" && \
+    mv src/api/rpc-client.ts src/api/rpc-client.real.ts && \
+    mv src/api/rpc-client-demo.ts src/api/rpc-client.ts && \
+    echo "✓ Demo RPC client activated" && \
+    mv src/api/websocket.ts src/api/websocket.real.ts && \
+    mv src/api/websocket-demo.ts src/api/websocket.ts && \
+    echo "✓ Demo WebSocket client activated"
 
 # Build the Vue application with Docker flag
 ENV DOCKER_BUILD=true
+ENV VITE_DEMO_MODE=true
 
 # Build
 RUN echo "=== Building Neode Demo (Frontend Only) ===" && \
