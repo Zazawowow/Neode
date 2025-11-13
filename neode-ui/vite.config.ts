@@ -30,7 +30,8 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: '../web/dist/neode-ui',
+    // Output to dist for Docker builds, or to ../web/dist/neode-ui for local development
+    outDir: process.env.DOCKER_BUILD ? 'dist' : '../web/dist/neode-ui',
     emptyOutDir: true,
   },
 })

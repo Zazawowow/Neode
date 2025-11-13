@@ -13,7 +13,8 @@ RUN npm ci
 # Copy source code
 COPY neode-ui/ ./
 
-# Build the Vue application
+# Build the Vue application with Docker flag
+ENV DOCKER_BUILD=true
 RUN npm run build
 
 # Production stage
