@@ -32,14 +32,25 @@ export class WebSocketClient {
       const wsUrl = `${protocol}//${host}${this.url}`
 
       this.ws = new WebSocket(wsUrl)
+      
+      // Timeout handler in case connection hangs
+      const connectionTimeout = setTimeout(() => {
+        if (this.ws && this.ws.readyState === WebSocket.CONNECTING) {
+          console.warn('WebSocket connection timeout, retrying...')
+          this.ws.close()
+          reject(new Error('Connection timeout'))
+        }
+      }, 3000) // 3 second timeout
 
       this.ws.onopen = () => {
+        clearTimeout(connectionTimeout)
         console.log('WebSocket connected')
         this.reconnectAttempts = 0
         resolve()
       }
 
       this.ws.onerror = (error) => {
+        clearTimeout(connectionTimeout)
         console.error('WebSocket error:', error)
         reject(error)
       }
@@ -54,12 +65,15 @@ export class WebSocketClient {
       }
 
       this.ws.onclose = () => {
+        clearTimeout(connectionTimeout)
         console.log('WebSocket closed')
         if (this.shouldReconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
+          // Much faster reconnection on first attempt (500ms instead of exponential)
+          const delay = this.reconnectAttempts === 0 ? 500 : this.reconnectDelay * Math.pow(2, this.reconnectAttempts)
           setTimeout(() => {
             this.reconnectAttempts++
             this.connect().catch(console.error)
-          }, this.reconnectDelay * Math.pow(2, this.reconnectAttempts))
+          }, delay)
         }
       }
     })

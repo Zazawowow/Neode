@@ -15,46 +15,46 @@ const router = createRouter({
       meta: { public: true },
     },
     {
-      path: '/onboarding/intro',
-      name: 'onboarding-intro',
-      component: () => import('../views/OnboardingIntro.vue'),
+      path: '/onboarding',
+      component: () => import('../views/OnboardingWrapper.vue'),
       meta: { public: true },
-    },
-    {
-      path: '/onboarding/options',
-      name: 'onboarding-options',
-      component: () => import('../views/OnboardingOptions.vue'),
-      meta: { public: true },
-    },
-    {
-      path: '/onboarding/path',
-      name: 'onboarding-path',
-      component: () => import('../views/OnboardingPath.vue'),
-      meta: { public: true },
-    },
-    {
-      path: '/onboarding/did',
-      name: 'onboarding-did',
-      component: () => import('../views/OnboardingDid.vue'),
-      meta: { public: true },
-    },
-    {
-      path: '/onboarding/backup',
-      name: 'onboarding-backup',
-      component: () => import('../views/OnboardingBackup.vue'),
-      meta: { public: true },
-    },
-    {
-      path: '/onboarding/verify',
-      name: 'onboarding-verify',
-      component: () => import('../views/OnboardingVerify.vue'),
-      meta: { public: true },
-    },
-    {
-      path: '/onboarding/done',
-      name: 'onboarding-done',
-      component: () => import('../views/OnboardingDone.vue'),
-      meta: { public: true },
+      children: [
+        {
+          path: 'intro',
+          name: 'onboarding-intro',
+          component: () => import('../views/OnboardingIntro.vue'),
+        },
+        {
+          path: 'options',
+          name: 'onboarding-options',
+          component: () => import('../views/OnboardingOptions.vue'),
+        },
+        {
+          path: 'path',
+          name: 'onboarding-path',
+          component: () => import('../views/OnboardingPath.vue'),
+        },
+        {
+          path: 'did',
+          name: 'onboarding-did',
+          component: () => import('../views/OnboardingDid.vue'),
+        },
+        {
+          path: 'backup',
+          name: 'onboarding-backup',
+          component: () => import('../views/OnboardingBackup.vue'),
+        },
+        {
+          path: 'verify',
+          name: 'onboarding-verify',
+          component: () => import('../views/OnboardingVerify.vue'),
+        },
+        {
+          path: 'done',
+          name: 'onboarding-done',
+          component: () => import('../views/OnboardingDone.vue'),
+        },
+      ],
     },
     {
       path: '/dashboard',

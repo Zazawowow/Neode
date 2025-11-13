@@ -231,7 +231,6 @@ function handleImageError(event: Event) {
 
 <style scoped>
 .marketplace-container {
-  padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
 }

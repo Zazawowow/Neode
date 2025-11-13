@@ -3,12 +3,12 @@
     <!-- Background container with 3D perspective -->
     <div class="bg-perspective-container">
       <!-- Background - default -->
-      <div
+    <div
         ref="bgDefault"
         class="bg-layer"
         :class="{ 'bg-transitioning-out': showAltBackground }"
-        style="background-image: url(/assets/img/bg-4.jpg)"
-      />
+      style="background-image: url(/assets/img/bg-4.jpg)"
+    />
       <!-- Background - alternate for app details -->
       <div
         ref="bgAlt"
@@ -16,7 +16,7 @@
         :class="{ 'bg-transitioning-in': showAltBackground }"
         style="background-image: url(/assets/img/bg-3.jpg)"
       />
-      <div class="fixed inset-0 bg-black/30 -z-10" />
+    <div class="fixed inset-0 bg-black/30 -z-10" />
       
       <!-- Glitch overlays - trigger on background change -->
       <div 
@@ -87,17 +87,8 @@
 
     <!-- Main Content -->
     <main class="flex-1 overflow-hidden relative pb-20 md:pb-0">
-      <!-- Mobile Header with Logo - Mobile Only -->
-      <header class="md:hidden sticky top-0 z-40 border-b border-glass-border shadow-glass-sm" style="background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);">
-        <div class="flex items-center justify-center py-4">
-          <div class="logo-gradient-border">
-            <img src="/assets/img/logo-neode.png" alt="Neode" class="w-12 h-12" />
-          </div>
-        </div>
-      </header>
-
       <!-- Connection Status Banner -->
-      <div v-if="isOffline" class="path-option-card mx-6 mt-6 px-6 py-3 border-l-4 border-yellow-500">
+      <div v-if="isOffline && !store.isReconnecting" class="path-option-card mx-6 mt-6 px-6 py-3 border-l-4 border-yellow-500">
         <div class="flex items-center gap-2 text-yellow-200">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />

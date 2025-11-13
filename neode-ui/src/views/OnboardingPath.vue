@@ -1,12 +1,5 @@
 <template>
   <div class="h-screen flex items-center justify-center p-4 md:p-6 relative overflow-hidden">
-    <!-- Background with overlay -->
-    <div 
-      class="absolute inset-0 bg-cover bg-center"
-      :style="{ backgroundImage: `url(/assets/img/${backgroundImage})` }"
-    />
-    <div class="absolute inset-0 bg-black/30" />
-
     <!-- Main Glass Container -->
     <div class="max-w-[1200px] w-full relative z-10 path-glass-container">
       <!-- Header -->
@@ -135,7 +128,6 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const selectedOptions = ref<string[]>([])
-const backgroundImage = ref('bg-3.jpg')
 
 function toggleOption(option: string) {
   const index = selectedOptions.value.indexOf(option)

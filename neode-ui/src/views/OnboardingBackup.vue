@@ -1,12 +1,5 @@
 <template>
   <div class="min-h-screen flex items-center justify-center p-4">
-    <!-- Background -->
-    <div
-      class="absolute inset-0 bg-cover bg-center"
-      :style="{ backgroundImage: 'url(/assets/img/bg-3.jpg)' }"
-    />
-    <div class="absolute inset-0 bg-black/30" />
-
     <!-- Main Glass Container -->
     <div class="max-w-[800px] w-full relative z-10 path-glass-container">
       <!-- Header -->

@@ -11,6 +11,7 @@ export const useAppStore = defineStore('app', () => {
   const data = ref<DataModel | null>(null)
   const isAuthenticated = ref(localStorage.getItem('neode-auth') === 'true')
   const isConnected = ref(false)
+  const isReconnecting = ref(false)
   const isLoading = ref(false)
   const error = ref<string | null>(null)
   let isWsSubscribed = false
@@ -65,7 +66,7 @@ export const useAppStore = defineStore('app', () => {
   async function connectWebSocket(): Promise<void> {
     try {
       console.log('[Store] Connecting WebSocket...')
-      isConnected.value = false
+      isReconnecting.value = true
       
       // Always ensure clean state before connecting
       if (isWsSubscribed) {
@@ -84,21 +85,24 @@ export const useAppStore = defineStore('app', () => {
           console.log('[Store] Received initial data from mock backend')
           data.value = update.data
           isConnected.value = true
+          isReconnecting.value = false
         }
         // Handle real backend format: {rev: 0, data: {...}}
         else if (update?.data && update?.rev !== undefined) {
           console.log('[Store] Received dump from real backend at revision', update.rev)
           data.value = update.data
           isConnected.value = true
+          isReconnecting.value = false
         }
         // Handle patch updates (both backends)
         else if (data.value && update?.patch) {
           try {
             console.log('[Store] Applying patch at revision', update.rev || 'unknown')
-            data.value = applyDataPatch(data.value, update.patch)
+          data.value = applyDataPatch(data.value, update.patch)
             // Mark as connected once we receive any valid patch
             if (!isConnected.value) {
               isConnected.value = true
+              isReconnecting.value = false
             }
           } catch (err) {
             console.error('[Store] Failed to apply WebSocket patch:', err)
@@ -108,6 +112,7 @@ export const useAppStore = defineStore('app', () => {
     } catch (err) {
       console.error('[Store] WebSocket connection failed:', err)
       isConnected.value = false
+      isReconnecting.value = false
       isWsSubscribed = false
       // Don't throw - allow app to work without real-time updates
     }
@@ -161,55 +166,14 @@ export const useAppStore = defineStore('app', () => {
       console.log('[Store] Validating session with backend...')
       await rpcClient.call({ method: 'server.echo', params: { message: 'ping' } })
       isAuthenticated.value = true
-      console.log('[Store] Session valid!')
+      console.log('[Store] Session valid, reconnecting...')
       
-      // Reset connection state before reconnecting
-      isConnected.value = false
+      // Start WebSocket reconnection (don't wait for it)
+      connectWebSocket()
       
-      // Reconnect WebSocket
-      await connectWebSocket()
-      
-      // Wait for WebSocket to receive initial data with proper timeout
-      const maxWait = 5000 // 5 seconds max (increased from 3s)
-      const checkInterval = 100 // Check every 100ms
-      let waited = 0
-      
-      console.log('[Store] Waiting for WebSocket data...')
-      while (!isConnected.value && waited < maxWait) {
-        await new Promise(resolve => setTimeout(resolve, checkInterval))
-        waited += checkInterval
-        
-        // Log progress every second
-        if (waited % 1000 === 0) {
-          console.log(`[Store] Still waiting... (${waited/1000}s)`)
-        }
-      }
-      
-      if (isConnected.value) {
-        console.log('[Store] WebSocket ready with data!')
-        return true
-      } else {
-        console.warn('[Store] WebSocket timeout after 5s - forcing reconnect...')
-        // Try one more time with a fresh connection
-        isWsSubscribed = false
-        await connectWebSocket()
-        
-        // Give it 2 more seconds
-        waited = 0
-        while (!isConnected.value && waited < 2000) {
-          await new Promise(resolve => setTimeout(resolve, checkInterval))
-          waited += checkInterval
-        }
-        
-        if (isConnected.value) {
-          console.log('[Store] WebSocket reconnected successfully!')
-          return true
-        } else {
-          console.error('[Store] WebSocket failed to connect after retries')
-          // Continue anyway but mark as offline
-          return true
-        }
-      }
+      // Return immediately - let the WebSocket connect in the background
+      console.log('[Store] Session restored, WebSocket reconnecting in background')
+      return true
     } catch (err) {
       console.error('[Store] Session check failed:', err)
       // Session invalid, clear auth
@@ -272,6 +236,7 @@ export const useAppStore = defineStore('app', () => {
     data,
     isAuthenticated,
     isConnected,
+    isReconnecting,
     isLoading,
     error,
 
