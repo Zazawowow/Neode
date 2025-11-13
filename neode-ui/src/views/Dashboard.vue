@@ -44,7 +44,7 @@
       </div>
 
       <!-- User Section - Desktop Only -->
-      <div class="p-6 border-t border-glass-border">
+      <div class="p-6">
         <button
           @click="handleLogout"
           class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors"
