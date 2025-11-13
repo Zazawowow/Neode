@@ -80,7 +80,7 @@ Mock Backend (Port 5959)
 
 If you can't update nginx right now, you can access Neode directly via alternative ports:
 
-1. **Open**: `https://neode.l484.com:8443`
+1. **Open**: `https://neode.l484.com:9443`
 2. **Or**: `https://neode.l484.com:8100`
 
 ⚠️ **Note**: SSL certificate might show a warning since Caddy is using a self-signed cert. To fix this, you need to configure Let's Encrypt in the Caddyfile.
@@ -122,7 +122,7 @@ docker logs neode-caddy
 sudo tail -f /var/log/nginx/error.log
 
 # Test direct connection to Caddy
-curl -k https://localhost:8443
+curl -k https://localhost:9443
 ```
 
 ## Rollback
@@ -145,7 +145,7 @@ If you prefer to manually update nginx, add this to your config:
 ```nginx
 # Inside your server block for neode.l484.com
 location / {
-    proxy_pass https://localhost:8443;
+    proxy_pass https://localhost:9443;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
@@ -169,7 +169,7 @@ sudo nginx -s reload
 
 ## Summary
 
-1. ✅ Deploy Portainer stack (uses ports 8080/8443)
+1. ✅ Deploy Portainer stack (uses ports 9080/9443)
 2. ✅ Run `./UPDATE_NGINX_PROXY.sh` on your server
 3. ✅ Access `https://neode.l484.com` (standard ports!)
 4. ✅ Everything works including WebSocket
