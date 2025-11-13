@@ -36,17 +36,12 @@ services:
         mkdir -p atob-package-build
         cd atob-package-build
         
-        # Create Dockerfile for ATOB
-        cat > Dockerfile <<'EOF'
-FROM nginx:alpine
-RUN apk add --no-cache curl
-RUN mkdir -p /usr/share/nginx/html
-RUN echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>A to B Bitcoin</title><style>body{margin:0;padding:0;overflow:hidden}iframe{width:100%;height:100vh;border:none}</style></head><body><iframe src="https://app.atobitcoin.io" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></body></html>' > /usr/share/nginx/html/index.html
-RUN echo '#!/bin/sh' > /docker_entrypoint.sh && echo 'exec nginx -g "daemon off;"' >> /docker_entrypoint.sh && chmod +x /docker_entrypoint.sh
-RUN echo '#!/bin/sh' > /check-web.sh && echo 'curl -sf http://localhost:80 > /dev/null && echo "result: true" || echo "result: false"' >> /check-web.sh && chmod +x /check-web.sh
-EXPOSE 80
-CMD ["/docker_entrypoint.sh"]
-EOF
+        echo "FROM nginx:alpine" > Dockerfile
+        echo "RUN apk add --no-cache curl" >> Dockerfile
+        echo "RUN mkdir -p /usr/share/nginx/html" >> Dockerfile
+        echo 'RUN echo "<!DOCTYPE html><html><head><title>ATOB</title><style>body{margin:0;padding:0}iframe{width:100%;height:100vh;border:none}</style></head><body><iframe src=\"https://app.atobitcoin.io\" allowfullscreen></iframe></body></html>" > /usr/share/nginx/html/index.html' >> Dockerfile
+        echo "EXPOSE 80" >> Dockerfile
+        echo 'CMD ["nginx", "-g", "daemon off;"]' >> Dockerfile
         
         echo "Building atob:0.1.0 image..."
         docker build -t atob:0.1.0 . || echo "Warning: Failed to build atob image"
