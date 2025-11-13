@@ -151,9 +151,84 @@ const MOCK_PASSWORD = 'your-new-password'
 
 ## 🐞 Troubleshooting
 
+### 502 Bad Gateway Error on Login
+
+**Symptom**: Get "Failed to load resource: the server responded with a status of 502 ()" on `/rpc/v1`
+
+**This means nginx can't reach the backend.** Here's how to fix it:
+
+**Step 1: Check if backend is running**
+```bash
+docker ps | grep neode-backend
+```
+
+Should show: `neode-backend` with status `Up` and `(healthy)`
+
+If not healthy yet, wait 90 seconds - the backend needs time to:
+1. Install git and wget
+2. Clone the repository
+3. Install npm dependencies
+4. Start the mock server
+
+**Step 2: Check backend logs**
+```bash
+docker logs neode-backend
+```
+
+Should see:
+```
+🚀 Neode Mock Backend Server
+RPC:       http://localhost:5959/rpc/v1
+Password: password123
+```
+
+**Step 3: Test backend directly**
+```bash
+docker exec neode-backend wget -qO- http://localhost:5959/health
+```
+
+Should return: `healthy`
+
+**Step 4: Check networking**
+```bash
+docker network inspect neode_neode-network
+```
+
+Both `neode-backend` and `neode-web` should be in the same network.
+
+**Step 5: Test from web container**
+```bash
+docker exec neode-web wget -qO- http://neode-backend:5959/health
+```
+
+Should return: `healthy`. If this fails, there's a DNS issue.
+
+**Step 6: Check nginx logs**
+```bash
+docker logs neode-web | grep error
+```
+
+Look for upstream connection errors.
+
+**Step 7: Restart stack**
+
+If all else fails:
+1. In Portainer, stop the stack
+2. Wait 10 seconds
+3. Start the stack again
+4. Wait 2 minutes for everything to initialize
+
+**Common causes:**
+- Frontend started before backend was ready (fixed with healthcheck)
+- Backend failed to install dependencies (check backend logs)
+- DNS resolution issue (check network config)
+- Port 5959 already in use (unlikely in Portainer)
+
+---
+
 ### "Can't login" in Portainer
 
-**Symptom**: Login page shows but password doesn't work.
+**Symptom**: Login page shows but password works (no 502 error).
 
 **Solutions**:
 1. Check if backend is running:
