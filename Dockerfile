@@ -15,7 +15,11 @@ COPY neode-ui/ ./
 
 # Build the Vue application with Docker flag
 ENV DOCKER_BUILD=true
-RUN npm run build
+RUN npm run build && \
+    echo "Build complete. Listing dist contents:" && \
+    ls -la dist/ && \
+    echo "Checking index.html exists:" && \
+    test -f dist/index.html && echo "✓ index.html found" || echo "✗ index.html NOT found"
 
 # Production stage
 FROM nginx:alpine
@@ -25,6 +29,12 @@ COPY docker/nginx.conf /etc/nginx/nginx.conf
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Verify files were copied
+RUN echo "Files in nginx html directory:" && \
+    ls -la /usr/share/nginx/html/ && \
+    echo "Checking index.html:" && \
+    test -f /usr/share/nginx/html/index.html && echo "✓ index.html present" || echo "✗ index.html MISSING"
 
 # Expose port 80
 EXPOSE 80
