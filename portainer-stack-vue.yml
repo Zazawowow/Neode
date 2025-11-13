@@ -12,8 +12,8 @@ services:
       - -c
       - |
         set -e
-        echo "Installing git and dependencies..."
-        apk add --no-cache git wget
+        echo "Installing git, docker-cli, and dependencies..."
+        apk add --no-cache git wget docker-cli
         
         echo "Cloning repository..."
         if [ ! -d ".git" ]; then
@@ -27,19 +27,48 @@ services:
         echo "Installing Node dependencies..."
         npm install
         
+        echo "Checking Docker access..."
+        docker ps || echo "Warning: Docker access not available"
+        
+        echo "Building ATOB Docker image..."
+        cd /app
+        if [ -d "atob-package-build" ]; then rm -rf atob-package-build; fi
+        mkdir -p atob-package-build
+        cd atob-package-build
+        
+        # Create Dockerfile for ATOB
+        cat > Dockerfile <<'EOF'
+FROM nginx:alpine
+RUN apk add --no-cache curl
+RUN mkdir -p /usr/share/nginx/html
+RUN echo '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>A to B Bitcoin</title><style>body{margin:0;padding:0;overflow:hidden}iframe{width:100%;height:100vh;border:none}</style></head><body><iframe src="https://app.atobitcoin.io" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></body></html>' > /usr/share/nginx/html/index.html
+RUN echo '#!/bin/sh' > /docker_entrypoint.sh && echo 'exec nginx -g "daemon off;"' >> /docker_entrypoint.sh && chmod +x /docker_entrypoint.sh
+RUN echo '#!/bin/sh' > /check-web.sh && echo 'curl -sf http://localhost:80 > /dev/null && echo "result: true" || echo "result: false"' >> /check-web.sh && chmod +x /check-web.sh
+EXPOSE 80
+CMD ["/docker_entrypoint.sh"]
+EOF
+        
+        echo "Building atob:0.1.0 image..."
+        docker build -t atob:0.1.0 . || echo "Warning: Failed to build atob image"
+        
+        cd /app/neode-ui
         echo "Starting mock backend on port 5959..."
         node mock-backend.js
     expose:
       - "5959"
+    ports:
+      - "8102:8102"
     restart: unless-stopped
     networks:
       - neode-network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5959/health"]
       interval: 15s
       timeout: 10s
       retries: 5
-      start_period: 90s
+      start_period: 120s
     environment:
       - NODE_ENV=development
 
