@@ -24,15 +24,8 @@ RUN echo "=== Environment Check ===" && \
 
 # Build the Vue application (skip TypeScript check in Docker)
 RUN echo "=== Starting Vite build ===" && \
-    npm run build:docker; \
-    BUILD_EXIT_CODE=$?; \
-    echo "Build exit code: $BUILD_EXIT_CODE"; \
-    if [ $BUILD_EXIT_CODE -ne 0 ]; then \
-        echo "=== BUILD FAILED ===" && \
-        echo "Checking package.json for build script..." && \
-        cat package.json | grep -A 3 "scripts" && \
-        exit 1; \
-    fi
+    echo "Running: npm run build:docker" && \
+    npm run build:docker
 
 # Verify build output
 RUN echo "=== Build verification ===" && \
