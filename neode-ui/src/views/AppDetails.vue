@@ -100,10 +100,9 @@ function launchApp() {
   
   // Special handling for ATOB - opens local Docker container
   if (appId.value === 'atob') {
-    // Use the Docker container running on port 8102
-    const protocol = window.location.protocol
+    // Use the Docker container running on port 8102 (HTTP only)
     const hostname = window.location.hostname
-    const atobUrl = `${protocol}//${hostname}:8102`
+    const atobUrl = `http://${hostname}:8102`
     window.open(atobUrl, '_blank', 'noopener,noreferrer')
     return
   }
