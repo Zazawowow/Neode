@@ -33,9 +33,7 @@
       ></div>
       
       <!-- Glitch overlay layers -->
-      <div v-show="isGlitching" class="bg-glitch-layer-1"></div>
-      <div v-show="isGlitching" class="bg-glitch-layer-2"></div>
-      <div v-show="isGlitching" class="bg-glitch-scan"></div>
+      <div v-show="isGlitching" class="bg-glitch-layer"></div>
     </div>
 
     <!-- Content with 3D transitions -->
@@ -224,104 +222,46 @@ onMounted(() => {
   transform: translateZ(0) scale(1) rotateY(0deg);
 }
 
-/* Glitch overlay layers */
-.bg-glitch-layer-1,
-.bg-glitch-layer-2,
-.bg-glitch-scan {
+/* Glitch overlay layer */
+.bg-glitch-layer {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 10;
-}
-
-.bg-glitch-layer-1 {
-  background: linear-gradient(90deg, 
-    rgba(255, 0, 0, 0.6) 0%,
-    transparent 20%,
-    transparent 80%,
-    rgba(0, 255, 255, 0.6) 100%);
-  mix-blend-mode: color-dodge;
+  background: rgba(255, 255, 255, 0.1);
+  mix-blend-mode: overlay;
   opacity: 0;
-  filter: brightness(1.8) contrast(1.5) saturate(2);
-  animation: bg-glitch-shift 500ms ease-in-out;
+  animation: bg-glitch-flash 500ms ease-in-out;
 }
 
-.bg-glitch-layer-2 {
-  background: linear-gradient(180deg,
-    rgba(0, 255, 0, 0.5) 0%,
-    transparent 50%,
-    rgba(255, 0, 255, 0.5) 100%);
-  mix-blend-mode: lighten;
-  opacity: 0;
-  filter: brightness(1.6) contrast(1.4) hue-rotate(45deg);
-  animation: bg-glitch-shift-2 500ms ease-in-out;
-}
-
-.bg-glitch-scan {
-  background: linear-gradient(0deg,
-    transparent 0%,
-    rgba(255, 0, 0, 0.4) 33%,
-    rgba(0, 255, 0, 0.4) 66%,
-    rgba(0, 0, 255, 0.4) 100%);
-  mix-blend-mode: screen;
-  opacity: 0;
-  filter: brightness(1.5);
-  animation: bg-glitch-scan 500ms linear;
-}
-
-@keyframes bg-glitch-shift {
+@keyframes bg-glitch-flash {
   0%, 100% {
     opacity: 0;
-    transform: translateX(0) skewX(0deg);
+    transform: translateX(0);
+  }
+  10% {
+    opacity: 0.3;
+    transform: translateX(-3px);
   }
   20% {
-    opacity: 0.7;
-    transform: translateX(-15px) skewX(4deg);
+    opacity: 0;
+    transform: translateX(3px);
+  }
+  30% {
+    opacity: 0.4;
+    transform: translateX(-2px);
   }
   40% {
-    opacity: 0.8;
-    transform: translateX(12px) skewX(-5deg);
+    opacity: 0;
+    transform: translateX(2px);
+  }
+  50% {
+    opacity: 0.2;
+    transform: translateX(-1px);
   }
   60% {
-    opacity: 0.7;
-    transform: translateX(-8px) skewX(3deg);
-  }
-  80% {
-    opacity: 0.5;
-    transform: translateX(6px) skewX(-2deg);
-  }
-}
-
-@keyframes bg-glitch-shift-2 {
-  0%, 100% {
     opacity: 0;
-    transform: translateY(0) skewY(0deg);
-  }
-  25% {
-    opacity: 0.6;
-    transform: translateY(10px) skewY(-4deg);
-  }
-  50% {
-    opacity: 0.8;
-    transform: translateY(-12px) skewY(5deg);
-  }
-  75% {
-    opacity: 0.5;
-    transform: translateY(8px) skewY(-3deg);
-  }
-}
-
-@keyframes bg-glitch-scan {
-  0% {
-    opacity: 0;
-    transform: translateY(-100%);
-  }
-  50% {
-    opacity: 0.7;
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(100%);
+    transform: translateX(1px);
   }
 }
 </style>
