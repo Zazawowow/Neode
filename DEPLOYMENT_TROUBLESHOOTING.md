@@ -36,7 +36,7 @@ cat /var/log/nginx/error.log
 ### 4. Test Health Endpoint
 
 ```bash
-curl http://localhost:8080/health
+curl http://localhost:8100/health
 # Should return: healthy
 ```
 
@@ -47,10 +47,10 @@ Test the Docker build locally:
 ```bash
 cd /path/to/Neode
 docker build -t neode-test .
-docker run -p 8080:80 neode-test
+docker run -p 8100:80 neode-test
 ```
 
-Then visit `http://localhost:8080`
+Then visit `http://localhost:8100`
 
 ### 6. Common Issues
 
@@ -97,7 +97,7 @@ docker exec -it neode-web sh
 # Create test file
 echo '<h1>Nginx is working!</h1>' > /usr/share/nginx/html/test.html
 
-# Visit: http://localhost:8080/test.html
+# Visit: http://localhost:8100/test.html
 ```
 
 If this works, the problem is with the Vue build, not nginx.
