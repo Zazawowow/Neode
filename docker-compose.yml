@@ -1,32 +1,6 @@
 version: '3.8'
 
 services:
-  # Mock Backend Service
-  neode-backend:
-    image: node:22-alpine
-    container_name: neode-backend
-    working_dir: /app/neode-ui
-    volumes:
-      - ./neode-ui:/app/neode-ui
-    command:
-      - sh
-      - -c
-      - |
-        set -e
-        echo "Installing Node dependencies..."
-        npm install
-        
-        echo "Starting mock backend on port 5959..."
-        node mock-backend.js
-    expose:
-      - "5959"
-    restart: unless-stopped
-    networks:
-      - neode-network
-    environment:
-      - NODE_ENV=development
-
-  # Vue UI with Nginx
   neode-web:
     build:
       context: .
@@ -35,11 +9,8 @@ services:
     ports:
       - "8100:80"
     restart: unless-stopped
-    depends_on:
-      - neode-backend
     environment:
       - NODE_ENV=production
-      - BACKEND_URL=http://neode-backend:5959
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.neode.rule=Host(`neode.local`)"
