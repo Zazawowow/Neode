@@ -63,10 +63,16 @@ export const useAppStore = defineStore('app', () => {
       isConnected.value = true
 
       // Subscribe to updates
-      wsClient.subscribe((update) => {
-        if (data.value && update?.patch) {
+      wsClient.subscribe((update: any) => {
+        // Handle initial data load
+        if (update?.type === 'initial' && update?.data) {
+          console.log('Received initial data from WebSocket:', update.data)
+          data.value = update.data
+        }
+        // Handle patch updates
+        else if (data.value && update?.patch) {
           try {
-          data.value = applyDataPatch(data.value, update.patch)
+            data.value = applyDataPatch(data.value, update.patch)
           } catch (err) {
             console.error('Failed to apply WebSocket patch:', err)
           }

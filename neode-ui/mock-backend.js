@@ -59,7 +59,7 @@ const mockData = {
       title: 'Bitcoin Core',
       version: '24.0.0',
       status: 'running',
-      state: 'installed',
+      state: 'running',
       manifest: {
         id: 'bitcoin',
         title: 'Bitcoin Core',
@@ -69,6 +69,11 @@ const mockData = {
           long: 'Store, validate, and relay blocks and transactions on the Bitcoin network.',
         },
         icon: '/assets/img/bitcoin.svg',
+      },
+      'static-files': {
+        license: '/public/package-data/bitcoin/24.0.0/LICENSE.md',
+        icon: '/assets/img/bitcoin.svg',
+        instructions: '/public/package-data/bitcoin/24.0.0/INSTRUCTIONS.md',
       },
     },
     'lightning': {
@@ -86,12 +91,17 @@ const mockData = {
         },
         icon: '/assets/img/c-lightning.png',
       },
+      'static-files': {
+        license: '/public/package-data/lightning/0.15.0/LICENSE.md',
+        icon: '/assets/img/c-lightning.png',
+        instructions: '/public/package-data/lightning/0.15.0/INSTRUCTIONS.md',
+      },
     },
     'atob': {
       title: 'A to B Bitcoin',
       version: '0.1.0',
       status: 'running',
-      state: 'installed',
+      state: 'running',
       manifest: {
         id: 'atob',
         title: 'A to B Bitcoin',
