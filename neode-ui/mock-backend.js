@@ -155,15 +155,75 @@ app.post('/rpc/v1', (req, res) => {
         })
       }
 
+      case 'marketplace.get': {
+        // Mock marketplace data
+        const mockApps = [
+          {
+            id: 'bitcoin',
+            title: 'Bitcoin Core',
+            description: 'A full Bitcoin node. Store, validate, and relay blocks and transactions on the Bitcoin network.',
+            version: '25.0.0',
+            icon: '/assets/img/bitcoin.png',
+            author: 'Start9 Labs',
+            license: 'MIT',
+          },
+          {
+            id: 'lightning',
+            title: 'Core Lightning',
+            description: 'Lightning Network implementation for fast, low-cost Bitcoin payments.',
+            version: '23.08',
+            icon: '/assets/img/c-lightning.png',
+            author: 'Blockstream',
+            license: 'MIT',
+          },
+          {
+            id: 'nextcloud',
+            title: 'Nextcloud',
+            description: 'Self-hosted file sync and sharing platform. Your own private cloud storage.',
+            version: '27.1.0',
+            icon: '/assets/img/nextcloud.png',
+            author: 'Nextcloud',
+            license: 'AGPL-3.0',
+          },
+          {
+            id: 'btcpay',
+            title: 'BTCPay Server',
+            description: 'Self-hosted Bitcoin payment processor. Accept Bitcoin payments without fees.',
+            version: '1.11.7',
+            icon: '/assets/img/btcpay.png',
+            author: 'BTCPay Server Foundation',
+            license: 'MIT',
+          },
+        ]
+        
+        return res.json({ result: mockApps })
+      }
+
       case 'server.update':
       case 'server.restart':
-      case 'server.shutdown':
-      case 'package.install':
+      case 'server.shutdown': {
+        return res.json({ result: 'ok' })
+      }
+
+      case 'package.install': {
+        const { id, version } = params
+        console.log(`[Mock] Installing package: ${id}@${version}`)
+        return res.json({ result: `job-${Date.now()}` })
+      }
+
       case 'package.uninstall':
       case 'package.start':
       case 'package.stop':
       case 'package.restart': {
+        const { id } = params
+        console.log(`[Mock] ${method} for package: ${id}`)
         return res.json({ result: 'ok' })
+      }
+
+      case 'package.sideload': {
+        const { manifest } = params
+        console.log(`[Mock] Sideloading package: ${manifest?.id}`)
+        return res.json({ result: `request-${Date.now()}` })
       }
 
       default: {

@@ -79,7 +79,18 @@ export const wsClient = new WebSocketClient()
 
 // Helper to apply patches to data
 export function applyDataPatch<T>(data: T, patch: PatchOperation[]): T {
-  const result = applyPatch(data, patch as any, false, false)
-  return result.newDocument as T
+  // Validate patch is an array before applying
+  if (!Array.isArray(patch) || patch.length === 0) {
+    console.warn('Invalid or empty patch received, returning original data')
+    return data
+  }
+  
+  try {
+    const result = applyPatch(data, patch as any, false, false)
+    return result.newDocument as T
+  } catch (error) {
+    console.error('Failed to apply patch:', error, 'Patch:', patch)
+    return data // Return original data on error
+  }
 }
 

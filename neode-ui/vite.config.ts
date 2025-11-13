@@ -8,22 +8,22 @@ export default defineConfig({
     port: 8100,
     proxy: {
       '/rpc/v1': {
-        target: 'http://localhost:5959',
+        target: process.env.BACKEND_URL || 'http://localhost:5959',
         changeOrigin: true,
         secure: false,
       },
       '/ws': {
-        target: 'ws://localhost:5959',
+        target: (process.env.BACKEND_URL || 'ws://localhost:5959').replace('http', 'ws'),
         ws: true,
         changeOrigin: true,
       },
       '/public': {
-        target: 'http://localhost:5959',
+        target: process.env.BACKEND_URL || 'http://localhost:5959',
         changeOrigin: true,
         secure: false,
       },
       '/rest': {
-        target: 'http://localhost:5959',
+        target: process.env.BACKEND_URL || 'http://localhost:5959',
         changeOrigin: true,
         secure: false,
       },

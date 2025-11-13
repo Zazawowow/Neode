@@ -204,6 +204,13 @@ async function loadMarketplace() {
   apps.value = []
 
   try {
+    // Check if authenticated
+    if (!store.isAuthenticated) {
+      error.value = 'Please login first to access the marketplace'
+      loading.value = false
+      return
+    }
+
     const data = await store.getMarketplace(selectedMarketplace.value)
     
     // Parse marketplace data - format may vary
@@ -214,7 +221,19 @@ async function loadMarketplace() {
       apps.value = data.packages || data.apps || []
     }
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Failed to load marketplace'
+    const errorMessage = err instanceof Error ? err.message : 'Failed to load marketplace'
+    
+    // Check for specific error types
+    if (errorMessage.includes('Method not found')) {
+      error.value = 'Backend marketplace API not available. Ensure Neode backend is running and up to date.'
+    } else if (errorMessage.includes('authenticated') || errorMessage.includes('401')) {
+      error.value = 'Authentication required. Please login first.'
+    } else if (errorMessage.includes('Network') || errorMessage.includes('fetch')) {
+      error.value = 'Cannot connect to backend. Ensure Neode backend is running on port 5959.'
+    } else {
+      error.value = errorMessage
+    }
+    
     console.error('Marketplace error:', err)
   } finally {
     loading.value = false

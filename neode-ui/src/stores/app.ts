@@ -52,7 +52,6 @@ export const useAppStore = defineStore('app', () => {
       console.error('Logout error:', err)
     } finally {
       isAuthenticated.value = false
-      isConnected.value = false
       data.value = null
       wsClient.disconnect()
     }
@@ -65,13 +64,18 @@ export const useAppStore = defineStore('app', () => {
 
       // Subscribe to updates
       wsClient.subscribe((update) => {
-        if (data.value) {
-          data.value = applyDataPatch(data.value, update.patch)
+        if (data.value && update?.patch) {
+          try {
+            data.value = applyDataPatch(data.value, update.patch)
+          } catch (err) {
+            console.error('Failed to apply WebSocket patch:', err)
+          }
         }
       })
     } catch (err) {
       console.error('WebSocket connection failed:', err)
       isConnected.value = false
+      // Don't throw - allow app to work without real-time updates
     }
   }
 
