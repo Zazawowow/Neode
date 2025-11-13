@@ -223,7 +223,7 @@
 
   .path-option-card--selected h3 {
     color: rgba(255, 255, 255, 1);
-  }
+}
 
   /* Action Buttons */
   .path-action-button {
@@ -283,7 +283,7 @@
     box-shadow:
       0 12px 32px rgba(0, 0, 0, 0.6),
       inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  }
+}
 
   .path-action-button:hover::before {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent);
@@ -318,7 +318,7 @@
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
-  }
+}
 }
 
 /* Background image */
