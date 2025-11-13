@@ -73,7 +73,7 @@ services:
     container_name: neode-web
     hostname: neode-web
     ports:
-      - "9991:80"     # Expose for external nginx proxy
+      - "8100:80"
     restart: unless-stopped
     depends_on:
       neode-backend:
@@ -83,15 +83,19 @@ services:
     environment:
       - NODE_ENV=production
       - BACKEND_URL=http://neode-backend:5959
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.neode.rule=Host(`neode.local`)"
+      - "traefik.http.routers.neode.entrypoints=web"
+      - "traefik.http.services.neode.loadbalancer.server.port=80"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 30s
+      start_period: 120s
 
 networks:
   neode-network:
     driver: bridge
-
 

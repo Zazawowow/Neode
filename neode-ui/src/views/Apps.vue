@@ -166,12 +166,11 @@ function canLaunch(pkg: any): boolean {
 }
 
 function launchApp(id: string, pkg: any) {
-  // Special handling for ATOB - opens local Docker container
+  // Special handling for ATOB - opens local container or external app
   if (id === 'atob') {
-    // Use HTTPS via Caddy proxy on port 8102
-    const protocol = window.location.protocol
-    const hostname = window.location.hostname
-    const atobUrl = `${protocol}//${hostname}:8102`
+    // In development with Docker, use local container (from s9pk)
+    const isDev = import.meta.env.DEV
+    const atobUrl = isDev ? 'http://localhost:8102' : 'https://app.atobitcoin.io'
     window.open(atobUrl, '_blank', 'noopener,noreferrer')
     return
   }
