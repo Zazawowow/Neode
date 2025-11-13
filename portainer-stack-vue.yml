@@ -5,14 +5,24 @@ services:
   neode-backend:
     image: node:22-alpine
     container_name: neode-backend
-    working_dir: /app/neode-ui
-    volumes:
-      - ./neode-ui:/app/neode-ui
+    working_dir: /app
     command:
       - sh
       - -c
       - |
         set -e
+        echo "Installing git and dependencies..."
+        apk add --no-cache git
+        
+        echo "Cloning repository..."
+        if [ ! -d ".git" ]; then
+          git clone https://github.com/Zazawowow/Neode.git .
+        else
+          git pull origin master || true
+        fi
+        
+        cd neode-ui
+        
         echo "Installing Node dependencies..."
         npm install
         
@@ -23,13 +33,19 @@ services:
     restart: unless-stopped
     networks:
       - neode-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5959/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     environment:
       - NODE_ENV=development
 
   # Vue UI with Nginx
   neode-web:
     build:
-      context: .
+      context: https://github.com/Zazawowow/Neode.git
       dockerfile: Dockerfile
     container_name: neode-web
     ports:
@@ -37,6 +53,8 @@ services:
     restart: unless-stopped
     depends_on:
       - neode-backend
+    networks:
+      - neode-network
     environment:
       - NODE_ENV=production
       - BACKEND_URL=http://neode-backend:5959
@@ -45,9 +63,14 @@ services:
       - "traefik.http.routers.neode.rule=Host(`neode.local`)"
       - "traefik.http.routers.neode.entrypoints=web"
       - "traefik.http.services.neode.loadbalancer.server.port=80"
-    networks:
-      - neode-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
 networks:
   neode-network:
     driver: bridge
+

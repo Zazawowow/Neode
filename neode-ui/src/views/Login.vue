@@ -65,8 +65,18 @@
         </button>
 
         <!-- Footer Links -->
-        <div class="mt-6 text-center text-sm text-white/60">
-          <a href="#" class="hover:text-white/80 transition-colors">Forgot password?</a>
+        <div class="mt-6 text-center text-sm text-white/60 space-y-2">
+          <div>
+            <a href="#" class="hover:text-white/80 transition-colors">Forgot password?</a>
+          </div>
+          <div>
+            <button 
+              @click="replayIntro" 
+              class="text-xs hover:text-white/80 transition-colors underline-offset-2 hover:underline"
+            >
+              Replay Intro
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -99,6 +109,13 @@ async function handleLogin() {
   } finally {
     loading.value = false
   }
+}
+
+function replayIntro() {
+  // Clear the intro seen flag
+  localStorage.removeItem('neode_intro_seen')
+  // Navigate to root to trigger splash screen
+  window.location.href = '/'
 }
 </script>
 

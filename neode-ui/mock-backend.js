@@ -168,6 +168,11 @@ app.post('/rpc/v1', (req, res) => {
   }
 })
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).send('healthy')
+})
+
 // WebSocket endpoint for real-time updates
 const server = http.createServer(app)
 const wss = new WebSocketServer({ server, path: '/ws/db' })
