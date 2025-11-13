@@ -59,6 +59,15 @@
 
     <!-- Main Content -->
     <main class="flex-1 overflow-y-auto relative pb-20 md:pb-0">
+      <!-- Mobile Header with Logo - Mobile Only -->
+      <header class="md:hidden sticky top-0 z-40 border-b border-glass-border shadow-glass-sm" style="background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);">
+        <div class="flex items-center justify-center py-4">
+          <div class="logo-gradient-border">
+            <img src="/assets/img/logo-neode.png" alt="Neode" class="w-12 h-12" />
+          </div>
+        </div>
+      </header>
+
       <!-- Connection Status Banner -->
       <div v-if="isOffline" class="path-option-card mx-6 mt-6 px-6 py-3 border-l-4 border-yellow-500">
         <div class="flex items-center gap-2 text-yellow-200">
