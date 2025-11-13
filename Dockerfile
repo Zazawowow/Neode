@@ -15,14 +15,33 @@ COPY neode-ui/ ./
 
 # Build the Vue application with Docker flag
 ENV DOCKER_BUILD=true
-RUN echo "Starting Vite build..." && \
-    npm run build || (echo "ERROR: npm run build failed!" && exit 1) && \
-    echo "Build complete. Checking dist directory..." && \
-    ls -la . && \
-    echo "Listing dist contents:" && \
-    ls -la dist/ && \
-    echo "Checking index.html exists:" && \
-    test -f dist/index.html && echo "✓ index.html found" || (echo "✗ index.html NOT found" && exit 1)
+
+# Show environment for debugging
+RUN echo "=== Environment Check ===" && \
+    echo "DOCKER_BUILD=$DOCKER_BUILD" && \
+    echo "Current directory:" && pwd && \
+    echo "Files in current directory:" && ls -la
+
+# Build the Vue application
+RUN echo "=== Starting Vite build ===" && \
+    npm run build 2>&1 || (echo "=== BUILD FAILED ===" && exit 1)
+
+# Verify build output
+RUN echo "=== Build verification ===" && \
+    echo "Files in current directory:" && ls -la && \
+    echo "" && \
+    echo "Checking for dist directory..." && \
+    if [ -d "dist" ]; then \
+        echo "✓ dist directory exists" && \
+        ls -la dist/ && \
+        if [ -f "dist/index.html" ]; then \
+            echo "✓ index.html found"; \
+        else \
+            echo "✗ index.html NOT found" && exit 1; \
+        fi \
+    else \
+        echo "✗ dist directory does not exist!" && exit 1; \
+    fi
 
 # Production stage
 FROM nginx:alpine
