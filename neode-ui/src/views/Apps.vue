@@ -166,11 +166,12 @@ function canLaunch(pkg: any): boolean {
 }
 
 function launchApp(id: string, pkg: any) {
-  // Special handling for ATOB - opens local container or external app
+  // Special handling for ATOB - opens local Docker container
   if (id === 'atob') {
-    // In development with Docker, use local container (from s9pk)
-    const isDev = import.meta.env.DEV
-    const atobUrl = isDev ? 'http://localhost:8102' : 'https://app.atobitcoin.io'
+    // Use the Docker container running on port 8102
+    const protocol = window.location.protocol
+    const hostname = window.location.hostname
+    const atobUrl = `${protocol}//${hostname}:8102`
     window.open(atobUrl, '_blank', 'noopener,noreferrer')
     return
   }
