@@ -33,9 +33,9 @@ server {
     # Max upload size
     client_max_body_size 100M;
     
-    # Proxy to Caddy on port 8443 (HTTPS)
+    # Proxy to Caddy on port 9443 (HTTPS)
     location / {
-        proxy_pass https://localhost:8443;
+        proxy_pass https://localhost:9443;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;

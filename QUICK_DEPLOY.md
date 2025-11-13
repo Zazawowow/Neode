@@ -22,8 +22,8 @@ In Portainer:
 5. Click **"Update"**
 
 The stack will now use:
-- Port **8080** for HTTP (instead of 80)
-- Port **8443** for HTTPS (instead of 443)
+- Port **9080** for HTTP (instead of 80)
+- Port **9443** for HTTPS (instead of 443)
 - Port **8100** for legacy access
 - Port **8102** for ATOB
 
@@ -39,7 +39,7 @@ cd /Users/tx1138/Code/Neode
 
 This script:
 - ✅ Backs up your current nginx config
-- ✅ Creates new config that proxies to Caddy on port 8443
+- ✅ Creates new config that proxies to Caddy on port 9443
 - ✅ Tests the config
 - ✅ Reloads nginx automatically
 
@@ -69,7 +69,7 @@ Internet (HTTPS/WSS)
     ↓
 External Nginx (Ports 80/443)
     ↓
-Caddy in Docker (Ports 8080/8443)
+Caddy in Docker (Ports 9080/9443)
     ↓
 Neode Web Container (Port 80)
     ↓
