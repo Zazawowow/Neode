@@ -21,7 +21,7 @@
   }
   
   .glass-card {
-    background-color: rgba(0, 0, 0, 0.35);
+    background-color: rgba(0, 0, 0, 0.65);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     border: 1px solid rgba(255, 255, 255, 0.18);
@@ -118,7 +118,7 @@
     max-width: 1200px;
     margin: 40px auto;
     padding: 32px;
-    background: rgba(0, 0, 0, 0.12);
+    background: rgba(0, 0, 0, 0.65);
     backdrop-filter: blur(40px);
     -webkit-backdrop-filter: blur(40px);
     border-radius: 24px;
@@ -134,7 +134,7 @@
   /* Choose Your Path - Option Cards */
   .path-option-card {
     position: relative;
-    background: rgba(0, 0, 0, 0.25);
+    background: rgba(0, 0, 0, 0.60);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     box-shadow:

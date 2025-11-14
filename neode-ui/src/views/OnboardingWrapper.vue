@@ -2,37 +2,14 @@
   <div class="min-h-screen relative overflow-hidden">
     <!-- Background layers with 3D perspective -->
     <div class="bg-perspective-container">
-      <!-- Default background (intro/options) -->
+      <!-- Single background layer -->
       <div 
-        class="bg-layer"
-        :class="{
-          'bg-transitioning-in': showDefaultBg,
-          'bg-transitioning-out': !showDefaultBg
-        }"
-        style="background-image: url('/assets/img/bg-4.jpg');"
+        class="bg-layer bg-static"
+        :style="{ backgroundImage: `url('/assets/img/${currentBackground}')` }"
+        :key="currentBackground"
       ></div>
       
-      <!-- Alternate background (path/did/backup/verify/done) -->
-      <div 
-        class="bg-layer"
-        :class="{
-          'bg-transitioning-in': showAltBg,
-          'bg-transitioning-out': !showAltBg
-        }"
-        style="background-image: url('/assets/img/bg-3.jpg');"
-      ></div>
-      
-      <!-- Login background -->
-      <div 
-        class="bg-layer"
-        :class="{
-          'bg-transitioning-in': showLoginBg,
-          'bg-transitioning-out': !showLoginBg
-        }"
-        style="background-image: url('/assets/img/bg-1.jpg');"
-      ></div>
-      
-      <!-- Glitch overlay layers -->
+      <!-- Glitch overlay layer -->
       <div v-show="isGlitching" class="bg-glitch-layer"></div>
     </div>
 
@@ -52,51 +29,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
-const currentBackground = ref<'default' | 'alt' | 'login'>('default')
+const currentBackground = ref('bg-4.jpg')
 const isGlitching = ref(false)
 
-// Screens that should trigger background swap and glitch
-const altBackgroundScreens = [
-  '/onboarding/path',
-  '/onboarding/did',
-  '/onboarding/backup',
-  '/onboarding/verify',
-  '/onboarding/done'
-]
-
-const loginScreen = '/login'
-
-// Computed background states
-const showDefaultBg = computed(() => currentBackground.value === 'default')
-const showAltBg = computed(() => currentBackground.value === 'alt')
-const showLoginBg = computed(() => currentBackground.value === 'login')
+// Map each route to a specific background image
+const routeBackgrounds: Record<string, string> = {
+  '/onboarding/intro': 'bg-4.jpg',
+  '/onboarding/options': 'bg-5.jpg',
+  '/onboarding/path': 'bg-3.jpg',
+  '/onboarding/did': 'bg-6.jpg',
+  '/onboarding/backup': 'bg-7.jpg',
+  '/onboarding/verify': 'bg-2.jpg',
+  '/onboarding/done': 'bg-1.jpg',
+  '/login': 'bg-1.jpg'
+}
 
 // Watch route changes for background swaps and glitch
 watch(() => route.path, (newPath, oldPath) => {
-  const isAltScreen = altBackgroundScreens.includes(newPath)
-  const wasAltScreen = altBackgroundScreens.includes(oldPath)
-  const isLogin = newPath === loginScreen
-  const wasLogin = oldPath === loginScreen
+  const newBg = routeBackgrounds[newPath]
   
-  // Determine previous background
-  const prevBackground = currentBackground.value
-  
-  // Update background based on current route
-  if (isLogin) {
-    currentBackground.value = 'login'
-  } else if (isAltScreen) {
-    currentBackground.value = 'alt'
-  } else {
-    currentBackground.value = 'default'
-  }
-  
-  // Trigger glitch when transitioning between different backgrounds
-  const backgroundChanged = currentBackground.value !== prevBackground
-  if (backgroundChanged && (isAltScreen || isLogin)) {
+  // Only update if we have a defined background for this route and it's different
+  if (newBg && newBg !== currentBackground.value) {
+    currentBackground.value = newBg
+    
     // Trigger glitch after the 3D transition completes
     setTimeout(() => {
       isGlitching.value = true
@@ -109,13 +68,9 @@ watch(() => route.path, (newPath, oldPath) => {
 
 // Initialize background on mount based on current route
 onMounted(() => {
-  const path = route.path
-  if (path === loginScreen) {
-    currentBackground.value = 'login'
-  } else if (altBackgroundScreens.includes(path)) {
-    currentBackground.value = 'alt'
-  } else {
-    currentBackground.value = 'default'
+  const bg = routeBackgrounds[route.path]
+  if (bg) {
+    currentBackground.value = bg
   }
 })
 </script>
@@ -207,19 +162,13 @@ onMounted(() => {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  transition: all 0.7s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   transform-style: preserve-3d;
   backface-visibility: hidden;
 }
 
-.bg-transitioning-out {
-  opacity: 0;
-  transform: translateZ(-500px) scale(0.7) rotateY(10deg);
-}
-
-.bg-transitioning-in {
+.bg-static {
   opacity: 1;
-  transform: translateZ(0) scale(1) rotateY(0deg);
+  transform: translateZ(0) scale(1);
 }
 
 /* Glitch overlay layer */
