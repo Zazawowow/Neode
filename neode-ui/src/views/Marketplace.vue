@@ -1,5 +1,7 @@
 <template>
-  <div class="marketplace-container">
+  <div class="marketplace-container flex flex-col h-full overflow-hidden">
+    <!-- Fixed Header Section -->
+    <div class="flex-shrink-0">
     <!-- Installation Progress Banner -->
     <div v-if="installing" class="mb-6 glass-card p-4 border-l-4 border-blue-500">
       <div class="flex items-center justify-between">
@@ -8,7 +10,7 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <div>
+  <div>
             <p class="text-white font-medium">Installing {{ installing }}...</p>
             <p class="text-white/70 text-sm">Checking for Docker image and starting container</p>
           </div>
@@ -19,219 +21,160 @@
       </div>
     </div>
 
-    <div class="mb-8 flex items-start justify-between">
-      <div>
-        <h1 class="text-4xl font-bold text-white mb-2">Marketplace</h1>
-        <p class="text-white/70">Discover and install apps for your Neode server</p>
-      </div>
-      
-      <!-- Sideload Button -->
-      <button
-        @click="showSideloadModal = true"
-        class="px-6 py-3 gradient-button rounded-lg font-medium flex items-center gap-2"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-        </svg>
-        Sideload
-      </button>
-    </div>
-
-    <!-- Tabs -->
-    <div class="mb-6 glass-card p-2 inline-flex rounded-lg">
-      <button
-        @click="activeTab = 'local'"
-        :class="[
-          'px-6 py-2 rounded-lg font-medium transition-all',
-          activeTab === 'local'
-            ? 'bg-white/20 text-white'
-            : 'text-white/60 hover:text-white/80'
-        ]"
-      >
-        Local Apps
-      </button>
-      <button
-        @click="activeTab = 'community'"
-        :class="[
-          'px-6 py-2 rounded-lg font-medium transition-all',
-          activeTab === 'community'
-            ? 'bg-white/20 text-white'
-            : 'text-white/60 hover:text-white/80'
-        ]"
-      >
-        Community Marketplace
-      </button>
-    </div>
-
-    <!-- Local Apps Tab -->
-    <div v-if="activeTab === 'local'">
-      <!-- Available Apps -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div
-          v-for="app in availableApps"
-          :key="app.id"
-          class="glass-card p-6 hover:bg-white/10 transition-all cursor-pointer flex flex-col"
-          @click="viewApp(app)"
-        >
-          <div class="flex items-start gap-4 mb-4">
-            <img
-              :src="app.icon"
-              :alt="app.title"
-              class="w-16 h-16 rounded-lg object-cover"
-              @error="handleImageError"
-            />
-            <div class="flex-1">
-              <h3 class="text-xl font-semibold text-white mb-1">{{ app.title }}</h3>
-              <p class="text-sm text-white/60">v{{ app.version }}</p>
-            </div>
-          </div>
-          
-          <p class="text-white/80 text-sm mb-4 flex-1">{{ app.description.short }}</p>
-          
-          <button
-            v-if="isInstalled(app.id)"
-            disabled
-            class="w-full px-4 py-2 bg-white/20 rounded-lg text-white/60 text-sm font-medium cursor-not-allowed mt-auto"
-          >
-            Already Installed
-          </button>
-          <button
-            v-else
-            @click.stop="installApp(app)"
-            :disabled="installing === app.id || installing !== null"
-            class="w-full px-4 py-2 gradient-button rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
-          >
-            <span v-if="installing === app.id" class="flex items-center justify-center gap-2">
-              <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Installing...
-            </span>
-            <span v-else>Install</span>
-          </button>
+      <div class="mb-8 flex items-start justify-between">
+        <div>
+      <h1 class="text-4xl font-bold text-white mb-2">Marketplace</h1>
+          <p class="text-white/70">Discover and install apps for your new sovereign life</p>
         </div>
-      </div>
-    </div>
 
-    <!-- Community Marketplace Tab -->
-    <div v-if="activeTab === 'community'">
-      <!-- Loading State -->
-      <div v-if="loadingCommunity" class="flex items-center justify-center py-12">
-        <div class="text-center">
-          <svg class="animate-spin h-12 w-12 text-blue-400 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <p class="text-white/70">Loading Start9 Community Marketplace...</p>
-        </div>
-      </div>
-
-      <!-- Error State -->
-      <div v-else-if="communityError" class="glass-card p-8 border-l-4 border-red-500">
-        <p class="text-red-400 font-medium mb-2">Failed to load marketplace</p>
-        <p class="text-white/70 text-sm mb-4">{{ communityError }}</p>
+        <!-- Sideload Button -->
         <button
-          @click="loadCommunityMarketplace"
-          class="px-4 py-2 gradient-button rounded-lg text-sm font-medium"
+          @click="showSideloadModal = true"
+          class="px-6 py-3 gradient-button rounded-lg font-medium flex items-center gap-2"
         >
-          Retry
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          Sideload
         </button>
       </div>
 
-      <!-- Community Apps Grid -->
-      <div v-else>
-        <!-- Info Banner (showing curated/GitHub list) -->
-        <div class="mb-6 glass-card p-4 border-l-4 border-blue-500">
-          <p class="text-white/80 text-sm">
-            <span class="font-medium">📚 Community Apps:</span> Showing {{communityApps.length}} Start9 ecosystem applications. 
-            Visit GitHub repos to find latest .s9pk releases for installation.
-          </p>
-        </div>
+      <!-- Category Tabs (Desktop only) -->
+      <div class="hidden md:flex mb-6 glass-card p-2 rounded-lg flex-wrap gap-2">
+        <button
+          v-for="category in categories"
+          :key="category.id"
+          @click="selectedCategory = category.id"
+          :class="[
+            'px-6 py-2 rounded-lg font-medium transition-all',
+            selectedCategory === category.id
+              ? 'bg-white/20 text-white'
+              : 'text-white/60 hover:text-white/80'
+          ]"
+        >
+          {{ category.name }}
+        </button>
+      </div>
 
-        <!-- Search Bar -->
-        <div class="mb-6">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search community apps..."
-            class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-white/40"
-          />
+      <!-- Current Category Badge (Mobile only) -->
+      <div class="md:hidden mb-6 glass-card p-4 rounded-lg flex items-center justify-between">
+        <div>
+          <p class="text-white/60 text-xs mb-1">Viewing Category</p>
+          <p class="text-white font-semibold">{{ categories.find(c => c.id === selectedCategory)?.name }}</p>
         </div>
+        <button
+          @click="showFilterModal = true"
+          class="px-4 py-2 gradient-button rounded-lg text-sm font-medium flex items-center gap-2"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+          Filter
+        </button>
+      </div>
 
-        <!-- Apps Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
-            v-for="app in filteredCommunityApps"
-            :key="app.id"
-            class="glass-card p-6 hover:bg-white/10 transition-all cursor-pointer flex flex-col"
-          >
-            <div class="flex items-start gap-4 mb-4">
-              <img
-                :src="app.icon || '/assets/img/logo-neode.png'"
-                :alt="app.title"
-                class="w-16 h-16 rounded-lg object-cover"
-                @error="handleImageError"
-              />
-              <div class="flex-1">
-                <h3 class="text-xl font-semibold text-white mb-1">{{ app.title }}</h3>
-                <p class="text-sm text-white/60">v{{ app.version }}</p>
-                <p v-if="app.author" class="text-xs text-white/50 mt-1">by {{ app.author }}</p>
-              </div>
-            </div>
-            
-            <p class="text-white/80 text-sm mb-4 line-clamp-3 flex-1">{{ app.description || 'No description available' }}</p>
-            
-            <div class="flex gap-2 mt-auto">
-              <button
-                v-if="isInstalled(app.id)"
-                disabled
-                class="flex-1 px-4 py-2 bg-white/20 rounded-lg text-white/60 text-sm font-medium cursor-not-allowed"
-              >
-                Already Installed
-              </button>
-              <button
-                v-else-if="app.manifestUrl"
-                @click.stop="installCommunityApp(app)"
-                :disabled="installing === app.id || installing !== null"
-                class="flex-1 px-4 py-2 gradient-button rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span v-if="installing === app.id" class="flex items-center justify-center gap-2">
-                  <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Installing...
-                </span>
-                <span v-else>Install</span>
-              </button>
-              <button
-                v-else
-                disabled
-                class="flex-1 px-4 py-2 bg-white/10 rounded-lg text-white/40 text-sm font-medium cursor-not-allowed"
-              >
-                Not Available
-              </button>
-              <a
-                v-if="app.repoUrl"
-                :href="app.repoUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm font-medium transition-all"
-                @click.stop
-              >
-                GitHub
-              </a>
-            </div>
-          </div>
-        </div>
-
-        <!-- Empty State -->
-        <div v-if="filteredCommunityApps.length === 0" class="text-center py-12">
-          <p class="text-white/70">No apps found matching "{{ searchQuery }}"</p>
-        </div>
+      <!-- Search Bar -->
+      <div class="mb-6">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Search apps..."
+          class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:border-white/40 transition-colors"
+        />
       </div>
     </div>
+
+    <!-- Scrollable Apps Section -->
+    <div class="flex-1 overflow-y-auto pr-2 -mr-2 pb-0 md:pb-6">
+      <!-- Apps Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div
+          v-for="app in filteredApps"
+        :key="app.id"
+          class="glass-card p-6 hover:bg-white/10 transition-all cursor-pointer flex flex-col"
+          @click="viewAppDetails(app)"
+      >
+        <div class="flex items-start gap-4 mb-4">
+        <img
+              v-if="app.icon"
+          :src="app.icon"
+          :alt="app.title"
+            class="w-16 h-16 rounded-lg object-cover"
+            @error="handleImageError"
+          />
+            <div v-else class="w-16 h-16 rounded-lg bg-white/10 flex items-center justify-center">
+              <svg class="w-8 h-8 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+          <div class="flex-1">
+            <h3 class="text-xl font-semibold text-white mb-1">{{ app.title }}</h3>
+              <p class="text-sm text-white/60">{{ app.version ? `v${app.version}` : 'latest' }}</p>
+              <p v-if="app.author" class="text-xs text-white/50 mt-1">by {{ app.author }}</p>
+          </div>
+        </div>
+        
+          <p class="text-white/80 text-sm mb-4 line-clamp-3 flex-1">
+            {{ typeof app.description === 'object' ? app.description.short : (app.description || 'No description available') }}
+          </p>
+        
+          <div class="flex gap-2 mt-auto">
+        <button
+          v-if="isInstalled(app.id)"
+          disabled
+              class="flex-1 px-4 py-2 bg-white/20 rounded-lg text-white/60 text-sm font-medium cursor-not-allowed"
+        >
+          Already Installed
+        </button>
+            <button
+              v-else-if="app.source === 'local' || app.manifestUrl"
+              @click.stop="app.source === 'local' ? installApp(app) : installCommunityApp(app)"
+          :disabled="installing === app.id || installing !== null"
+              class="flex-1 px-4 py-2 gradient-button rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <span v-if="installing === app.id" class="flex items-center justify-center gap-2">
+            <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            Installing...
+          </span>
+          <span v-else>Install</span>
+            </button>
+            <button
+              v-else
+              disabled
+              class="flex-1 px-4 py-2 bg-white/10 rounded-lg text-white/40 text-sm font-medium cursor-not-allowed"
+            >
+              Not Available
+            </button>
+            <a
+              v-if="app.repoUrl"
+              :href="app.repoUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white text-sm font-medium transition-all"
+              @click.stop
+            >
+              GitHub
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div v-if="filteredApps.length === 0" class="text-center py-12">
+        <div v-if="loadingCommunity" class="flex flex-col items-center gap-4">
+          <svg class="animate-spin h-12 w-12 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p class="text-white/70">Loading community apps...</p>
+        </div>
+        <p v-else class="text-white/70">No apps found in {{ categories.find(c => c.id === selectedCategory)?.name }}{{ searchQuery ? ` matching "${searchQuery}"` : '' }}</p>
+      </div>
+          </div>
+    <!-- End Scrollable Apps Section -->
 
     <!-- Sideload Modal -->
     <Transition name="modal">
@@ -255,16 +198,16 @@
           <p class="text-white/70 mb-6">Install a package from an s9pk file URL or local path</p>
           
           <div class="flex flex-col gap-4">
-            <input
-              v-model="sideloadUrl"
-              type="text"
-              placeholder="https://example.com/package.s9pk or /packages/package.s9pk"
+          <input
+            v-model="sideloadUrl"
+            type="text"
+            placeholder="https://example.com/package.s9pk or /packages/package.s9pk"
               class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-white/40"
               @keyup.enter="sideloadPackage"
-            />
-            <button
-              @click="sideloadPackage"
-              :disabled="!sideloadUrl || sideloading"
+          />
+          <button
+            @click="sideloadPackage"
+            :disabled="!sideloadUrl || sideloading"
               class="px-8 py-3 gradient-button rounded-lg font-medium disabled:opacity-50 flex items-center justify-center gap-2"
             >
               <svg v-if="sideloading" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -272,9 +215,9 @@
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
               {{ sideloading ? 'Installing...' : 'Install Package' }}
-            </button>
-          </div>
-          
+          </button>
+        </div>
+        
           <p v-if="sideloadError" class="mt-4 text-red-400 text-sm">{{ sideloadError }}</p>
           <p v-if="sideloadSuccess" class="mt-4 text-green-400 text-sm">{{ sideloadSuccess }}</p>
 
@@ -289,20 +232,109 @@
         </div>
       </div>
     </Transition>
+
+    <!-- Filter Modal (Mobile only) -->
+    <Transition name="modal">
+      <div
+        v-if="showFilterModal"
+        class="fixed inset-0 z-50 flex items-end justify-center md:hidden bg-black/60 backdrop-blur-sm"
+        @click.self="showFilterModal = false"
+      >
+        <div class="glass-card p-6 w-full rounded-t-3xl max-h-[80vh] overflow-y-auto">
+          <!-- Header -->
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-white">Filter by Category</h2>
+            <button
+              @click="showFilterModal = false"
+              class="text-white/60 hover:text-white transition-colors"
+            >
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Category Grid -->
+          <div class="grid grid-cols-2 gap-3">
+            <button
+              v-for="category in categories"
+              :key="category.id"
+              @click="selectedCategory = category.id; showFilterModal = false"
+              :class="[
+                'p-4 rounded-xl font-medium transition-all text-left',
+                selectedCategory === category.id
+                  ? 'bg-white/20 text-white border-2 border-white/40'
+                  : 'glass-card text-white/80 hover:bg-white/10'
+              ]"
+            >
+              <div class="flex items-center gap-3">
+                <!-- Category Icon -->
+                <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center">
+                  <svg v-if="category.id === 'community'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <svg v-else-if="category.id === 'commerce'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  <svg v-else-if="category.id === 'money'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <svg v-else-if="category.id === 'data'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                  </svg>
+                  <svg v-else-if="category.id === 'home'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                  </svg>
+                  <svg v-else-if="category.id === 'car'" class="w-6 h-6" viewBox="0 0 122.88 122.88" fill="currentColor">
+                    <path d="M61.44,0c33.93,0,61.44,27.51,61.44,61.44c0,33.93-27.51,61.44-61.44,61.44S0,95.37,0,61.44 C0,27.51,27.51,0,61.44,0L61.44,0z M61.17,61.6c1.76,0,3.18,1.42,3.18,3.18c0,1.76-1.42,3.18-3.18,3.18 c-1.76,0-3.18-1.42-3.18-3.18C57.99,63.03,59.42,61.6,61.17,61.6L61.17,61.6z M61.2,53.28c6.34,0,11.47,5.14,11.47,11.47 c0,6.34-5.14,11.47-11.47,11.47c-6.33,0-11.47-5.14-11.47-11.47C49.73,58.41,54.87,53.28,61.2,53.28L61.2,53.28z M14.78,44.57 c4.45-12.31,13.52-22.7,24.9-28.01c15.63-7.29,34.61-7.75,50.69,4.15c9.48,7.01,12.94,12.76,17.67,22.95 c3.58,9.03,0.64,11.97-10.87,6.9c-23.79-11.77-47.84-11.24-72.12,0C16.09,56.41,11.06,51.53,14.78,44.57L14.78,44.57z M75.9,109.05 c16.62-5.23,26.32-15.81,32.27-29.3c3.87-10.43-8.26-13.97-12.52-7.1c-2.55,5.06-5.59,9.4-9.55,12.77 c-6.2,5.27-15.18,6.23-16.58,16.16C68.79,106.74,69.97,111.38,75.9,109.05L75.9,109.05z M47.26,109.05 c-16.62-5.23-26.32-15.81-32.27-29.3c-3.87-10.43,8.26-13.97,12.52-7.1c2.55,5.06,5.59,9.4,9.55,12.77 c6.2,5.27,15.18,6.23,16.58,16.16C54.37,106.74,53.19,111.38,47.26,109.05L47.26,109.05z"/>
+                  </svg>
+                  <svg v-else-if="category.id === 'networking'" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                  </svg>
+                  <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                </div>
+                <div class="flex-1">
+                  <p class="font-semibold">{{ category.name }}</p>
+                  <p v-if="selectedCategory === category.id" class="text-xs text-white/60 mt-1">Currently viewing</p>
+                </div>
+                <svg v-if="selectedCategory === category.id" class="w-5 h-5 text-white flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+              </div>
+            </button>
+          </div>
+      </div>
+    </div>
+    </Transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { rpcClient } from '@/api/rpc-client'
+import { useMarketplaceApp } from '@/composables/useMarketplaceApp'
 
 const router = useRouter()
 const store = useAppStore()
+const { setCurrentApp } = useMarketplaceApp()
 
-// Tab state
-const activeTab = ref<'local' | 'community'>('local')
+// Category state
+const selectedCategory = ref('community')
+
+const categories = [
+  { id: 'community', name: 'Community' },
+  { id: 'commerce', name: 'Commerce' },
+  { id: 'money', name: 'Money' },
+  { id: 'data', name: 'Data' },
+  { id: 'home', name: 'Home' },
+  { id: 'car', name: 'Auto' },
+  { id: 'networking', name: 'Networking' },
+  { id: 'other', name: 'Other' }
+]
 
 // Local apps state
 const installing = ref<string | null>(null)
@@ -315,6 +347,9 @@ const sideloadUrl = ref('')
 const sideloading = ref(false)
 const sideloadError = ref('')
 const sideloadSuccess = ref('')
+
+// Filter modal state (for mobile)
+const showFilterModal = ref(false)
 
 // Community marketplace state
 const loadingCommunity = ref(false)
@@ -329,6 +364,7 @@ const availableApps = ref([
     title: 'A to B Bitcoin',
     version: '0.1.0',
     icon: '/assets/img/atob.png',
+    category: 'community',
     description: {
       short: 'Bitcoin tools and services for seamless transactions',
       long: 'A to B Bitcoin provides tools and services for Bitcoin transactions. Access the A to B platform through your Neode server with full privacy and control.'
@@ -340,11 +376,48 @@ const availableApps = ref([
     title: 'K484',
     version: '0.1.0',
     icon: '/assets/img/k484.png',
+    category: 'commerce',
     description: {
       short: 'Point of Sale and Admin system for Neode',
       long: 'K484 provides a complete POS and administration system for your Neode server. Choose between POS mode for transactions or Admin mode for management.'
     },
     s9pkUrl: '/packages/k484.s9pk'
+  },
+  {
+    id: 'btcpay',
+    title: 'BTCPay Server',
+    version: '0.1.0',
+    icon: '/assets/img/btcpay.png',
+    category: 'commerce',
+    description: {
+      short: 'Self-hosted Bitcoin payment processor',
+      long: 'BTCPay Server is a free, open-source cryptocurrency payment processor. Accept Bitcoin payments without intermediaries or fees. Complete merchant solution with invoicing, point of sale, and more.'
+    },
+    s9pkUrl: '/packages/btcpay.s9pk'
+  },
+  {
+    id: 'nextcloud',
+    title: 'Nextcloud',
+    version: '0.1.0',
+    icon: '/assets/img/nextcloud.png',
+    category: 'data',
+    description: {
+      short: 'Self-hosted file sync and collaboration platform',
+      long: 'Nextcloud provides file storage, sync, and sharing with calendar, contacts, mail, and office suite integration. Your own private cloud with complete control over your data.'
+    },
+    s9pkUrl: '/packages/nextcloud.s9pk'
+  },
+  {
+    id: 'home-assistant',
+    title: 'Home Assistant',
+    version: '0.1.0',
+    icon: '/assets/img/home-assistant.png',
+    category: 'home',
+    description: {
+      short: 'Open-source home automation platform',
+      long: 'Home Assistant is a powerful home automation hub that allows you to control and automate your smart home devices privately. No cloud required - everything runs locally on your Neode server.'
+    },
+    s9pkUrl: '/packages/home-assistant.s9pk'
   }
 ])
 
@@ -352,26 +425,125 @@ const installedPackages = computed(() => {
   return store.data?.['package-data'] || {}
 })
 
-// Filtered community apps based on search
-const filteredCommunityApps = computed(() => {
-  if (!searchQuery.value) return communityApps.value
+// Function to categorize community apps based on their ID and description
+function categorizeCommunityApp(app: any): string {
+  const id = app.id.toLowerCase()
+  const title = app.title?.toLowerCase() || ''
+  const description = app.description?.toLowerCase() || ''
+  const combined = `${id} ${title} ${description}`
   
-  const query = searchQuery.value.toLowerCase()
-  return communityApps.value.filter(app => 
-    app.title.toLowerCase().includes(query) ||
-    app.description?.toLowerCase().includes(query) ||
-    app.id.toLowerCase().includes(query) ||
-    app.author?.toLowerCase().includes(query)
-  )
+  // Money category
+  if (id.includes('bitcoin') || id.includes('btc') || id.includes('lightning') || 
+      id.includes('lnd') || id.includes('cln') || id.includes('electr') || 
+      id.includes('fedimint') || id.includes('cashu') || title.includes('lightning') ||
+      combined.includes('wallet') || combined.includes('satoshi')) {
+    return 'money'
+  }
+  
+  // Commerce category
+  if (id.includes('btcpay') || id.includes('commerce') || id.includes('shop') || 
+      id.includes('store') || id.includes('pos') || id.includes('payment') ||
+      combined.includes('merchant') || combined.includes('invoice')) {
+    return 'commerce'
+  }
+  
+  // Data category
+  if (id.includes('cloud') || id.includes('nextcloud') || id.includes('sync') || 
+      id.includes('storage') || id.includes('backup') || id.includes('file') ||
+      id.includes('photo') || id.includes('immich') || id.includes('jellyfin') ||
+      id.includes('plex') || id.includes('media') || id.includes('vault') ||
+      combined.includes('password manager') || combined.includes('file storage')) {
+    return 'data'
+  }
+  
+  // Home category
+  if (id.includes('home-assistant') || id.includes('homeassistant') || 
+      id.includes('smart-home') || id.includes('automation') || id.includes('iot') ||
+      combined.includes('home automation') || combined.includes('smart home')) {
+    return 'home'
+  }
+  
+  // Networking category
+  if (id.includes('vpn') || id.includes('wireguard') || id.includes('tailscale') ||
+      id.includes('proxy') || id.includes('dns') || id.includes('pihole') ||
+      id.includes('adguard') || id.includes('nginx') || id.includes('tor') ||
+      combined.includes('network') || combined.includes('firewall')) {
+    return 'networking'
+  }
+  
+  // Community category
+  if (id.includes('matrix') || id.includes('synapse') || id.includes('element') ||
+      id.includes('nostr') || id.includes('mastodon') || id.includes('lemmy') ||
+      id.includes('messenger') || id.includes('chat') || id.includes('social') ||
+      id.includes('cups') || combined.includes('communication') ||
+      combined.includes('messaging')) {
+    return 'community'
+  }
+  
+  // Default to other
+  return 'other'
+}
+
+// Combine local and community apps with categories
+const allApps = computed(() => {
+  // Local apps already have categories - normalize field names
+  const local = availableApps.value.map(app => ({ 
+    ...app, 
+    source: 'local',
+    // Add manifestUrl and url for consistency with community apps
+    manifestUrl: app.s9pkUrl || app.manifestUrl,
+    url: app.s9pkUrl || app.url
+  }))
+  
+  // Categorize community apps intelligently
+  const community = communityApps.value.map(app => {
+    const category = categorizeCommunityApp(app)
+    return {
+      ...app, 
+      category,
+      source: 'community'
+    }
+  })
+  
+  return [...local, ...community]
+})
+
+// Filtered apps by category and search
+const filteredApps = computed(() => {
+  let apps = allApps.value
+  
+  // Filter by category
+  if (selectedCategory.value && selectedCategory.value !== 'all') {
+    apps = apps.filter(app => app.category === selectedCategory.value)
+  }
+  
+  // Filter by search query
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    apps = apps.filter(app => 
+      app.title?.toLowerCase().includes(query) ||
+      app.description?.toLowerCase().includes(query) ||
+      (typeof app.description === 'object' && app.description?.short?.toLowerCase().includes(query)) ||
+      app.id?.toLowerCase().includes(query) ||
+      app.author?.toLowerCase().includes(query)
+    )
+  }
+  
+  return apps
+})
+
+// Keep for backward compatibility
+const filteredCommunityApps = computed(() => {
+  return communityApps.value
 })
 
 function isInstalled(appId: string): boolean {
   return appId in installedPackages.value
 }
 
-// Load community marketplace when tab is switched
-watch(activeTab, (newTab) => {
-  if (newTab === 'community' && communityApps.value.length === 0 && !loadingCommunity.value) {
+// Load community marketplace on mount
+onMounted(() => {
+  if (communityApps.value.length === 0 && !loadingCommunity.value) {
     loadCommunityMarketplace()
   }
 })
@@ -668,9 +840,22 @@ async function loadCommunityMarketplace() {
   }
 }
 
-function viewApp(app: any) {
-  // Could navigate to app details page
-  console.log('View app:', app)
+function viewAppDetails(app: any) {
+  console.log('[Marketplace] Navigating to app detail:', app)
+  
+  try {
+    // Store app data in composable (simple ref, no reactivity issues)
+    setCurrentApp(app)
+    console.log('[Marketplace] App data stored in composable')
+    
+    // Navigate without passing state
+    router.push({
+      name: 'marketplace-app-detail',
+      params: { id: app.id }
+    })
+  } catch (e) {
+    console.error('[Marketplace] Navigation error:', e)
+  }
 }
 
 async function installApp(app: any) {
@@ -679,11 +864,14 @@ async function installApp(app: any) {
   installing.value = app.id
   
   try {
+    const installUrl = app.url || app.manifestUrl || app.s9pkUrl
+    console.log('[Marketplace] Installing local app:', { id: app.id, url: installUrl, version: app.version })
+    
     await rpcClient.call({
       method: 'package.install',
       params: {
         id: app.id,
-        url: app.s9pkUrl,
+        url: installUrl,
         version: app.version
       }
     })
@@ -838,5 +1026,31 @@ function handleImageError(event: Event) {
 
 .modal-leave-to .glass-card {
   transform: scale(0.95);
+}
+
+/* Custom scrollbar styling for apps section */
+.marketplace-container ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.marketplace-container ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.marketplace-container ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.marketplace-container ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Firefox scrollbar */
+.marketplace-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
 }
 </style>

@@ -80,6 +80,11 @@ const router = createRouter({
           component: () => import('../views/Marketplace.vue'),
         },
         {
+          path: 'marketplace/:id',
+          name: 'marketplace-app-detail',
+          component: () => import('../views/MarketplaceAppDetails.vue'),
+        },
+        {
           path: 'server',
           name: 'server',
           component: () => import('../views/Server.vue'),

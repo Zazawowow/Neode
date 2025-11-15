@@ -104,7 +104,7 @@
           <RouterView v-slot="{ Component, route }">
             <Transition :name="getTransitionName(route)">
               <div :key="route.path" class="view-wrapper">
-                <div class="p-4 md:p-8 overflow-y-auto h-full">
+                <div class="p-4 md:p-8 pb-0 md:pb-8 overflow-y-auto h-full">
                   <component :is="Component" class="view-container" />
                 </div>
               </div>
@@ -155,7 +155,9 @@ const showAltBackground = ref(false)
 const isGlitching = ref(false)
 
 watch(() => route.path, (newPath) => {
-  const isAppDetails = newPath.includes('/apps/') && !newPath.endsWith('/apps')
+  // Check if we're on app details OR marketplace app details
+  const isAppDetails = (newPath.includes('/apps/') && !newPath.endsWith('/apps')) || 
+                       (newPath.includes('/marketplace/') && !newPath.endsWith('/marketplace'))
   const wasAppDetails = showAltBackground.value
   
   // Change background immediately
@@ -245,12 +247,24 @@ function getTransitionName(currentRoute: any) {
   const wasAppDetails = previousPath.includes('/apps/') && !previousPath.endsWith('/apps')
   const wasAppsList = previousPath === '/dashboard/apps'
   
+  // Marketplace detail transitions
+  const isMarketplaceDetails = currentPath.includes('/marketplace/') && !currentPath.endsWith('/marketplace')
+  const isMarketplaceList = currentPath === '/dashboard/marketplace'
+  const wasMarketplaceDetails = previousPath.includes('/marketplace/') && !previousPath.endsWith('/marketplace')
+  const wasMarketplaceList = previousPath === '/dashboard/marketplace'
+  
   let transitionName = 'none'
   
   // Horizontal depth transition: apps list <-> app details
   if (wasAppsList && isAppDetails) {
     transitionName = 'depth-forward'
   } else if (wasAppDetails && isAppsList) {
+    transitionName = 'depth-back'
+  }
+  // Horizontal depth transition: marketplace list <-> marketplace details
+  else if (wasMarketplaceList && isMarketplaceDetails) {
+    transitionName = 'depth-forward'
+  } else if (wasMarketplaceDetails && isMarketplaceList) {
     transitionName = 'depth-back'
   }
   // Vertical transition: between main tabs

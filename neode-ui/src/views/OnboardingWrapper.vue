@@ -1,10 +1,11 @@
 <template>
   <div class="min-h-screen relative overflow-hidden">
-    <!-- Background layers with 3D perspective -->
+    <!-- Background layers with 3D perspective and zoom effect -->
     <div class="bg-perspective-container">
-      <!-- Single background layer -->
+      <!-- Background layer with zoom animation -->
       <div 
-        class="bg-layer bg-static"
+        class="bg-layer bg-zoom"
+        :class="{ 'bg-zoom-in': isTransitioning }"
         :style="{ backgroundImage: `url('/assets/img/${currentBackground}')` }"
         :key="currentBackground"
       ></div>
@@ -35,6 +36,7 @@ import { useRoute } from 'vue-router'
 const route = useRoute()
 const currentBackground = ref('bg-4.jpg')
 const isGlitching = ref(false)
+const isTransitioning = ref(false)
 
 // Map each route to a specific background image
 const routeBackgrounds: Record<string, string> = {
@@ -48,12 +50,16 @@ const routeBackgrounds: Record<string, string> = {
   '/login': 'bg-1.jpg'
 }
 
-// Watch route changes for background swaps and glitch
+// Watch route changes for background swaps, zoom, and glitch
 watch(() => route.path, (newPath, oldPath) => {
   const newBg = routeBackgrounds[newPath]
   
   // Only update if we have a defined background for this route and it's different
   if (newBg && newBg !== currentBackground.value) {
+    // Trigger zoom animation
+    isTransitioning.value = true
+    
+    // Change background
     currentBackground.value = newBg
     
     // Trigger glitch after the 3D transition completes
@@ -62,6 +68,9 @@ watch(() => route.path, (newPath, oldPath) => {
       setTimeout(() => {
         isGlitching.value = false
       }, 500) // Match glitch duration
+      
+      // Reset zoom after glitch
+      isTransitioning.value = false
     }, 700 + 50) // Wait for 3D transition (700ms) + small delay
   }
 })
@@ -133,6 +142,16 @@ onMounted(() => {
   opacity: 0;
   transform: translateZ(600px) scale(1.4);
   filter: blur(12px);
+}
+
+/* Background zoom effect - makes you feel like you're going deeper */
+.bg-zoom {
+  transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: scale(1);
+}
+
+.bg-zoom-in {
+  transform: scale(1.15);
 }
 
 /* Enhanced effect with rotation for more console-like feel */
