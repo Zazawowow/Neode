@@ -165,6 +165,7 @@
             </button>
             <button
               @click="restartApp"
+              :class="[canLaunch && (pkg.state === 'stopped' || pkg.state === 'running') ? 'col-span-2' : '']"
               class="px-4 py-2.5 glass-button rounded-lg text-sm font-medium hover:bg-white/15 transition-colors flex items-center justify-center gap-2"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
