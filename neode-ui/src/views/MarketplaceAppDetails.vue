@@ -1,5 +1,5 @@
 <template>
-  <div class="app-details-container pb-16">
+  <div class="app-details-container pb-32 md:pb-16">
     <!-- Desktop Back Button -->
     <button @click="goBack" class="hidden md:flex mb-6 items-center gap-2 text-white/70 hover:text-white transition-colors">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -8,14 +8,15 @@
       Back to Marketplace
     </button>
 
-    <!-- Mobile Floating Back Button -->
+    <!-- Mobile Full-Width Back Button -->
     <button 
       @click="goBack"
-      class="md:hidden fixed bottom-20 left-1/2 transform -translate-x-1/2 z-40 gradient-button w-14 h-14 rounded-full shadow-2xl flex items-center justify-center"
+      class="md:hidden fixed bottom-20 left-4 right-4 z-40 glass-button px-6 py-3 rounded-lg font-medium shadow-2xl flex items-center justify-center gap-2"
     >
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
+      <span>Back to Marketplace</span>
     </button>
 
     <!-- Loading State -->

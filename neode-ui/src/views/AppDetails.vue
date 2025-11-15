@@ -1,5 +1,5 @@
 <template>
-  <div class="app-details-container pb-16">
+  <div class="app-details-container pb-32 md:pb-16">
     <!-- Desktop Back Button -->
     <button @click="goBack" class="hidden md:flex mb-6 items-center gap-2 text-white/70 hover:text-white transition-colors">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -8,14 +8,15 @@
       Back to Apps
     </button>
 
-    <!-- Mobile Floating Back Button -->
+    <!-- Mobile Full-Width Back Button -->
     <button 
       @click="goBack"
-      class="md:hidden fixed bottom-20 left-1/2 transform -translate-x-1/2 z-40 gradient-button w-14 h-14 rounded-full shadow-2xl flex items-center justify-center"
+      class="md:hidden fixed bottom-20 left-4 right-4 z-40 glass-button px-6 py-3 rounded-lg font-medium shadow-2xl flex items-center justify-center gap-2"
     >
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
+      <span>Back to Apps</span>
     </button>
 
     <div v-if="pkg">
@@ -24,9 +25,9 @@
         <!-- Desktop: Single Row Layout -->
         <div class="hidden md:flex items-center gap-6">
           <!-- App Icon -->
-          <img
-            :src="pkg['static-files'].icon"
-            :alt="pkg.manifest.title"
+      <img
+        :src="pkg['static-files'].icon"
+        :alt="pkg.manifest.title"
             class="w-20 h-20 rounded-xl shadow-xl flex-shrink-0"
             @error="handleImageError"
           />
@@ -36,22 +37,22 @@
             <h1 class="text-2xl font-bold text-white mb-1">{{ pkg.manifest.title }}</h1>
             <p class="text-white/70 text-sm mb-2">{{ pkg.manifest.description.short }}</p>
             <div class="flex items-center gap-2">
-              <span
+      <span
                 class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium"
-                :class="getStatusClass(pkg.state)"
-              >
+        :class="getStatusClass(pkg.state)"
+      >
                 <span class="w-1.5 h-1.5 rounded-full mr-1.5" :class="getStatusDotClass(pkg.state)"></span>
-                {{ pkg.state }}
-              </span>
+        {{ pkg.state }}
+      </span>
               <span class="text-white/50 text-xs">v{{ pkg.manifest.version }}</span>
             </div>
           </div>
-          
+
           <!-- Action Buttons -->
           <div class="flex items-center gap-2 flex-shrink-0">
-            <button
+        <button
               v-if="canLaunch"
-              @click="launchApp"
+          @click="launchApp"
               class="gradient-button px-6 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,8 +139,8 @@
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
-            </button>
-          </div>
+        </button>
+      </div>
 
           <!-- Action Buttons (Auto Grid) -->
           <div class="grid grid-cols-2 gap-2">
@@ -153,37 +154,37 @@
               </svg>
               Launch
             </button>
-            <button
-              v-if="pkg.state === 'stopped'"
-              @click="startApp"
+        <button
+          v-if="pkg.state === 'stopped'"
+          @click="startApp"
               class="px-4 py-2.5 bg-green-500/20 border border-green-500/40 rounded-lg text-green-200 text-sm font-medium hover:bg-green-500/30 transition-colors flex items-center justify-center gap-2"
-            >
+        >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
               </svg>
-              Start
-            </button>
-            <button
-              v-if="pkg.state === 'running'"
-              @click="stopApp"
+          Start
+        </button>
+        <button
+          v-if="pkg.state === 'running'"
+          @click="stopApp"
               class="px-4 py-2.5 bg-yellow-500/20 border border-yellow-500/40 rounded-lg text-yellow-200 text-sm font-medium hover:bg-yellow-500/30 transition-colors flex items-center justify-center gap-2"
-            >
+        >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
               </svg>
-              Stop
-            </button>
-            <button
-              @click="restartApp"
+          Stop
+        </button>
+        <button
+          @click="restartApp"
               :class="[canLaunch && (pkg.state === 'stopped' || pkg.state === 'running') ? 'col-span-2' : '']"
               class="px-4 py-2.5 glass-button rounded-lg text-sm font-medium hover:bg-white/15 transition-colors flex items-center justify-center gap-2"
-            >
+        >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
-              Restart
-            </button>
+          Restart
+        </button>
           </div>
         </div>
       </div>
@@ -336,6 +337,51 @@
       <h3 class="text-2xl font-semibold text-white mb-2">App Not Found</h3>
       <p class="text-white/70">The requested application could not be found</p>
     </div>
+
+    <!-- Uninstall Confirmation Modal -->
+    <Transition name="modal">
+      <div
+        v-if="uninstallModal.show"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        @click="uninstallModal.show = false"
+      >
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+        <div
+          @click.stop
+          class="glass-card p-6 md:p-8 max-w-md w-full relative z-10"
+        >
+          <div class="flex items-start gap-4 mb-6">
+            <div class="p-3 bg-red-500/20 rounded-lg flex-shrink-0">
+              <svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="text-xl font-semibold text-white mb-2">Uninstall App?</h3>
+              <p class="text-white/70 text-sm">
+                Are you sure you want to uninstall <span class="text-white font-medium">{{ uninstallModal.appTitle }}</span>?
+                This will remove the app and stop its container.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex flex-col-reverse md:flex-row gap-3 md:justify-end">
+            <button
+              @click="uninstallModal.show = false"
+              class="w-full md:w-auto px-6 py-3 glass-button rounded-lg text-sm font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              @click="confirmUninstall"
+              class="w-full md:w-auto px-6 py-3 bg-red-600/80 hover:bg-red-600 rounded-lg text-white text-sm font-medium transition-colors"
+            >
+              Uninstall
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -351,6 +397,11 @@ const store = useAppStore()
 
 const appId = computed(() => route.params.id as string)
 const pkg = computed(() => store.packages[appId.value])
+
+const uninstallModal = ref({
+  show: false,
+  appTitle: ''
+})
 
 // Check if app has a UI interface and is running
 const canLaunch = computed(() => {
@@ -438,10 +489,16 @@ async function restartApp() {
   }
 }
 
-async function uninstallApp() {
-  if (!confirm(`Are you sure you want to uninstall ${pkg.value?.manifest.title}?`)) {
-    return
+function showUninstallModal() {
+  if (!pkg.value) return
+  uninstallModal.value = {
+    show: true,
+    appTitle: pkg.value.manifest.title
   }
+}
+
+async function confirmUninstall() {
+  uninstallModal.value.show = false
   
   try {
     await store.uninstallPackage(appId.value)
@@ -451,6 +508,11 @@ async function uninstallApp() {
     console.error('Failed to uninstall app:', err)
     alert('Failed to uninstall app')
   }
+}
+
+// Keep for backwards compatibility but redirect to modal
+async function uninstallApp() {
+  showUninstallModal()
 }
 
 function getStatusClass(state: PackageState): string {
@@ -487,3 +549,26 @@ function getStatusDotClass(state: PackageState): string {
   }
 }
 </script>
+
+<style scoped>
+.modal-enter-active,
+.modal-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-enter-active .glass-card,
+.modal-leave-active .glass-card {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-from .glass-card,
+.modal-leave-to .glass-card {
+  transform: scale(0.95);
+  opacity: 0;
+}
+</style>
