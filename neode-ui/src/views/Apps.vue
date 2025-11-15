@@ -87,7 +87,7 @@
           <button
             v-if="pkg.state === 'running'"
             @click.stop="stopApp(id as string)"
-            class="flex-1 px-4 py-2 bg-red-500/20 border border-red-500/40 rounded-lg text-red-200 text-sm font-medium hover:bg-red-500/30 transition-colors"
+            class="flex-1 px-4 py-2 bg-yellow-500/20 border border-yellow-500/40 rounded-lg text-yellow-200 text-sm font-medium hover:bg-yellow-500/30 transition-colors"
           >
             Stop
           </button>
