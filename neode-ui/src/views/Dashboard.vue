@@ -267,6 +267,13 @@ function getTransitionName(currentRoute: any) {
   } else if (wasMarketplaceDetails && isMarketplaceList) {
     transitionName = 'depth-back'
   }
+  // Horizontal depth transition: marketplace list <-> installed app details
+  // (when clicking installed app from marketplace)
+  else if (wasMarketplaceList && isAppDetails) {
+    transitionName = 'depth-forward'
+  } else if (wasAppDetails && isMarketplaceList) {
+    transitionName = 'depth-back'
+  }
   // Vertical transition: between main tabs
   else {
     const currentIndex = tabOrder.indexOf(currentPath)

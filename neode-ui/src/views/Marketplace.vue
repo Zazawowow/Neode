@@ -844,15 +844,24 @@ function viewAppDetails(app: any) {
   console.log('[Marketplace] Navigating to app detail:', app)
   
   try {
-    // Store app data in composable (simple ref, no reactivity issues)
-    setCurrentApp(app)
-    console.log('[Marketplace] App data stored in composable')
-    
-    // Navigate without passing state
-    router.push({
-      name: 'marketplace-app-detail',
-      params: { id: app.id }
-    })
+    // If app is already installed, go directly to the installed app detail page
+    if (isInstalled(app.id)) {
+      console.log('[Marketplace] App is installed, navigating to app details page')
+      router.push({
+        name: 'app-details',
+        params: { id: app.id }
+      })
+    } else {
+      // Store app data in composable for marketplace detail view
+      setCurrentApp(app)
+      console.log('[Marketplace] App data stored in composable')
+      
+      // Navigate to marketplace detail page
+      router.push({
+        name: 'marketplace-app-detail',
+        params: { id: app.id }
+      })
+    }
   } catch (e) {
     console.error('[Marketplace] Navigation error:', e)
   }

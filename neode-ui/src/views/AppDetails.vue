@@ -93,18 +93,18 @@
 
         <!-- Mobile: Two Column Grid Layout -->
         <div class="md:hidden">
-          <!-- Top: Icon + Info -->
-          <div class="grid grid-cols-[80px_1fr] gap-4 mb-4">
+          <!-- Header: Icon + Info + Delete -->
+          <div class="flex items-start gap-4 mb-4">
             <!-- App Icon -->
             <img
               :src="pkg['static-files'].icon"
               :alt="pkg.manifest.title"
-              class="w-20 h-20 rounded-xl shadow-xl"
+              class="w-20 h-20 rounded-xl shadow-xl flex-shrink-0"
               @error="handleImageError"
             />
             
             <!-- App Info -->
-            <div class="min-w-0">
+            <div class="flex-1 min-w-0">
               <h1 class="text-xl font-bold text-white mb-1">{{ pkg.manifest.title }}</h1>
               <p class="text-white/70 text-xs mb-2 line-clamp-2">{{ pkg.manifest.description.short }}</p>
               <div class="flex flex-wrap items-center gap-2">
@@ -118,9 +118,20 @@
                 <span class="text-white/50 text-xs">v{{ pkg.manifest.version }}</span>
               </div>
             </div>
+
+            <!-- Uninstall Icon Button -->
+            <button
+              @click="uninstallApp"
+              class="flex-shrink-0 w-9 h-9 rounded-lg bg-red-600/20 border border-red-600/40 text-red-300 hover:bg-red-600/30 transition-colors flex items-center justify-center"
+              title="Uninstall"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
           </div>
 
-          <!-- Bottom: Action Buttons -->
+          <!-- Action Buttons (Auto Grid) -->
           <div class="grid grid-cols-2 gap-2">
             <button
               v-if="canLaunch"
@@ -160,15 +171,6 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
               Restart
-            </button>
-            <button
-              @click="uninstallApp"
-              class="col-span-2 px-4 py-2.5 bg-red-600/20 border border-red-600/40 rounded-lg text-red-300 text-sm font-medium hover:bg-red-600/30 transition-colors flex items-center justify-center gap-2"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              Uninstall
             </button>
           </div>
         </div>
