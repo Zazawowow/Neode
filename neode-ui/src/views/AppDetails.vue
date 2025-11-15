@@ -1,5 +1,5 @@
 <template>
-  <div class="app-details-container">
+  <div class="app-details-container pb-16">
     <!-- Back Button -->
     <button @click="goBack" class="mb-6 flex items-center gap-2 text-white/70 hover:text-white transition-colors">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -9,97 +9,172 @@
     </button>
 
     <div v-if="pkg">
-      <!-- Hero Section -->
-      <div class="glass-card p-8 mb-6">
-        <div class="flex flex-col md:flex-row gap-8 items-start">
+      <!-- Compact Hero Section -->
+      <div class="glass-card p-6 mb-6">
+        <!-- Desktop: Single Row Layout -->
+        <div class="hidden md:flex items-center gap-6">
           <!-- App Icon -->
-          <div class="flex-shrink-0">
+          <img
+            :src="pkg['static-files'].icon"
+            :alt="pkg.manifest.title"
+            class="w-20 h-20 rounded-xl shadow-xl flex-shrink-0"
+            @error="handleImageError"
+          />
+          
+          <!-- App Info (grows to fill space) -->
+          <div class="flex-1 min-w-0">
+            <h1 class="text-2xl font-bold text-white mb-1">{{ pkg.manifest.title }}</h1>
+            <p class="text-white/70 text-sm mb-2">{{ pkg.manifest.description.short }}</p>
+            <div class="flex items-center gap-2">
+              <span
+                class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium"
+                :class="getStatusClass(pkg.state)"
+              >
+                <span class="w-1.5 h-1.5 rounded-full mr-1.5" :class="getStatusDotClass(pkg.state)"></span>
+                {{ pkg.state }}
+              </span>
+              <span class="text-white/50 text-xs">v{{ pkg.manifest.version }}</span>
+            </div>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <button
+              v-if="canLaunch"
+              @click="launchApp"
+              class="gradient-button px-6 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              Launch
+            </button>
+            <button
+              v-if="pkg.state === 'stopped'"
+              @click="startApp"
+              class="px-4 py-2.5 bg-green-500/20 border border-green-500/40 rounded-lg text-green-200 text-sm font-medium hover:bg-green-500/30 transition-colors flex items-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              </svg>
+              Start
+            </button>
+            <button
+              v-if="pkg.state === 'running'"
+              @click="stopApp"
+              class="px-4 py-2.5 bg-red-500/20 border border-red-500/40 rounded-lg text-red-200 text-sm font-medium hover:bg-red-500/30 transition-colors flex items-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+              </svg>
+              Stop
+            </button>
+            <button
+              @click="restartApp"
+              class="px-4 py-2.5 glass-button rounded-lg text-sm font-medium hover:bg-white/15 transition-colors flex items-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Restart
+            </button>
+            <button
+              @click="uninstallApp"
+              class="px-4 py-2.5 bg-red-600/20 border border-red-600/40 rounded-lg text-red-300 text-sm font-medium hover:bg-red-600/30 transition-colors flex items-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Uninstall
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile: Two Column Grid Layout -->
+        <div class="md:hidden">
+          <!-- Top: Icon + Info -->
+          <div class="grid grid-cols-[80px_1fr] gap-4 mb-4">
+            <!-- App Icon -->
             <img
               :src="pkg['static-files'].icon"
               :alt="pkg.manifest.title"
-              class="w-32 h-32 rounded-2xl shadow-2xl"
+              class="w-20 h-20 rounded-xl shadow-xl"
               @error="handleImageError"
             />
-          </div>
-
-          <!-- App Info -->
-          <div class="flex-1 min-w-0">
-            <div class="flex items-start justify-between gap-4 mb-4">
-              <div class="flex-1">
-                <h1 class="text-4xl font-bold text-white mb-2">{{ pkg.manifest.title }}</h1>
-                <p class="text-white/80 text-lg mb-3">{{ pkg.manifest.description.short }}</p>
-                <div class="flex flex-wrap items-center gap-3">
-                  <span
-                    class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium"
-                    :class="getStatusClass(pkg.state)"
-                  >
-                    <span class="w-2 h-2 rounded-full mr-2" :class="getStatusDotClass(pkg.state)"></span>
-                    {{ pkg.state }}
-                  </span>
-                  <span class="text-white/60 text-sm">v{{ pkg.manifest.version }}</span>
-                  <span v-if="pkg.manifest.author" class="text-white/60 text-sm">by {{ pkg.manifest.author }}</span>
-                </div>
+            
+            <!-- App Info -->
+            <div class="min-w-0">
+              <h1 class="text-xl font-bold text-white mb-1">{{ pkg.manifest.title }}</h1>
+              <p class="text-white/70 text-xs mb-2 line-clamp-2">{{ pkg.manifest.description.short }}</p>
+              <div class="flex flex-wrap items-center gap-2">
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                  :class="getStatusClass(pkg.state)"
+                >
+                  <span class="w-1.5 h-1.5 rounded-full mr-1" :class="getStatusDotClass(pkg.state)"></span>
+                  {{ pkg.state }}
+                </span>
+                <span class="text-white/50 text-xs">v{{ pkg.manifest.version }}</span>
               </div>
             </div>
+          </div>
 
-            <!-- Primary Action Buttons -->
-            <div class="flex flex-wrap gap-3">
-              <button
-                v-if="canLaunch"
-                @click="launchApp"
-                class="gradient-button px-8 py-3 rounded-lg text-lg font-semibold flex items-center gap-2"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-                Launch App
-              </button>
-              <button
-                v-if="pkg.state === 'stopped'"
-                @click="startApp"
-                class="px-6 py-3 bg-green-500/20 border border-green-500/40 rounded-lg text-green-200 font-medium hover:bg-green-500/30 transition-colors flex items-center gap-2"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Start
-              </button>
-              <button
-                v-if="pkg.state === 'running'"
-                @click="stopApp"
-                class="px-6 py-3 bg-red-500/20 border border-red-500/40 rounded-lg text-red-200 font-medium hover:bg-red-500/30 transition-colors flex items-center gap-2"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
-                </svg>
-                Stop
-              </button>
-              <button
-                @click="restartApp"
-                class="px-6 py-3 glass-button rounded-lg font-medium hover:bg-white/15 transition-colors flex items-center gap-2"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Restart
-              </button>
-              <button
-                @click="uninstallApp"
-                class="px-6 py-3 bg-red-600/20 border border-red-600/40 rounded-lg text-red-300 font-medium hover:bg-red-600/30 transition-colors flex items-center gap-2"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                Uninstall
-              </button>
-            </div>
+          <!-- Bottom: Action Buttons -->
+          <div class="grid grid-cols-2 gap-2">
+            <button
+              v-if="canLaunch"
+              @click="launchApp"
+              class="gradient-button px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              Launch
+            </button>
+            <button
+              v-if="pkg.state === 'stopped'"
+              @click="startApp"
+              class="px-4 py-2.5 bg-green-500/20 border border-green-500/40 rounded-lg text-green-200 text-sm font-medium hover:bg-green-500/30 transition-colors flex items-center justify-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              </svg>
+              Start
+            </button>
+            <button
+              v-if="pkg.state === 'running'"
+              @click="stopApp"
+              class="px-4 py-2.5 bg-red-500/20 border border-red-500/40 rounded-lg text-red-200 text-sm font-medium hover:bg-red-500/30 transition-colors flex items-center justify-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Stop
+            </button>
+            <button
+              @click="restartApp"
+              class="px-4 py-2.5 glass-button rounded-lg text-sm font-medium hover:bg-white/15 transition-colors flex items-center justify-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Restart
+            </button>
+            <button
+              @click="uninstallApp"
+              class="col-span-2 px-4 py-2.5 bg-red-600/20 border border-red-600/40 rounded-lg text-red-300 text-sm font-medium hover:bg-red-600/30 transition-colors flex items-center justify-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Uninstall
+            </button>
           </div>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 md:mb-16">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Main Content -->
         <div class="lg:col-span-2 space-y-6">
           <!-- Screenshots Gallery -->
