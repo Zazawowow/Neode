@@ -1,11 +1,21 @@
 <template>
   <div class="app-details-container pb-16">
-    <!-- Back Button -->
-    <button @click="goBack" class="mb-6 flex items-center gap-2 text-white/70 hover:text-white transition-colors">
+    <!-- Desktop Back Button -->
+    <button @click="goBack" class="hidden md:flex mb-6 items-center gap-2 text-white/70 hover:text-white transition-colors">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
       Back to Apps
+    </button>
+
+    <!-- Mobile Floating Back Button -->
+    <button 
+      @click="goBack"
+      class="md:hidden fixed bottom-20 left-1/2 transform -translate-x-1/2 z-40 gradient-button w-14 h-14 rounded-full shadow-2xl flex items-center justify-center"
+    >
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
     </button>
 
     <div v-if="pkg">
@@ -60,17 +70,6 @@
               Start
             </button>
             <button
-              v-if="pkg.state === 'running'"
-              @click="stopApp"
-              class="px-4 py-2.5 bg-red-500/20 border border-red-500/40 rounded-lg text-red-200 text-sm font-medium hover:bg-red-500/30 transition-colors flex items-center gap-2"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
-              </svg>
-              Stop
-            </button>
-            <button
               @click="restartApp"
               class="px-4 py-2.5 glass-button rounded-lg text-sm font-medium hover:bg-white/15 transition-colors flex items-center gap-2"
             >
@@ -78,6 +77,17 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
               Restart
+            </button>
+            <button
+              v-if="pkg.state === 'running'"
+              @click="stopApp"
+              class="px-4 py-2.5 bg-yellow-500/20 border border-yellow-500/40 rounded-lg text-yellow-200 text-sm font-medium hover:bg-yellow-500/30 transition-colors flex items-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+              </svg>
+              Stop
             </button>
             <button
               @click="uninstallApp"
@@ -156,10 +166,11 @@
             <button
               v-if="pkg.state === 'running'"
               @click="stopApp"
-              class="px-4 py-2.5 bg-red-500/20 border border-red-500/40 rounded-lg text-red-200 text-sm font-medium hover:bg-red-500/30 transition-colors flex items-center justify-center gap-2"
+              class="px-4 py-2.5 bg-yellow-500/20 border border-yellow-500/40 rounded-lg text-yellow-200 text-sm font-medium hover:bg-yellow-500/30 transition-colors flex items-center justify-center gap-2"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
               </svg>
               Stop
             </button>
