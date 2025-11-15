@@ -33,18 +33,47 @@ neode-ui/
 
 ### Prerequisites
 
-- Node.js 20.19+ or 22.12+
-- Running Neode backend on port 5959 (or update vite.config.ts)
+- Node.js 20.19+ or 22.12+ (20.18.2 works but shows warning)
 
-### Development
+### Quick Start (Recommended)
 
 ```bash
 cd neode-ui
 npm install
-npm run dev
+npm start
 ```
 
-Visit http://localhost:8100
+Visit **http://localhost:8100** and login with password: `password123`
+
+This starts both:
+- ✅ Mock backend (port 5959) - no Docker required!
+- ✅ Vite dev server (port 8100) with instant HMR
+
+**Stop servers:**
+```bash
+npm stop
+```
+
+📖 **See [DEV-SCRIPTS.md](./DEV-SCRIPTS.md) for detailed documentation**
+
+### Development Options
+
+```bash
+# Start everything (mock backend + Vite)
+npm start
+
+# Stop everything
+npm stop
+
+# Run mock backend only
+npm run backend:mock
+
+# Run Vite only (requires backend running separately)
+npm run dev
+
+# Run with real Rust backend (requires core/ to be running)
+npm run dev:real
+```
 
 ### Build for Production
 

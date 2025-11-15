@@ -166,12 +166,23 @@ function canLaunch(pkg: any): boolean {
 }
 
 function launchApp(id: string, pkg: any) {
-  // Special handling for ATOB - opens local container or external app
-  if (id === 'atob') {
-    // In development with Docker, use local container (from s9pk)
-    const isDev = import.meta.env.DEV
-    const atobUrl = isDev ? 'http://localhost:8102' : 'https://app.atobitcoin.io'
-    window.open(atobUrl, '_blank', 'noopener,noreferrer')
+  const isDev = import.meta.env.DEV
+  
+  // Special handling for apps with Docker containers
+  const appUrls: Record<string, { dev: string, prod: string }> = {
+    'atob': {
+      dev: 'http://localhost:8102',
+      prod: 'https://app.atobitcoin.io'
+    },
+    'k484': {
+      dev: 'http://localhost:8103',
+      prod: 'http://localhost:8103' // Self-hosted splash screen
+    }
+  }
+  
+  if (appUrls[id]) {
+    const url = isDev ? appUrls[id].dev : appUrls[id].prod
+    window.open(url, '_blank', 'noopener,noreferrer')
     return
   }
   

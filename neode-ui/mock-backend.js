@@ -12,13 +12,8 @@ import { WebSocketServer } from 'ws'
 import http from 'http'
 import { exec } from 'child_process'
 import { promisify } from 'util'
-import path from 'path'
-import { fileURLToPath } from 'url'
-import fs from 'fs'
 
 const execPromise = promisify(exec)
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 const app = express()
 const PORT = 5959
@@ -60,64 +55,187 @@ function broadcastUpdate(patch) {
   })
 }
 
-// Helper: Install package from s9pk
+// Track used ports and running containers
+const usedPorts = new Set([5959, 8100]) // Backend and Vite dev server
+const runningContainers = new Map() // id -> { port, containerId, dockerMode }
+
+// Predefined port mappings for known apps
+const portMappings = {
+  'atob': 8102,
+  'k484': 8103,
+  'amin': 8104
+}
+
+// Helper: Check if Docker daemon is actually running
+async function isDockerAvailable() {
+  try {
+    await execPromise('docker ps')
+    return true
+  } catch {
+    return false
+  }
+}
+
+// Helper: Install package with Docker (if available) or simulate
 async function installPackage(id, url) {
-  console.log(`[Package] Installing ${id}...`)
+  console.log(`[Package] 📦 Installing ${id}...`)
   
   try {
-    // For development, we'll use the pre-built Docker image
-    // In production, the real backend would extract the s9pk using StartOS SDK
+    // Check if already installed
+    if (mockData['package-data'][id]) {
+      throw new Error(`Package ${id} is already installed`)
+    }
     
     const version = '0.1.0'
+    const dockerAvailable = await isDockerAvailable()
     
-    // Stop and remove existing container if it exists
-    try {
-      await execPromise(`docker stop ${id}-test 2>/dev/null || true`)
-      await execPromise(`docker rm ${id}-test 2>/dev/null || true`)
-    } catch (e) {
-      // Ignore errors
+    // Get package metadata
+    const packageMetadata = {
+      'atob': {
+        title: 'A to B Bitcoin',
+        shortDesc: 'Bitcoin tools and services for seamless transactions',
+        longDesc: 'A to B Bitcoin provides tools and services for Bitcoin transactions.',
+        icon: '/assets/img/atob.png'
+      },
+      'k484': {
+        title: 'K484',
+        shortDesc: 'Point of Sale and Admin system for Neode',
+        longDesc: 'K484 provides a complete POS and administration system for your Neode server.',
+        icon: '/assets/img/k484.png'
+      },
+      'amin': {
+        title: 'Amin',
+        shortDesc: 'Administrative interface for Neode',
+        longDesc: 'Amin provides administrative tools and monitoring for your Neode server.',
+        icon: '/assets/img/logo-neode.png'
+      }
     }
     
-    // Check if Docker image exists
-    const { stdout } = await execPromise(`docker images -q ${id}:${version}`)
-    if (!stdout.trim()) {
-      throw new Error(`Docker image ${id}:${version} not found. Build it first: cd ~/atob-package && docker build -t ${id}:${version} .`)
+    const metadata = packageMetadata[id] || {
+      title: id.charAt(0).toUpperCase() + id.slice(1),
+      shortDesc: `${id} application`,
+      longDesc: `${id} application for Neode`,
+      icon: '/assets/img/logo-neode.png'
     }
     
-    // Determine port mapping
-    const portMap = id === 'atob' ? '8102:80' : '8103:80'
+    // Determine port
+    const assignedPort = portMappings[id] || 8105
+    usedPorts.add(assignedPort)
     
-    // Start container
-    await execPromise(`docker run -d --name ${id}-test -p ${portMap} ${id}:${version}`)
+    let dockerMode = false
+    let actuallyRunning = false
     
-    // Wait for container to be ready
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    // Try to run with Docker if available
+    if (dockerAvailable) {
+      try {
+        console.log(`[Package] 🐳 Docker available, attempting to run container...`)
+        
+        // Stop and remove existing container if it exists
+        try {
+          await execPromise(`docker stop ${id}-test 2>/dev/null || true`)
+          await execPromise(`docker rm ${id}-test 2>/dev/null || true`)
+        } catch (e) {
+          // Ignore errors
+        }
+        
+        // Check if Docker image exists
+        const { stdout } = await execPromise(`docker images -q ${id}:${version}`)
+        
+        if (stdout.trim()) {
+          // Image exists, start container
+          await execPromise(`docker run -d --name ${id}-test -p ${assignedPort}:80 ${id}:${version}`)
+          
+          // Wait for container to be ready
+          await new Promise(resolve => setTimeout(resolve, 2000))
+          
+          // Verify container is running
+          const { stdout: containerStatus } = await execPromise(`docker ps --filter name=${id}-test --format "{{.Status}}"`)
+          
+          if (containerStatus.includes('Up')) {
+            dockerMode = true
+            actuallyRunning = true
+            runningContainers.set(id, { port: assignedPort, containerId: `${id}-test`, dockerMode: true })
+            console.log(`[Package] 🐳 Docker container running on port ${assignedPort}`)
+            
+            // Auto-fix nginx config for k484 to enable SPA routing
+            if (id === 'k484') {
+              try {
+                console.log(`[Package] 🔧 Configuring nginx for SPA routing...`)
+                
+                // Fix nginx config
+                await execPromise(`docker exec ${id}-test sh -c 'cat > /etc/nginx/conf.d/default.conf << "EOF"
+server {
+    listen       80;
+    listen  [::]:80;
+    server_name  localhost;
+    root   /usr/share/nginx/html;
+    index  index.html;
+
+    location / {
+        try_files \\\\$uri /index.html;
+    }
+
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}
+EOF
+'`)
+                
+                // Fix logo permissions
+                await execPromise(`docker exec ${id}-test chmod 644 /usr/share/nginx/html/k484-logo.png`)
+                
+                // Restart container to apply nginx config
+                await execPromise(`docker restart ${id}-test`)
+                await new Promise(resolve => setTimeout(resolve, 2000))
+                
+                console.log(`[Package] ✅ nginx configured - /admin route enabled`)
+              } catch (fixError) {
+                console.log(`[Package] ⚠️  nginx auto-fix failed: ${fixError.message}`)
+              }
+            }
+          } else {
+            console.log(`[Package] ⚠️  Container failed to start, falling back to simulation`)
+          }
+        } else {
+          console.log(`[Package] ℹ️  Docker image ${id}:${version} not found, using simulation mode`)
+        }
+      } catch (dockerError) {
+        console.log(`[Package] ⚠️  Docker error (${dockerError.message}), falling back to simulation`)
+      }
+    } else {
+      console.log(`[Package] ℹ️  Docker not available, using simulation mode`)
+    }
     
-    // Verify container is running
-    const { stdout: containerStatus } = await execPromise(`docker ps --filter name=${id}-test --format "{{.Status}}"`)
-    if (!containerStatus.includes('Up')) {
-      throw new Error(`Container ${id}-test failed to start`)
+    // If Docker didn't work, simulate installation
+    if (!dockerMode) {
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      runningContainers.set(id, { port: assignedPort, containerId: null, dockerMode: false })
     }
     
     // Add to mock data
     mockData['package-data'][id] = {
-      title: id === 'atob' ? 'A to B Bitcoin' : id,
+      title: metadata.title,
       version: version,
       status: 'running',
       state: 'running',
+      port: assignedPort,
+      dockerMode: dockerMode,
+      actuallyRunning: actuallyRunning,
       manifest: {
         id: id,
-        title: id === 'atob' ? 'A to B Bitcoin' : id,
+        title: metadata.title,
         version: version,
         description: {
-          short: id === 'atob' ? 'Bitcoin tools and services for seamless transactions' : `${id} application`,
-          long: id === 'atob' ? 'A to B Bitcoin provides tools and services for Bitcoin transactions.' : `${id} application`
+          short: metadata.shortDesc,
+          long: metadata.longDesc
         },
-        icon: id === 'atob' ? '/assets/img/atob.png' : '/assets/img/logo-neode.png',
+        icon: metadata.icon,
         interfaces: {
           main: {
             name: 'Web Interface',
-            description: `${id} web interface`,
+            description: `${metadata.title} web interface`,
             ui: true,
             'tor-config': {
               'port-mapping': {
@@ -135,7 +253,7 @@ async function installPackage(id, url) {
       },
       'static-files': {
         license: `/public/package-data/${id}/${version}/LICENSE.md`,
-        icon: id === 'atob' ? '/assets/img/atob.png' : '/assets/img/logo-neode.png',
+        icon: metadata.icon,
         instructions: `/public/package-data/${id}/${version}/INSTRUCTIONS.md`,
       },
     }
@@ -149,23 +267,54 @@ async function installPackage(id, url) {
       }
     ])
     
-    console.log(`[Package] ✅ ${id} installed and running on port ${portMap.split(':')[0]}`)
-    return { success: true, containerId: `${id}-test` }
+    if (dockerMode) {
+      console.log(`[Package] ✅ ${id} installed and RUNNING at http://localhost:${assignedPort}`)
+    } else {
+      console.log(`[Package] ✅ ${id} installed (simulated - no Docker container)`)
+    }
+    
+    return { success: true, port: assignedPort, dockerMode }
     
   } catch (error) {
-    console.error(`[Package] Installation failed:`, error.message)
+    console.error(`[Package] ❌ Installation failed:`, error.message)
     throw error
   }
 }
 
-// Helper: Uninstall package
+// Helper: Uninstall package (stops Docker container if running)
 async function uninstallPackage(id) {
-  console.log(`[Package] Uninstalling ${id}...`)
+  console.log(`[Package] 🗑️  Uninstalling ${id}...`)
   
   try {
-    // Stop and remove container
-    await execPromise(`docker stop ${id}-test 2>/dev/null || true`)
-    await execPromise(`docker rm ${id}-test 2>/dev/null || true`)
+    // Check if package exists
+    if (!mockData['package-data'][id]) {
+      throw new Error(`Package ${id} is not installed`)
+    }
+    
+    // Stop Docker container if it's running
+    const containerInfo = runningContainers.get(id)
+    if (containerInfo && containerInfo.dockerMode && containerInfo.containerId) {
+      try {
+        console.log(`[Package] 🐳 Stopping Docker container ${containerInfo.containerId}...`)
+        await execPromise(`docker stop ${containerInfo.containerId} 2>/dev/null || true`)
+        await execPromise(`docker rm ${containerInfo.containerId} 2>/dev/null || true`)
+        console.log(`[Package] 🐳 Docker container stopped`)
+      } catch (dockerError) {
+        console.log(`[Package] ⚠️  Error stopping Docker container: ${dockerError.message}`)
+      }
+    }
+    
+    // Simulate uninstall delay
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // Release the port
+    const port = mockData['package-data'][id].port
+    if (port) {
+      usedPorts.delete(port)
+    }
+    
+    // Remove from tracking
+    runningContainers.delete(id)
     
     // Remove from mock data
     delete mockData['package-data'][id]
@@ -178,11 +327,11 @@ async function uninstallPackage(id) {
       }
     ])
     
-    console.log(`[Package] ✅ ${id} uninstalled`)
+    console.log(`[Package] ✅ ${id} uninstalled successfully`)
     return { success: true }
     
   } catch (error) {
-    console.error(`[Package] Uninstall failed:`, error.message)
+    console.error(`[Package] ❌ Uninstall failed:`, error.message)
     throw error
   }
 }
@@ -511,7 +660,9 @@ wss.on('connection', (ws) => {
   })
 })
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
+  const dockerAvailable = await isDockerAvailable()
+  
   console.log(`
 ╔════════════════════════════════════════════════════════════╗
 ║                                                            ║
@@ -522,6 +673,8 @@ server.listen(PORT, () => {
 ║                                                            ║
 ║   Mock credentials:                                        ║
 ║   Password: ${MOCK_PASSWORD}                              ║
+║                                                            ║
+║   Docker Status: ${dockerAvailable ? '🐳 Available (apps will run for real!)' : '⚠️  Not available (simulated mode)'}      ║
 ║                                                            ║
 ╚════════════════════════════════════════════════════════════╝
   `)

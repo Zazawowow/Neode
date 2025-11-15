@@ -4,6 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "start": "./start-dev.sh",
+    "stop": "./stop-dev.sh",
     "dev": "vite",
     "dev:mock": "concurrently \"node mock-backend.js\" \"vite\"",
     "dev:real": "echo 'Start backend: cd ../core && cargo run --release' && vite",
