@@ -5,7 +5,7 @@
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
-      Back to Apps
+      Back to My Apps
     </button>
 
     <!-- Mobile Full-Width Back Button -->
@@ -20,7 +20,7 @@
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
-      <span>Back to Apps</span>
+      <span>Back to My Apps</span>
     </button>
 
     <div v-if="pkg">

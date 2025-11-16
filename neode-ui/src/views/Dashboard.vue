@@ -220,12 +220,12 @@ const navItems = [
   },
   {
     path: '/dashboard/apps',
-    label: 'Apps',
+    label: 'My Apps',
     icon: 'apps',
   },
   {
     path: '/dashboard/marketplace',
-    label: 'Marketplace',
+    label: 'App Store',
     icon: 'marketplace',
   },
   {

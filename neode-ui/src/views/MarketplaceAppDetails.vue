@@ -5,7 +5,7 @@
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
-      Back to Marketplace
+      Back to App Store
     </button>
 
     <!-- Mobile Full-Width Back Button -->
@@ -20,7 +20,7 @@
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
-      <span>Back to Marketplace</span>
+      <span>Back to App Store</span>
     </button>
 
     <!-- Loading State -->

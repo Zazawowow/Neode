@@ -23,7 +23,7 @@
 
       <div class="mb-8 flex items-start justify-between">
         <div>
-      <h1 class="hidden md:block text-4xl font-bold text-white mb-2">Marketplace</h1>
+      <h1 class="hidden md:block text-4xl font-bold text-white mb-2">App Store</h1>
           <p class="hidden md:block text-white/70">Discover and install apps for your new sovereign life</p>
         </div>
 
