@@ -465,7 +465,10 @@ function goBack() {
 }
 
 function goToInstalledApp() {
-  router.push(`/dashboard/apps/${appId.value}`)
+  router.push({
+    path: `/dashboard/apps/${appId.value}`,
+    query: { from: 'marketplace' }
+  })
 }
 
 async function installApp() {

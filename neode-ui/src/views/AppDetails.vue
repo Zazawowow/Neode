@@ -5,7 +5,7 @@
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
-      Back to My Apps
+      {{ backButtonText }}
     </button>
 
     <!-- Mobile Full-Width Back Button -->
@@ -20,7 +20,7 @@
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
       </svg>
-      <span>Back to My Apps</span>
+      <span>{{ backButtonText }}</span>
     </button>
 
     <div v-if="pkg">
@@ -408,6 +408,14 @@ const pkg = computed(() => store.packages[appId.value])
 const uninstallModal = ref({
   show: false,
   appTitle: ''
+})
+
+// Determine back button text based on where user came from
+const backButtonText = computed(() => {
+  // Check if we came from marketplace
+  const fromMarketplace = route.query.from === 'marketplace' || 
+                          document.referrer.includes('/marketplace')
+  return fromMarketplace ? 'Back to App Store' : 'Back to My Apps'
 })
 
 // Check if app has a UI interface and is running
