@@ -1,5 +1,5 @@
 <template>
-  <div class="app-details-container pb-32 md:pb-16">
+  <div class="app-details-container pb-16 md:pb-16">
     <!-- Desktop Back Button -->
     <button @click="goBack" class="hidden md:flex mb-6 items-center gap-2 text-white/70 hover:text-white transition-colors">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -11,7 +11,11 @@
     <!-- Mobile Full-Width Back Button -->
     <button 
       @click="goBack"
-      class="md:hidden fixed bottom-20 left-4 right-4 z-40 glass-button px-6 py-3 rounded-lg font-medium shadow-2xl flex items-center justify-center gap-2"
+      class="md:hidden fixed left-4 right-4 z-40 glass-button px-6 py-3 rounded-lg font-medium shadow-2xl flex items-center justify-center gap-2"
+      :style="{
+        bottom: 'calc(var(--mobile-tab-bar-height, 64px) + 16px)',
+        filter: 'drop-shadow(0 10px 25px rgba(0, 0, 0, 0.5))'
+      }"
     >
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -353,6 +357,9 @@
       <h3 class="text-2xl font-semibold text-white mb-2">App Not Found</h3>
       <p class="text-white/70">The requested application could not be found in the marketplace</p>
     </div>
+
+    <!-- Spacer for mobile back button -->
+    <div class="md:hidden h-[calc(var(--mobile-tab-bar-height,_64px)+96px)]"></div>
   </div>
 </template>
 

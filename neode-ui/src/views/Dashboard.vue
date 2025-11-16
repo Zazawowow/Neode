@@ -104,7 +104,12 @@
           <RouterView v-slot="{ Component, route }">
             <Transition :name="getTransitionName(route)">
               <div :key="route.path" class="view-wrapper">
-                <div class="p-4 md:p-8 pb-0 md:pb-8 overflow-y-auto h-full">
+                <div
+                  :class="[
+                    'p-4 md:p-8 overflow-y-auto h-full md:pb-8',
+                    needsMobileBackButtonSpace ? 'pb-[calc(var(--mobile-tab-bar-height,_72px)+96px)]' : 'pb-0'
+                  ]"
+                >
                   <component :is="Component" class="view-container" />
                 </div>
               </div>
@@ -115,16 +120,20 @@
     </main>
 
     <!-- Mobile Bottom Tab Bar -->
-    <nav class="md:hidden fixed bottom-0 left-0 right-0 border-t border-glass-border shadow-glass z-50" style="background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);">
+<nav
+      ref="mobileTabBar"
+      class="md:hidden fixed bottom-0 left-0 right-0 border-t border-glass-border shadow-glass z-50"
+      style="background: rgba(0, 0, 0, 0.25); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);"
+    >
       <div class="flex justify-around items-center px-2 py-3">
         <RouterLink
           v-for="item in navItems"
           :key="item.path"
           :to="item.path"
-          class="flex flex-col items-center justify-center gap-1 px-3 py-2.5 rounded-lg text-white/70 transition-colors min-w-0"
+          class="flex items-center justify-center w-full py-3 rounded-lg text-white/70 transition-colors"
           exact-active-class="nav-tab-active"
         >
-          <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path 
               v-for="(path, index) in getIconPath(item.icon)" 
               :key="index"
@@ -134,7 +143,6 @@
               :d="path" 
             />
           </svg>
-          <span class="text-xs font-medium truncate max-w-full">{{ item.label }}</span>
         </RouterLink>
       </div>
     </nav>
@@ -142,7 +150,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, ref, watch } from 'vue'
+import { computed, h, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '../stores/app'
 
@@ -153,11 +161,16 @@ const store = useAppStore()
 // Background swap for app details
 const showAltBackground = ref(false)
 const isGlitching = ref(false)
+const mobileTabBar = ref<HTMLElement | null>(null)
+
+function isDetailRoute(path: string) {
+  return (path.includes('/apps/') && !path.endsWith('/apps')) ||
+    (path.includes('/marketplace/') && !path.endsWith('/marketplace'))
+}
 
 watch(() => route.path, (newPath) => {
   // Check if we're on app details OR marketplace app details
-  const isAppDetails = (newPath.includes('/apps/') && !newPath.endsWith('/apps')) || 
-                       (newPath.includes('/marketplace/') && !newPath.endsWith('/marketplace'))
+  const isAppDetails = isDetailRoute(newPath)
   const wasAppDetails = showAltBackground.value
   
   // Change background immediately
@@ -172,6 +185,25 @@ watch(() => route.path, (newPath) => {
       }, 375) // Glitch duration - 25% faster
     }, 500) // Wait for background 3D transition to complete
   }
+})
+
+const needsMobileBackButtonSpace = computed(() => isDetailRoute(route.path))
+
+function updateTabBarHeight() {
+  if (typeof window === 'undefined') return
+  if (mobileTabBar.value) {
+    const height = mobileTabBar.value.offsetHeight
+    document.documentElement.style.setProperty('--mobile-tab-bar-height', `${height}px`)
+  }
+}
+
+onMounted(() => {
+  updateTabBarHeight()
+  window.addEventListener('resize', updateTabBarHeight)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateTabBarHeight)
 })
 
 const serverName = computed(() => store.serverName)
