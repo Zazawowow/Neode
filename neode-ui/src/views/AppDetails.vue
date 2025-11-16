@@ -412,10 +412,13 @@ const uninstallModal = ref({
 
 // Determine back button text based on where user came from
 const backButtonText = computed(() => {
-  // Check if we came from marketplace
-  const fromMarketplace = route.query.from === 'marketplace' || 
-                          document.referrer.includes('/marketplace')
-  return fromMarketplace ? 'Back to App Store' : 'Back to My Apps'
+  // Check if we came from marketplace via query parameter
+  if (route.query.from === 'marketplace') {
+    return 'Back to App Store'
+  }
+  
+  // Default to My Apps
+  return 'Back to My Apps'
 })
 
 // Check if app has a UI interface and is running
